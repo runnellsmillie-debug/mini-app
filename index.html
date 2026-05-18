@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>1 Money - Telegram Mini App</title>
+    <!-- Telegram Web App skripti -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+      :root {
+        --tg-theme-bg-color: #ffffff;
+        --tg-theme-text-color: #000000;
+        --tg-theme-button-color: #2481cc;
+        --tg-theme-button-text-color: #ffffff;
+        --tg-theme-hint-color: #999999;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        background-color: var(--tg-theme-bg-color, #f4f6f9);
+        color: var(--tg-theme-text-color, #222);
+        margin: 0;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .balance-card {
+        background: linear-gradient(135deg, #2481cc, #1a65a4);
+        color: white;
+        width: 100%;
+        max-width: 350px;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        box-sizing: border-box;
+      }
+
+      .balance-title {
+        font-size: 14px;
+        opacity: 0.8;
+        text-transform: uppercase;
+      }
+      .balance-amount {
+        font-size: 28px;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+
+      .stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 15px;
+      }
+      .stat-item {
+        font-size: 13px;
+      }
+      .stat-income {
+        color: #4cd964;
+        font-weight: bold;
+      }
+      .stat-expense {
+        color: #ff3b30;
+        font-weight: bold;
+      }
+
+      .input-group {
+        width: 100%;
+        max-width: 350px;
+        margin-bottom: 15px;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--tg-theme-hint-color, #ccc);
+        border-radius: 10px;
+        background-color: var(--tg-theme-bg-color);
+        color: var(--tg-theme-text-color);
+        font-size: 16px;
+        box-sizing: border-box;
+        outline: none;
+      }
+
+      .grid-categories {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        width: 100%;
+        max-width: 350px;
+      }
+
+      .category-btn {
+        background-color: rgba(128, 128, 128, 0.1);
+        border: none;
+        border-radius: 12px;
+        padding: 15px 5px;
+        font-size: 14px;
+        color: var(--tg-theme-text-color);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        transition: transform 0.1s;
+      }
+
+      .category-btn:active {
+        transform: scale(0.95);
+      }
+      .category-icon {
+        font-size: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Balans Kartasi -->
+    <div class="balance-card">
+      <div class="balance-title">Umumiy Balans</div>
+      <div class="balance-amount" id="balance">0 UZS</div>
+      <div class="stats">
+        <div class="stat-item">
+          Kirim:<br /><span class="stat-income">+0</span>
+        </div>
+        <div class="stat-item">
+          Chiqim:<br /><span class="stat-expense">-0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summa kiritish joyi -->
+    <div class="input-group">
+      <input
+        type="number"
+        id="amount-input"
+        placeholder="Summani kiriting (masalan: 50000)"
+        inputmode="numeric"
+      />
+    </div>
+
+    <!-- Kategoriyalar -->
+    <div class="grid-categories">
+      <button class="category-btn" onclick="sendData('Oziq-ovqat', 'minus')">
+        <span class="category-icon">🍔</span><span>Taom</span>
+      </button>
+      <button class="category-btn" onclick="sendData('Transport', 'minus')">
+        <span class="category-icon">🚖</span><span>Yo'l</span>
+      </button>
+      <button class="category-btn" onclick="sendData('Xaridlar', 'minus')">
+        <span class="category-icon">🛍️</span><span>Xarid</span>
+      </button>
+      <button class="category-btn" onclick="sendData('Kommunal', 'minus')">
+        <span class="category-icon">🏠</span><span>Uy</span>
+      </button>
+      <button class="category-btn" onclick="sendData('Ko\'ngilochar', 'minus')">
+        <span class="category-icon">🎮</span><span>Oyin</span>
+      </button>
+      <button
+        class="category-btn"
+        onclick="sendData('Oylik', 'plus')"
+        style="background-color: rgba(76, 217, 100, 0.15)"
+      >
+        <span class="category-icon">📈</span
+        ><span style="color: #4cd964; font-weight: bold">Kirim</span>
+      </button>
+    </div>
+
+    <script>
+      // Telegram Web App'ni ishga tushirish
+      const tg = window.Telegram.WebApp;
+      tg.ready(); // Telegramga interfeys tayyorligini bildirish
+      tg.expand(); // Ilovani butun ekranga ochish
+
+      // Ranglarni Telegram mavzusiga moslash
+      document.documentElement.style.setProperty(
+        "--tg-theme-bg-color",
+        tg.themeParams.bg_color,
+      );
+      document.documentElement.style.setProperty(
+        "--tg-theme-text-color",
+        tg.themeParams.text_color,
+      );
+      document.documentElement.style.setProperty(
+        "--tg-theme-hint-color",
+        tg.themeParams.hint_color,
+      );
+
+      function sendData(category, type) {
+        const amountInput = document.getElementById("amount-input");
+        const amount = amountInput.value;
+
+        if (!amount || amount <= 0) {
+          alert("Iltimos, oldin summani kiriting!");
+          return;
+        }
+
+        // Ma'lumotni JSON formatida botga qaytarish
+        const data = {
+          amount: parseInt(amount),
+          category: category,
+          type: type,
+        };
+
+        // Telegram botga ma'lumotni yuborish va ilovani yopish
+        tg.sendData(JSON.stringify(data));
+      }
+    </script>
+  </body>
+</html>
