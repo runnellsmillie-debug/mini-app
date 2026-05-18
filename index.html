@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1Money Family ERP v2</title>
+    <title>1Money Family ERP v6</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-user-select: none; user-select: none; padding: 12px; max-width: 430px; margin: 0 auto; box-sizing: border-box; }
@@ -44,6 +44,8 @@
         .date-input-group { display: flex; gap: 6px; margin-bottom: 12px; }
         .date-picker { flex: 1; padding: 10px; border-radius: 10px; background: #1e293b; border: 1px solid #334155; color: #fff; font-size: 13px; outline: none; }
         .history-item { display: flex; align-items: center; background: #1e293b; padding: 10px; border-radius: 12px; margin-bottom: 6px; font-size: 13px; }
+        .plan-item { display: flex; align-items: center; justify-content: space-between; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 10px; border-radius: 10px; margin-bottom: 6px; font-size: 13px; }
+        
         .progress-bar-bg { background: rgba(255,255,255,0.05); border-radius: 4px; height: 6px; overflow: hidden; margin: 6px 0; }
         .progress-bar-fill { height: 100%; border-radius: 4px; }
         .delete-btn { background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer; font-size: 16px; margin-left: auto; padding: 5px; }
@@ -62,15 +64,17 @@
     <div id="modal-overlay">
         <div class="modal-box">
             <h3 style="margin-top:0; color:#3b82f6;">Yangi profil qo'shish</h3>
-            <input type="text" id="prof-name" class="input-text" placeholder="Ism (Masalan: Ilyos)" />
+            <input type="text" id="prof-name" class="input-text" placeholder="Ism (Masalan: Odina)" />
             <div style="display:flex; gap:6px; margin-bottom:10px;">
                 <input type="number" id="prof-age" class="input-text" placeholder="Yoshi" style="flex:1; margin:0;" />
-                <select id="prof-gender" class="input-text" style="flex:2; margin:0;">
-                    <option value="male">O'g'il / Erkak</option>
-                    <option value="female">Qiz / Ayol</option>
+                <select id="prof-role" class="input-text" style="flex:2; margin:0;">
+                    <option value="parent_m">Ota (Erkak)</option>
+                    <option value="parent_f">Ona (Ayol)</option>
+                    <option value="child_m">O'g'il farzand</option>
+                    <option value="child_f">Qiz farzand</option>
                 </select>
             </div>
-            <input type="text" id="prof-emoji" class="input-text" placeholder="Emoji (Masalan: 👦)" value="👤" />
+            <input type="text" id="prof-emoji" class="input-text" placeholder="Emoji (Masalan: 👧)" value="" />
             <div style="display:flex; gap:10px; margin-top:10px;">
                 <button onclick="closeProfileModal()" style="flex:1; padding:12px; border-radius:10px; border:none; background:#334155; color:#fff; font-weight:bold;">Bekor qilish</button>
                 <button onclick="saveNewProfile()" style="flex:1; padding:12px; border-radius:10px; border:none; background:#10b981; color:#fff; font-weight:bold;">Saqlash</button>
@@ -89,7 +93,7 @@
 
     <div id="tab-home">
         <div class="balance-main">
-            <div style="color: #94a3b8; font-size: 11px; text-transform: uppercase;">Oilaviy Umumiy Qoldiq</div>
+            <div style="color: #94a3b8; font-size: 11px; text-transform: uppercase;">Umumiy Qoldiq</div>
             <div id="main-total-balance" style="font-size: 26px; font-weight: bold; margin: 5px 0;">0 so'm</div>
         </div>
         <div class="balance-grid">
@@ -103,17 +107,47 @@
             </div>
         </div>
 
-        <div style="font-size: 13px; font-weight: bold; color: #94a3b8; margin-bottom: 8px;">
-            <span id="home-history-title">Bugungi amallar:</span>
+        <div class="widget-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-size: 12px; color: #94a3b8; font-weight: bold;">📅 Rejali to'lovlar:</div>
+                <button onclick="toggleScheduledSetup()" style="background:#3b82f6; border:none; color:#fff; font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer; font-weight:bold;">⚙️ Boshqarish</button>
+            </div>
+            
+            <div id="scheduled-setup-panel" style="display:none; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid #334155;">
+                <div style="font-size:11px; color:#94a3b8; margin-bottom:8px;">Yangi to'lov qo'shish:</div>
+                <input type="text" id="sched-new-name" placeholder="Nomi (Masalan: Bog'cha to'lovi)" class="input-text" style="padding:8px; font-size:13px; margin-bottom:6px;" />
+                <div style="display:flex; gap:6px; margin-bottom:8px;">
+                    <input type="number" id="sched-new-day" placeholder="Sana (1-31)" class="input-text" style="padding:8px; font-size:13px; width:40%; margin:0;" />
+                    <input type="number" id="sched-new-amount" placeholder="Summasi" class="input-text" style="padding:8px; font-size:13px; width:60%; margin:0;" />
+                </div>
+                <button onclick="addScheduled()" style="width:100%; padding:8px; background:#10b981; color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; margin-bottom:10px;">➕ Ro'yxatga qo'shish</button>
+                <div style="font-size:11px; color:#94a3b8; margin-bottom:5px;">Mavjud to'lovlar:</div>
+                <div id="scheduled-edit-list"></div>
+            </div>
+            <div id="scheduled-list-container"></div>
         </div>
-        <div id="home-today-list"></div>
+
+        <div id="planned-expenses-section" style="display:none;">
+            <div style="font-size: 13px; font-weight: bold; color: #3b82f6; margin-bottom: 8px;">🛒 Olinishi kerak (Plan):</div>
+            <div style="display:flex; gap:6px; margin-bottom:10px;">
+                <input type="text" id="new-plan-input" class="input-text" placeholder="Nima olamiz? (Masalan: Kurtka)" style="margin:0;">
+                <button onclick="addPlannedItem()" style="background:#10b981; color:#fff; border:none; padding:0 15px; border-radius:10px; font-weight:bold; cursor:pointer;">➕</button>
+            </div>
+            <div id="planned-list-container"></div>
+        </div>
+
+        <div id="today-expenses-section">
+            <div style="font-size: 13px; font-weight: bold; color: #94a3b8; margin-bottom: 8px;"><span id="home-history-title">Bugungi amallar:</span></div>
+            <div id="home-today-list"></div>
+        </div>
+
         <button onclick="sendToTelegram()" style="width:100%; padding:14px; background:#10b981; color:white; border:none; font-weight:bold; margin-top:20px; font-size:14px; border-radius:12px; cursor:pointer;">
             ✅ Telegramga saqlash (<span id="session-count">0</span>)
         </button>
     </div>
 
     <div id="tab-add" style="display: none;">
-        <div class="mode-selector">
+        <div class="mode-selector" id="mode-selector-tabs">
             <button id="mode-exp" class="mode-btn" style="background:#ef4444;" onclick="setAddMode('expense')">▼ Chiqim</button>
             <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">▲ Kirim</button>
             <button id="mode-trn" class="mode-btn" onclick="setAddMode('transfer')">🔄 O'tkazma</button>
@@ -180,8 +214,13 @@
             <input type="date" id="report-to-date" class="date-picker" onchange="renderReport()" />
         </div>
         
+        <div id="user-stats-wrapper">
+            <div style="font-size:12px; color:#f472b6; font-weight:bold; margin-bottom:6px;">👤 Kim qancha xarajat qildi?</div>
+            <div id="user-stats-container" style="display:flex; gap:8px; margin-bottom:12px; overflow-x:auto; padding-bottom:4px;"></div>
+        </div>
+
         <div class="balance-grid">
-            <div class="balance-card" style="border-color: #10b981;">
+            <div class="balance-card" style="border-color: #10b981;" id="report-inc-card">
                 <div style="font-size: 10px; color: #94a3b8;">Davr kirimi</div>
                 <div id="report-month-inc" style="font-size: 13px; font-weight: bold; color: #10b981;">0 so'm</div>
             </div>
@@ -197,74 +236,64 @@
     </div>
 
     <script>
-        // AI: JINS VA YOSHGA QARAB KATEGORIYALAR BAZASI
         const CATS_GENERAL = [
           { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B", subs: [ 
-              { id: "supermarket", label: "Supermarket", icon: "🏪", items: [ { id: "gosht_s", label: "Go'sht/Tovuq", icon: "🥩" }, { id: "meva_s", label: "Meva/Sabzavot", icon: "🍅" }, { id: "non_s", label: "Non/Pishiriq", icon: "🍞" }, { id: "sut_s", label: "Sut/Tuxum", icon: "🥛" }, { id: "boshqa_s", label: "Mayda-chuyda", icon: "🍬" } ]},
+              { id: "supermarket", label: "Supermarket", icon: "🏪", items: [ { id: "gosht_s", label: "Go'sht/Tovuq", icon: "🥩" }, { id: "meva_s", label: "Meva/Sabzavot", icon: "🍅" }, { id: "non_s", label: "Non/Pishiriq", icon: "🍞" }, { id: "sut_s", label: "Sut/Tuxum", icon: "🥛" }, { id: "boshqa_s", label: "Mayda", icon: "🍬" } ]},
               { id: "bozor", label: "Bozor", icon: "⚖️", items: [ { id: "gosht_b", label: "Go'sht", icon: "🥩" }, { id: "meva_b", label: "Sabzavot", icon: "🍅" }, { id: "rozgor_b", label: "Ro'zg'or", icon: "🛍️" } ]},
               { id: "dokon", label: "Do'kon", icon: "🏪", items: []}, { id: "kafe", label: "Kafe", icon: "🍔", items: [] } 
           ]},
-          { id: "uy", label: "Uy / Kommunal", icon: "🏠", color: "#FBBF24", subs: [ 
+          { id: "uy", label: "Uy/Kommunal", icon: "🏠", color: "#FBBF24", subs: [ 
               { id: "kommunal", label: "Kommunal", icon: "🧾", items: [ { id: "svet", label: "Svet", icon: "⚡" }, { id: "gaz", label: "Gaz", icon: "🔥" }, { id: "suv", label: "Suv", icon: "💧" }, { id: "musor", label: "Chiqindi", icon: "🧹" } ]},
-              { id: "aloqa", label: "Internet/Aloqa", icon: "📡", items: []}, { id: "jihoz", label: "Jihoz/Ta'mir", icon: "🛠️", items: []}, { id: "xoja", label: "Xo'jalik", icon: "🧽", items: []}
+              { id: "aloqa", label: "Internet/Tel", icon: "📡", items: []}, { id: "jihoz", label: "Ta'mir/Mebel", icon: "🛠️", items: []}, { id: "xoja", label: "Xo'jalik", icon: "🧽", items: []}
           ]},
           { id: "avto", label: "Jetour Avto", icon: "🚗", color: "#2196F3", subs: [ 
-              { id: "zapravka", label: "Yoqilg'i", icon: "⛽", items: []}, { id: "servis", label: "Usta/Zapchast", icon: "🔧", items: []}, { id: "moyka", label: "Moyka", icon: "🧼", items: []}, { id: "tyun", label: "Tyuning", icon: "🛡️", items: []}
+              { id: "zapravka", label: "Yoqilg'i", icon: "⛽", items: []}, { id: "servis", label: "Usta/Zapchast", icon: "🔧", items: []}, { id: "moyka", label: "Moyka", icon: "🧼", items: []}, { id: "tyun", label: "Tyuning/Hujjat", icon: "🛡️", items: []}
           ]},
           { id: "biznes", label: "IMSOA Biznes", icon: "🏢", color: "#607D8B", subs: [ 
               { id: "xom", label: "Xomashyo", icon: "🧱", items: []}, { id: "ishchi", label: "Ishchilar", icon: "👨‍🏭", items: []}, { id: "obyekt", label: "Obyekt xarajati", icon: "🏭", items: []}
           ]},
-          { id: "soglik", label: "Sog'liq/Go'zallik", icon: "💊", color: "#34D399", subs: [ { id: "apteka", label: "Apteka", icon: "🏥", items: []}, { id: "shifo", label: "Shifokor", icon: "🩺", items: []}, { id: "salon", label: "Go'zallik Saloni", icon: "✂️", items: []} ]},
-          { id: "boshqa", label: "Boshqa", icon: "📦", color: "#94A3B8", subs: [ { id: "majbur", label: "Kredit/Qarz", icon: "🏦", items: []}, { id: "ehson", label: "Ehson/Xayriya", icon: "🤲", items: []}, { id: "kutilmagan", label: "Kutilmagan", icon: "❓", items: []} ]}
+          { id: "soglik", label: "Sog'liq", icon: "💊", color: "#34D399", subs: [ { id: "apteka", label: "Apteka", icon: "🏥", items: []}, { id: "shifo", label: "Shifokor", icon: "🩺", items: []}, { id: "salon", label: "Go'zallik Saloni", icon: "✂️", items: []} ]},
+          { id: "boshqa", label: "Boshqa", icon: "📦", color: "#94A3B8", subs: [ { id: "majbur", label: "Kredit/Qarz", icon: "🏦", items: []}, { id: "ehson", label: "Ehson", icon: "🤲", items: []}, { id: "kutilmagan", label: "Kutilmagan", icon: "❓", items: []} ]}
         ];
 
-        // 7-17 Yosh (O'g'il bolalar uchun) - ILYOS
         const CATS_TEEN_M = [
-          { id: "talim", label: "Ta'lim/Maktab", icon: "📚", color: "#8B5CF6", subs: [ { id: "maktab", label: "Maktab/Kanselyariya", icon: "🎒", items: [] }, { id: "rep", label: "Repetitor/Kurs", icon: "👨‍🏫", items: [] } ]},
+          { id: "talim", label: "Maktab/Kurs", icon: "📚", color: "#8B5CF6", subs: [ { id: "maktab", label: "Kanselyariya", icon: "🎒", items: [] }, { id: "rep", label: "Repetitor/Kurs", icon: "👨‍🏫", items: [] } ]},
           { id: "kiyim_m", label: "Kiyim-kechak", icon: "👕", color: "#2196F3", subs: [ { id: "maktab_k", label: "Maktab formasi", icon: "👔", items: [] }, { id: "sport", label: "Sport kiyimi", icon: "🥋", items: [] }, { id: "oyoq", label: "Poyabzal", icon: "👟", items: [] } ]},
           { id: "texnika", label: "Gadjet/Texnika", icon: "💻", color: "#607D8B", subs: [ { id: "tel", label: "Telefon/Aksessuar", icon: "📱", items: [] }, { id: "ps", label: "O'yinlar/PS", icon: "🎮", items: [] } ]},
           { id: "chontak", label: "Cho'ntak puli", icon: "💵", color: "#10B981", subs: [] },
-          { id: "soglik", label: "Shifokor/Dori", icon: "💊", color: "#EF4444", subs: [] },
-          { id: "kngil", label: "Park/Ko'ngilochar", icon: "🎢", color: "#FF6B6B", subs: [] }
+          { id: "kngil", label: "Ko'ngilochar", icon: "🎢", color: "#FF6B6B", subs: [] }, { id: "soglik", label: "Shifokor/Dori", icon: "💊", color: "#EF4444", subs: [] }
         ];
 
-        // 7-17 Yosh (Qiz bolalar uchun) - SEVINCH
         const CATS_TEEN_F = [
-          { id: "talim", label: "Ta'lim/Maktab", icon: "📚", color: "#8B5CF6", subs: [ { id: "maktab", label: "Maktab/Kanselyariya", icon: "🎒", items: [] }, { id: "rep", label: "Repetitor/Kurs", icon: "👩‍🏫", items: [] } ]},
+          { id: "talim", label: "Maktab/Kurs", icon: "📚", color: "#8B5CF6", subs: [ { id: "maktab", label: "Kanselyariya", icon: "🎒", items: [] }, { id: "rep", label: "Repetitor/Kurs", icon: "👩‍🏫", items: [] } ]},
           { id: "kiyim_f", label: "Kiyim-kechak", icon: "👗", color: "#E91E63", subs: [ { id: "maktab_k", label: "Maktab formasi", icon: "👚", items: [] }, { id: "kundalik", label: "Kundalik kiyim", icon: "👗", items: [] }, { id: "oyoq", label: "Poyabzal", icon: "🥿", items: [] } ]},
-          { id: "gozallik", label: "Go'zallik/Parvarish", icon: "💅", color: "#F48FB1", subs: [ { id: "kosmetika", label: "Kosmetika", icon: "💄", items: [] }, { id: "aks", label: "Zirak/Aksessuar", icon: "💍", items: [] }, { id: "salon", label: "Salon xizmati", icon: "✂️", items: [] } ]},
+          { id: "gozallik", label: "Go'zallik", icon: "💅", color: "#F48FB1", subs: [ { id: "kosmetika", label: "Kosmetika", icon: "💄", items: [] }, { id: "aks", label: "Zirak/Aksessuar", icon: "💍", items: [] }, { id: "salon", label: "Salon", icon: "✂️", items: [] } ]},
           { id: "chontak", label: "Cho'ntak puli", icon: "💵", color: "#10B981", subs: [] },
-          { id: "soglik", label: "Shifokor/Dori", icon: "💊", color: "#EF4444", subs: [] },
-          { id: "kngil", label: "Kafe/Dugonalar", icon: "🍕", color: "#FF6B6B", subs: [] }
+          { id: "kngil", label: "Dugonalar/Kafe", icon: "🍕", color: "#FF6B6B", subs: [] }, { id: "soglik", label: "Shifokor/Dori", icon: "💊", color: "#EF4444", subs: [] }
         ];
 
-        // 0-6 Yosh (Chaqaloqlar)
         const CATS_BABY = [
           { id: "bogcha", label: "Bog'cha To'lovi", icon: "🏫", color: "#8B5CF6", subs: [] },
           { id: "taglik", label: "Pampers/Gigiyena", icon: "🧻", color: "#34D399", subs: [] },
-          { id: "ovqat", label: "Maxsus ovqat/Bo'tqa", icon: "🍼", color: "#FF6B6B", subs: [] },
+          { id: "ovqat", label: "Maxsus ovqat", icon: "🍼", color: "#FF6B6B", subs: [] },
           { id: "oyinchoq", label: "O'yinchoqlar", icon: "🧸", color: "#FBBF24", subs: [] },
           { id: "kiyim", label: "Bolalar kiyimi", icon: "👕", color: "#2196F3", subs: [] },
           { id: "soglik", label: "Shifokor/Dori", icon: "💊", color: "#EF4444", subs: [] }
         ];
 
-        // Kattalar (Ayollar uchun qo'shimcha)
         const CATS_ADULT_F = [
           { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B", subs: [ { id: "supermarket", label: "Supermarket", icon: "🏪", items: []}, { id: "bozor", label: "Bozor", icon: "⚖️", items: []} ]},
           { id: "uy", label: "Uy / Xo'jalik", icon: "🏠", color: "#FBBF24", subs: [ { id: "kommunal", label: "Kommunal", icon: "🧾", items: []}, { id: "xoja", label: "Xo'jalik/Tozalik", icon: "🧽", items: []} ]},
-          { id: "gozallik", label: "Go'zallik/Salon", icon: "💅", color: "#E91E63", subs: [ { id: "salon", label: "Go'zallik Saloni", icon: "✂️", items: []}, { id: "kosmetika", label: "Kosmetika/Atir", icon: "💄", items: []} ]},
+          { id: "gozallik", label: "Go'zallik/Salon", icon: "💅", color: "#E91E63", subs: [ { id: "salon", label: "Go'zallik Saloni", icon: "✂️", items: []}, { id: "kosmetika", label: "Kosmetika", icon: "💄", items: []} ]},
           { id: "kiyim", label: "Ayollar kiyimi", icon: "👗", color: "#F48FB1", subs: []},
           { id: "soglik", label: "Sog'liq", icon: "💊", color: "#34D399", subs: []},
-          { id: "boshqa", label: "Boshqa/Kredit", icon: "📦", color: "#94A3B8", subs: [] }
+          { id: "boshqa", label: "Kredit/Boshqa", icon: "📦", color: "#94A3B8", subs: [] }
         ];
 
         const INCOME_SOURCES = [ { id: "maosh", label: "Oylik maosh", icon: "💼" }, { id: "imsoa_k", label: "IMSOA foyda", icon: "💰" }, { id: "boshqa_k", label: "Qo'shimcha", icon: "🎁" } ];
         const OY_NOMLARI = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
 
-        let state = { 
-            profiles: [{ id: "general", name: "Umumiy", icon: "🏠", age: null, gender: "male" }],
-            transactions: [], incomes: [], debts: [] 
-        };
+        let state = { profiles: [{ id: "general", name: "Umumiy", icon: "🏠", age: null, role: "parent_m" }], transactions: [], incomes: [], debts: [], scheduled: [] };
         let currentProfileId = "general";
         let currentTab = "home"; let addMode = "expense"; let accountType = "card"; let transferDir = "card-to-cash";
         let activeMainCat = null; let activeSubCat = null; 
@@ -277,28 +306,18 @@
         function getVal(id) { const el = document.getElementById(id); return el ? el.value : ""; }
 
         try { if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.first_name) { telegramUserName = tg.initDataUnsafe.user.first_name; } } catch(e) {}
-
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById("toast-msg"); if(!toast) return;
-            toast.innerText = msg; toast.style.background = isError ? "#EF4444" : "#10B981";
-            toast.style.display = "block"; setTimeout(() => { toast.style.display = "none"; }, 2500);
-        }
+        function showToast(msg, isError = false) { const toast = document.getElementById("toast-msg"); if(!toast) return; toast.innerText = msg; toast.style.background = isError ? "#EF4444" : "#10B981"; toast.style.display = "block"; setTimeout(() => { toast.style.display = "none"; }, 2500); }
 
         function init() {
-            const raw = localStorage.getItem("xarajat_erp_v2");
-            if (raw) { 
-                try { state = JSON.parse(raw); } catch(e) {} 
-            } else {
-                const oldRaw = localStorage.getItem("xarajat_erp_v1");
-                if (oldRaw) { try { state = JSON.parse(oldRaw); } catch(e) {} }
-            }
-            if (!state.profiles) state.profiles = [{ id: "general", name: "Umumiy", icon: "🏠", age: null, gender: "male" }];
-            if (!state.transactions) state.transactions = []; if (!state.incomes) state.incomes = []; if (!state.debts) state.debts = [];
-            renderProfilesBar();
-            render();
+            const raw = localStorage.getItem("xarajat_erp_v3");
+            if (raw) { try { state = JSON.parse(raw); } catch(e) {} }
+            if (!state.profiles) state.profiles = [{ id: "general", name: "Umumiy", icon: "🏠", age: null, role: "parent_m" }];
+            state.profiles.forEach(p => { if(!p.planned) p.planned = []; }); // Plan array
+            if (!state.transactions) state.transactions = []; if (!state.incomes) state.incomes = []; if (!state.debts) state.debts = []; if (!state.scheduled) state.scheduled = [];
+            renderProfilesBar(); render();
         }
 
-        function saveState() { localStorage.setItem("xarajat_erp_v2", JSON.stringify(state)); render(); }
+        function saveState() { localStorage.setItem("xarajat_erp_v3", JSON.stringify(state)); render(); }
 
         // PROFILES MANAGEMENT
         function renderProfilesBar() {
@@ -310,73 +329,61 @@
                     <div class="profile-name">${p.name}</div>
                 </div>`;
             });
-            html += `<div class="profile-item" onclick="openProfileModal()">
-                <div class="profile-avatar" style="border-style:dashed;">➕</div>
-                <div class="profile-name">Qo'shish</div>
-            </div>`;
+            html += `<div class="profile-item" onclick="openProfileModal()"><div class="profile-avatar" style="border-style:dashed;">➕</div><div class="profile-name">Qo'shish</div></div>`;
             setHtml("profiles-container", html);
         }
 
         window.selectProfile = function(id) {
             currentProfileId = id;
-            const prof = state.profiles.find(p => p.id === id);
-            setTxt("home-history-title", `Bugun (${prof.name}):`);
-            setTxt("report-title-text", `📊 Hisobot: ${prof.name}`);
             activeMainCat = null; activeSubCat = null; 
-            renderProfilesBar();
-            updateInputModes(); // Yoshga qarab tugmalarni tekshirish
-            render();
+            renderProfilesBar(); applyAccessRules(); render();
         }
 
         window.openProfileModal = function() { document.getElementById("modal-overlay").style.display = "flex"; }
         window.closeProfileModal = function() { document.getElementById("modal-overlay").style.display = "none"; }
         
         window.saveNewProfile = function() {
-            const name = getVal("prof-name").trim();
-            const age = parseInt(getVal("prof-age"));
-            const gender = getVal("prof-gender");
-            const emoji = getVal("prof-emoji").trim() || (gender === 'female' ? "👧" : "👦");
+            const name = getVal("prof-name").trim(); const age = parseInt(getVal("prof-age")); const role = getVal("prof-role");
+            let emoji = getVal("prof-emoji").trim();
+            if(!emoji) emoji = role.endsWith('_f') ? "👧" : "👦";
             if(!name) { showToast("Profil ismini kiriting!", true); return; }
             
-            const newProf = { id: "p_" + Date.now(), name: name, age: isNaN(age) ? null : age, gender: gender, icon: emoji };
+            const newProf = { id: "p_" + Date.now(), name: name, age: isNaN(age) ? null : age, role: role, icon: emoji, planned: [] };
             state.profiles.push(newProf);
-            closeProfileModal();
-            setVal("prof-name", ""); setVal("prof-age", ""); setVal("prof-emoji", "");
-            saveState(); renderProfilesBar(); showToast("Profil yaratildi!");
+            closeProfileModal(); setVal("prof-name", ""); setVal("prof-age", ""); setVal("prof-emoji", "");
+            saveState(); renderProfilesBar(); showToast("Profil qo'shildi!");
         }
 
-        // BOLALAR UCHUN KIRIM TUGMALARINI YASHIRISH LOGIKASI
-        function updateInputModes() {
+        // ISOLATION RULES (16 yoshdan kichiklar uchun)
+        function applyAccessRules() {
             const prof = state.profiles.find(p => p.id === currentProfileId);
-            const isChild = prof && prof.age !== null && prof.age < 18 && currentProfileId !== "general";
+            const isChild = prof && prof.age !== null && prof.age < 16 && prof.id !== "general";
 
-            if (isChild) {
-                document.getElementById("mode-inc").style.display = "none";
-                document.getElementById("mode-trn").style.display = "none";
-                if(addMode !== "expense") setAddMode("expense");
-            } else {
-                document.getElementById("mode-inc").style.display = "block";
-                document.getElementById("mode-trn").style.display = "block";
-            }
+            // 1. Hide Qarz tab
+            document.getElementById("btn-debts").style.display = isChild ? "none" : "block";
+            if(isChild && currentTab === "debts") switchTab("home");
+
+            // 2. Hide Kirim & Transfer inside Add Tab
+            document.getElementById("mode-inc").style.display = isChild ? "none" : "block";
+            document.getElementById("mode-trn").style.display = isChild ? "none" : "block";
+            if(isChild && addMode !== "expense") setAddMode("expense");
+
+            // 3. Hide User Stats in Report and Income card in Report
+            document.getElementById("user-stats-wrapper").style.display = (currentProfileId === "general") ? "block" : "none";
+            document.getElementById("report-inc-card").style.display = isChild ? "none" : "block";
         }
 
         window.switchTab = function(tabId) {
             currentTab = tabId;
             document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
             const activeBtn = document.getElementById("btn-" + tabId); if(activeBtn) activeBtn.classList.add("active");
-            
-            ["home", "add", "debts", "report"].forEach(t => {
-                const el = document.getElementById("tab-"+t);
-                if(el) el.style.display = t === tabId ? "block" : "none";
-            });
-            if(tabId === 'add') updateInputModes();
+            ["home", "add", "debts", "report"].forEach(t => { const el = document.getElementById("tab-"+t); if(el) el.style.display = t === tabId ? "block" : "none"; });
+            if(tabId === 'add') applyAccessRules();
             render();
         }
 
         window.pressNum = function(val) {
-            if (val === "C") amountStr = "";
-            else if (val === "⌫") amountStr = amountStr.slice(0, -1);
-            else if (amountStr.length < 10) amountStr += val;
+            if (val === "C") amountStr = ""; else if (val === "⌫") amountStr = amountStr.slice(0, -1); else if (amountStr.length < 10) amountStr += val;
             setTxt("num-display", amountStr ? new Intl.NumberFormat("uz-UZ").format(parseInt(amountStr)) : "0");
         }
 
@@ -393,37 +400,76 @@
             setHtml("stay-hint", ""); renderCats();
         }
 
-        window.setAccountType = function(acc) {
-            accountType = acc;
-            document.getElementById("acc-card").style.border = acc === "card" ? "1px solid #3b82f6" : "none";
-            document.getElementById("acc-cash").style.border = acc === "cash" ? "1px solid #10b981" : "none";
-        }
-
+        window.setAccountType = function(acc) { accountType = acc; document.getElementById("acc-card").style.border = acc === "card" ? "1px solid #3b82f6" : "none"; document.getElementById("acc-cash").style.border = acc === "cash" ? "1px solid #10b981" : "none"; }
+        window.setTransferDir = function(dir) { transferDir = dir; document.getElementById("trn-dir-card-cash").style.background = dir === "card-to-cash" ? "#3b82f6" : "#1e293b"; document.getElementById("trn-dir-card-cash").style.border = dir === "card-to-cash" ? "1px solid #3b82f6" : "none"; document.getElementById("trn-dir-cash-card").style.background = dir === "cash-to-card" ? "#3b82f6" : "#1e293b"; document.getElementById("trn-dir-cash-card").style.border = dir === "cash-to-card" ? "1px solid #3b82f6" : "none"; }
+        window.setDebtAccount = function(acc) { debtAccount = acc; document.getElementById("debt-acc-card").style.border = acc === "card" ? "1px solid #3b82f6" : "none"; document.getElementById("debt-acc-cash").style.border = acc === "cash" ? "1px solid #10b981" : "none"; }
+        window.setDebtType = function(type) { debtType = type; document.getElementById("debt-type-take").style.background = type === "take" ? "#84cc16" : "#334155"; document.getElementById("debt-type-give").style.background = type === "give" ? "#ef4444" : "#334155"; }
         function formatMoney(n) { return new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm"; }
 
-        // AI CATEGORY SELECTOR based on Age & Gender
+        // PLANNED ITEMS (WISHLIST)
+        window.addPlannedItem = function() {
+            const text = getVal("new-plan-input").trim(); if(!text) return;
+            const prof = state.profiles.find(p=>p.id===currentProfileId);
+            prof.planned.push({ id: Date.now().toString(), text: text });
+            setVal("new-plan-input", ""); saveState(); showToast("Planga qo'shildi!");
+        }
+        window.deletePlannedItem = function(id) {
+            const prof = state.profiles.find(p=>p.id===currentProfileId);
+            prof.planned = prof.planned.filter(x=>x.id!==id);
+            saveState(); showToast("Plandan o'chirildi!");
+        }
+
+        // SCHEDULED PAYMENTS
+        window.toggleScheduledSetup = function() { const p = document.getElementById("scheduled-setup-panel"); if(p) p.style.display = p.style.display === "none" ? "block" : "none"; renderScheduledSettings(); }
+        window.addScheduled = function() {
+            const name = getVal("sched-new-name").trim(); const day = parseInt(getVal("sched-new-day")); const amt = parseFloat(getVal("sched-new-amount"));
+            if(!name || !day || day < 1 || day > 31 || !amt) { showToast("Ma'lumotlarni to'g'ri kiriting!", true); return; }
+            state.scheduled.push({ id: Date.now().toString(), label: name, day: day, amount: amt, dismissedMonth: "", profileId: currentProfileId });
+            setVal("sched-new-name", ""); setVal("sched-new-day", ""); setVal("sched-new-amount", ""); saveState(); renderScheduledSettings(); showToast("Reja qo'shildi!");
+        }
+        window.deleteScheduled = function(id) { state.scheduled = state.scheduled.filter(s => s.id !== id); saveState(); renderScheduledSettings(); showToast("Reja o'chirildi!"); }
+        function renderScheduledSettings() {
+            let html = "";
+            const mySched = state.scheduled.filter(s => s.profileId === currentProfileId || (!s.profileId && currentProfileId==='general'));
+            mySched.forEach(s => {
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:6px; border-radius:6px; margin-bottom:4px; border:1px solid #334155; font-size:12px;">
+                    <span><b>${s.label}</b> (${s.day}-sana, ${formatMoney(s.amount).replace(" so'm","")})</span>
+                    <button onclick="deleteScheduled('${s.id}')" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;">✕</button>
+                </div>`;
+            });
+            setHtml("scheduled-edit-list", html || "<div style='color:#64748b; font-size:11px;'>Ro'yxat bo'sh.</div>");
+        }
+        window.dismissScheduled = function(id) { const currentMonth = new Date().toISOString().slice(0, 7); const item = state.scheduled.find(x => x.id === id); if(item) { item.dismissedMonth = currentMonth; saveState(); showToast("Bu oy uchun yashirildi!"); } }
+        function getDaysUntilDay(targetDay) { const now = new Date(); const today = now.getDate(); if (today <= targetDay) return targetDay - today; return Math.ceil((new Date(now.getFullYear(), now.getMonth() + 1, targetDay) - now) / 86400000); }
+
         function getCurrentProfileCategories() {
             if(currentProfileId === "general") return CATS_GENERAL;
             const prof = state.profiles.find(p => p.id === currentProfileId);
             if(!prof) return CATS_GENERAL;
-
-            const isFemale = prof.gender === 'female';
+            const isFemale = prof.role && prof.role.endsWith('_f');
             const age = prof.age !== null ? prof.age : 30;
-
+            if(prof.role === 'parent_m') return CATS_GENERAL;
+            if(prof.role === 'parent_f') return CATS_ADULT_F;
             if(age <= 6) return CATS_BABY;
             if(age >= 7 && age <= 17) return isFemale ? CATS_TEEN_F : CATS_TEEN_M;
             return isFemale ? CATS_ADULT_F : CATS_GENERAL;
         }
 
         function render() {
-            const cashInc = state.incomes.filter(i => i.account === 'cash').reduce((s,i) => s + i.amount, 0);
-            const cardInc = state.incomes.filter(i => i.account !== 'cash').reduce((s,i) => s + i.amount, 0);
-            const cashExp = state.transactions.filter(t => t.account === 'cash').reduce((s,t) => s + t.amount, 0);
-            const cardExp = state.transactions.filter(t => t.account !== 'cash').reduce((s,t) => s + t.amount, 0);
+            const cashInc = state.incomes.filter(i => i.account === 'cash').reduce((s,i) => s + i.amount, 0); const cardInc = state.incomes.filter(i => i.account !== 'cash').reduce((s,i) => s + i.amount, 0);
+            const cashExp = state.transactions.filter(t => t.account === 'cash').reduce((s,t) => s + t.amount, 0); const cardExp = state.transactions.filter(t => t.account !== 'cash').reduce((s,t) => s + t.amount, 0);
+            setTxt("main-total-balance", formatMoney(cashInc - cashExp + cardInc - cardExp)); setTxt("main-card-balance", formatMoney(cardInc - cardExp)); setTxt("main-cash-balance", formatMoney(cashInc - cashExp));
 
-            setTxt("main-total-balance", formatMoney(cashInc - cashExp + cardInc - cardExp));
-            setTxt("main-card-balance", formatMoney(cardInc - cardExp));
-            setTxt("main-cash-balance", formatMoney(cashInc - cashExp));
+            const currentMonth = new Date().toISOString().slice(0, 7);
+            let schedCode = "";
+            const mySched = state.scheduled.filter(s => s.profileId === currentProfileId || (!s.profileId && currentProfileId==='general'));
+            mySched.forEach(s => {
+                const days = getDaysUntilDay(s.day);
+                if (days <= 3 && s.dismissedMonth !== currentMonth) {
+                    schedCode += `<div class="scheduled-item" onclick="dismissScheduled('${s.id}')"><span>⚠️ <b>${s.label}</b> (${formatMoney(s.amount)})</span><span style="font-weight:bold;">${days} kun qoldi ✕</span></div>`;
+                }
+            });
+            setHtml("scheduled-list-container", schedCode);
 
             if (currentTab === "home") renderHome();
             if (currentTab === "add") renderCats();
@@ -432,192 +478,146 @@
         }
 
         function renderHome() {
-            const todayStr = new Date().toISOString().slice(0, 10);
-            const myTxs = state.transactions.filter(t => t.date === todayStr && (t.profileId === currentProfileId || !t.profileId));
-            const myIncs = state.incomes.filter(i => i.date === todayStr && (i.profileId === currentProfileId || !i.profileId));
-            const combined = [...myIncs.map(i => ({...i, mode: 'plus'})), ...myTxs.map(t => ({...t, mode: 'minus'}))].sort((a,b) => b.id - a.id).slice(0, 5);
+            const prof = state.profiles.find(p => p.id === currentProfileId);
+            const isChild = prof && prof.age !== null && prof.age < 16 && prof.id !== "general";
 
-            let homeListCode = "";
-            if(combined.length === 0) { homeListCode = `<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>${state.profiles.find(p=>p.id===currentProfileId).name} uchun bugun amal yo'q.</div>`; } 
-            else {
-                combined.forEach(item => {
-                    const color = item.mode === 'plus' ? '#10b981' : (item.cat === "O'tkazma" ? '#3b82f6' : '#f472b6');
-                    const sign = item.mode === 'plus' ? '+' : '-';
-                    homeListCode += `<div class="history-item">
-                        <div>
-                            <div style="font-weight:bold; color:${item.mode==='plus'?'#10b981':'#fff'}">${item.desc}</div>
-                            <div style="font-size:10px; color:#64748b;">👤 ${item.user || 'Siz'} | ${item.subCat ? '['+item.subCat+']' : item.cat}</div>
-                        </div>
-                        <div style="color:${color}; font-weight:bold; margin-left:auto;">${sign}${formatMoney(item.amount).replace(" so'm", "")}</div>
-                        <button class="delete-btn" onclick="deleteItem('${item.mode==='minus'?'tx':'inc'}', ${item.id})">✕</button>
+            if (isChild) {
+                document.getElementById("today-expenses-section").style.display = "none";
+                document.getElementById("planned-expenses-section").style.display = "block";
+                let planHtml = "";
+                prof.planned.forEach(p => {
+                    planHtml += `<div class="plan-item">
+                        <span>🛒 <b>${p.text}</b></span>
+                        <button onclick="deletePlannedItem('${p.id}')" style="background:#10b981; border:none; color:#fff; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer;">Olib berildi ✅</button>
                     </div>`;
                 });
+                setHtml("planned-list-container", planHtml || "<div style='color:#64748b; font-size:11px; text-align:center;'>Ro'yxat bo'sh. Olib berilishi kerak bo'lgan narsalarni qo'shing.</div>");
+            } else {
+                document.getElementById("today-expenses-section").style.display = "block";
+                document.getElementById("planned-expenses-section").style.display = "none";
+                const todayStr = new Date().toISOString().slice(0, 10);
+                const myTxs = state.transactions.filter(t => t.date === todayStr && (t.profileId === currentProfileId || !t.profileId));
+                const myIncs = state.incomes.filter(i => i.date === todayStr && (i.profileId === currentProfileId || !i.profileId));
+                const combined = [...myIncs.map(i => ({...i, mode: 'plus'})), ...myTxs.map(t => ({...t, mode: 'minus'}))].sort((a,b) => b.id - a.id).slice(0, 5);
+                let homeListCode = "";
+                if(combined.length === 0) { homeListCode = `<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>${prof.name} uchun bugun amal yo'q.</div>`; } 
+                else {
+                    combined.forEach(item => {
+                        const color = item.mode === 'plus' ? '#10b981' : (item.cat === "O'tkazma" ? '#3b82f6' : '#f472b6');
+                        const sign = item.mode === 'plus' ? '+' : '-';
+                        homeListCode += `<div class="history-item">
+                            <div><div style="font-weight:bold; color:${item.mode==='plus'?'#10b981':'#fff'}">${item.desc}</div><div style="font-size:10px; color:#64748b;">👤 ${item.user || 'Siz'} | ${item.subCat ? '['+item.subCat+']' : item.cat}</div></div>
+                            <div style="color:${color}; font-weight:bold; margin-left:auto;">${sign}${formatMoney(item.amount).replace(" so'm", "")}</div>
+                            <button class="delete-btn" onclick="deleteItem('${item.mode==='minus'?'tx':'inc'}', ${item.id})">✕</button>
+                        </div>`;
+                    });
+                }
+                setHtml("home-today-list", homeListCode);
             }
-            setHtml("home-today-list", homeListCode);
+            setTxt("session-count", sessionData.length);
         }
 
         function renderCats() {
             if(addMode === "transfer") return;
             const container = document.getElementById("cats-container"); if(!container) return;
-            
             if (addMode === "income") {
-                let code = "<div class='cat-grid'>";
-                INCOME_SOURCES.forEach(s => { code += `<button class="cat-grid-btn" style="background:#1e293b; border:1px solid #334155;" onclick="finalSelect('${s.label}')"><span style="font-size:20px;">${s.icon}</span><span>${s.label}</span></button>`; });
+                let code = "<div class='cat-grid'>"; INCOME_SOURCES.forEach(s => { code += `<button class="cat-grid-btn" style="background:#1e293b; border:1px solid #334155;" onclick="finalSelect('${s.label}')"><span style="font-size:20px;">${s.icon}</span><span>${s.label}</span></button>`; });
                 container.innerHTML = code + "</div>"; return;
             }
-            
             const currentCats = getCurrentProfileCategories();
-
             if (activeSubCat) {
                 let code = `<div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-size:11px; color:#94a3b8;">${activeMainCat.label} ➔ <b style="color:#fff">${activeSubCat.label}</b></span><button onclick="backToMainCats()" style="background:#475569; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">⬅ Orqaga</button></div><div class='sub-grid'>`;
-                activeSubCat.items.forEach(item => { 
-                    code += `<button class="cat-grid-btn" style="background:#3b82f6;" onclick="finalSelect('${item.label}')"><span style="font-size:22px;">${item.icon}</span><span>${item.label}</span></button>`; 
-                });
+                activeSubCat.items.forEach(item => { code += `<button class="cat-grid-btn" style="background:#3b82f6;" onclick="finalSelect('${item.label}')"><span style="font-size:22px;">${item.icon}</span><span>${item.label}</span></button>`; });
                 container.innerHTML = code + `</div></div>`;
-            } 
-            else if (activeMainCat && activeMainCat.subs && activeMainCat.subs.length > 0) {
+            } else if (activeMainCat && activeMainCat.subs && activeMainCat.subs.length > 0) {
                 let code = `<div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-size:12px; color:#94a3b8;">Rukun: <b>${activeMainCat.label}</b></span><button onclick="backToMainCats()" style="background:#475569; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">⬅ Orqaga</button></div><div class='sub-grid'>`;
-                activeMainCat.subs.forEach(sub => { 
-                    const isFolder = sub.items && sub.items.length > 0;
-                    const action = isFolder ? `clickSubCat('${sub.id}')` : `finalSelect('${sub.label}')`;
-                    const fIcon = isFolder ? "📂" : "";
-                    code += `<button class="cat-grid-btn" style="background:#334155;" onclick="${action}"><span style="font-size:22px;">${sub.icon}</span><span>${sub.label} <br/>${fIcon}</span></button>`; 
-                });
+                activeMainCat.subs.forEach(sub => { const isFolder = sub.items && sub.items.length > 0; const action = isFolder ? `clickSubCat('${sub.id}')` : `finalSelect('${sub.label}')`; const fIcon = isFolder ? "📂" : ""; code += `<button class="cat-grid-btn" style="background:#334155;" onclick="${action}"><span style="font-size:22px;">${sub.icon}</span><span>${sub.label} <br/>${fIcon}</span></button>`; });
                 container.innerHTML = code + `<button class="cat-grid-btn" style="background:#4b5563;" onclick="finalSelect('${activeMainCat.label}')"><span style="font-size:22px;">⚙️</span><span>Umumiy</span></button></div></div>`;
-            } 
-            else {
-                let code = "<div class='cat-grid'>";
-                currentCats.forEach(c => { code += `<button class="cat-grid-btn" style="background:${c.color};" onclick="clickMainCat('${c.id}')"><span style="font-size:20px;">${c.icon}</span><span>${c.label}</span></button>`; });
+            } else {
+                let code = "<div class='cat-grid'>"; currentCats.forEach(c => { code += `<button class="cat-grid-btn" style="background:${c.color};" onclick="clickMainCat('${c.id}')"><span style="font-size:20px;">${c.icon}</span><span>${c.label}</span></button>`; });
                 container.innerHTML = code + "</div>";
             }
         }
 
-        window.clickMainCat = function(id) {
-            const currentCats = getCurrentProfileCategories();
-            const cat = currentCats.find(c => c.id === id);
-            if (cat && cat.subs && cat.subs.length > 0) { activeMainCat = cat; renderCats(); setHtml("stay-hint",""); }
-            else if(cat) { finalSelect(cat.label); }
-        }
-
-        window.clickSubCat = function(id) {
-            const sub = activeMainCat.subs.find(s => s.id === id);
-            if(sub && sub.items && sub.items.length > 0) { activeSubCat = sub; renderCats(); setHtml("stay-hint",""); }
-            else { finalSelect(sub ? sub.label : 'Xato'); }
-        }
-
-        window.backToMainCats = function() { 
-            if(activeSubCat) { activeSubCat = null; } 
-            else { activeMainCat = null; }
-            setHtml("stay-hint",""); renderCats(); 
-        }
+        window.clickMainCat = function(id) { const currentCats = getCurrentProfileCategories(); const cat = currentCats.find(c => c.id === id); if (cat && cat.subs && cat.subs.length > 0) { activeMainCat = cat; renderCats(); setHtml("stay-hint",""); } else if(cat) { finalSelect(cat.label); } }
+        window.clickSubCat = function(id) { const sub = activeMainCat.subs.find(s => s.id === id); if(sub && sub.items && sub.items.length > 0) { activeSubCat = sub; renderCats(); setHtml("stay-hint",""); } else { finalSelect(sub ? sub.label : 'Xato'); } }
+        window.backToMainCats = function() { if(activeSubCat) { activeSubCat = null; } else { activeMainCat = null; } setHtml("stay-hint",""); renderCats(); }
 
         window.finalSelect = function(label) {
             const amt = parseFloat(amountStr); if (!amt || amt <= 0) { showToast("Summani kiriting!", true); return; }
-            const d = new Date(); const descEl = document.getElementById("add-desc");
-            let finalDesc = descEl && descEl.value.trim() ? descEl.value.trim() : "";
-            
-            if(!finalDesc) {
-                if(label === "Oylik maosh") finalDesc = OY_NOMLARI[d.getMonth()] + " oyligi";
-                else finalDesc = label; 
-            }
-
-            let path = "";
-            if (activeSubCat) path = activeSubCat.label + " ➔ " + label;
-            else if (activeMainCat) path = label;
-
-            const item = {
-                id: Date.now(), amount: amt, desc: finalDesc,
-                cat: activeMainCat ? activeMainCat.label : label, 
-                subCat: path,
-                account: accountType, date: d.toISOString().slice(0, 10), time: d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }), 
-                user: telegramUserName, profileId: currentProfileId 
-            };
+            const d = new Date(); const descEl = document.getElementById("add-desc"); let finalDesc = descEl && descEl.value.trim() ? descEl.value.trim() : "";
+            if(!finalDesc) { if(label === "Oylik maosh") finalDesc = OY_NOMLARI[d.getMonth()] + " oyligi"; else finalDesc = label; }
+            let path = ""; if (activeSubCat) path = activeSubCat.label + " ➔ " + label; else if (activeMainCat) path = label;
+            const item = { id: Date.now(), amount: amt, desc: finalDesc, cat: activeMainCat ? activeMainCat.label : label, subCat: path, account: accountType, date: d.toISOString().slice(0, 10), time: d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }), user: telegramUserName, profileId: currentProfileId };
             if (addMode === "expense") state.transactions.unshift(item); else state.incomes.unshift(item);
-            
-            amountStr = ""; if(descEl) descEl.value = ""; setTxt("num-display", "0");
-            saveState(); 
-
-            if (activeSubCat || activeMainCat) {
-                setHtml("stay-hint", `✅ Oxirgi: <b>${formatMoney(amt)}</b> (${label}). Yana kiriting yoki Orqaga bosing!`);
-                renderCats();
-            } else { setHtml("stay-hint", ""); }
+            const profName = state.profiles.find(p=>p.id===currentProfileId).name;
+            sessionData.push({ amount: amt, category: `${item.desc} (${profName}) [${telegramUserName}]`, type: addMode==='expense'?'minus':'plus' });
+            amountStr = ""; if(descEl) descEl.value = ""; setTxt("num-display", "0"); saveState(); 
+            if (activeSubCat || activeMainCat) { setHtml("stay-hint", `✅ Oxirgi: <b>${formatMoney(amt)}</b> (${label}). Yana kiriting yoki Orqaga bosing!`); renderCats(); } else { setHtml("stay-hint", ""); }
             showToast("Saqlandi ✓");
         }
 
-        window.deleteItem = function(type, id) {
-            if(type === 'tx') state.transactions = state.transactions.filter(t => t.id !== id);
-            else state.incomes = state.incomes.filter(i => i.id !== id);
-            saveState(); showToast("O'chirildi");
+        window.executeTransfer = function() {
+            const amt = parseFloat(amountStr); if (!amt || amt <= 0) { showToast("Summani kiriting!", true); return; }
+            const d = new Date(); const timeStr = d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }); const dateStr = d.toISOString().slice(0, 10); const descEl = document.getElementById("add-desc"); const customDesc = descEl && descEl.value.trim() ? descEl.value.trim() : "";
+            let fromAcc = "card"; let toAcc = "cash"; let dirText = "Plastik ➔ Naqd"; if (transferDir === "cash-to-card") { fromAcc = "cash"; toAcc = "card"; dirText = "Naqd ➔ Plastik"; }
+            state.transactions.unshift({ id: Date.now(), amount: amt, desc: `O'tkazma: ${dirText} ${customDesc?'('+customDesc+')':''}`, cat: "O'tkazma", account: fromAcc, date: dateStr, time: timeStr, user: telegramUserName, profileId: "general" });
+            state.incomes.unshift({ id: Date.now()+1, amount: amt, desc: `Qabul: ${dirText} ${customDesc?'('+customDesc+')':''}`, cat: "O'tkazma", account: toAcc, date: dateStr, time: timeStr, user: telegramUserName, profileId: "general" });
+            sessionData.push({ amount: amt, category: `O'tkazma: ${dirText} [${telegramUserName}]`, type: "minus" });
+            amountStr = ""; if(descEl) descEl.value = ""; setTxt("num-display", "0"); saveState(); showToast("Pul o'tkazildi 🔄");
+        }
+
+        window.saveDebt = function() {
+            const name = getVal("debt-name").trim(); const amt = parseFloat(getVal("debt-amount")); if (!name || !amt || amt <= 0) { showToast("Ma'lumotlarni kiriting!", true); return; }
+            const item = { id: Date.now(), name: name, amount: amt, type: debtType, account: debtAccount, date: new Date().toISOString().slice(0,10) }; state.debts.unshift(item);
+            const timeStr = new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+            if (debtType === "take") { state.transactions.unshift({ id: Date.now()+1, amount: amt, desc: `Qarz berildi: ${name}`, cat: "Qarz", account: debtAccount, date: item.date, time: timeStr, user: telegramUserName, profileId: "general" }); } else { state.incomes.unshift({ id: Date.now()+1, amount: amt, desc: `Qarz olindi: ${name}`, cat: "Qarz", account: debtAccount, date: item.date, time: timeStr, user: telegramUserName, profileId: "general" }); }
+            setVal("debt-name", ""); setVal("debt-amount", ""); saveState(); showToast("Qarz qo'shildi ✓");
+        }
+
+        window.closeDebt = function(id) {
+            const debt = state.debts.find(x => x.id === id); if(!debt) return;
+            const timeStr = new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }); const todayStr = new Date().toISOString().slice(0, 10);
+            if (debt.type === "take") { state.incomes.unshift({ id: Date.now(), amount: debt.amount, desc: `Qarz qaytdi: ${debt.name}`, cat: "Qarz", account: debt.account, date: todayStr, time: timeStr, user: telegramUserName, profileId: "general" }); } else { state.transactions.unshift({ id: Date.now(), amount: debt.amount, desc: `Qarz to'landi: ${debt.name}`, cat: "Qarz", account: debt.account, date: todayStr, time: timeStr, user: telegramUserName, profileId: "general" }); }
+            state.debts = state.debts.filter(x => x.id !== id); saveState(); showToast("Qarz uzildi ✓");
+        }
+
+        window.deleteItem = function(type, id) { if(type === 'tx') state.transactions = state.transactions.filter(t => t.id !== id); else state.incomes = state.incomes.filter(i => i.id !== id); saveState(); showToast("O'chirildi"); }
+
+        function renderDebts() {
+            let debtListCode = ""; if (state.debts.length === 0) debtListCode = "<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Qarzlar yo'q.</div>";
+            else { state.debts.forEach(d => { const clr = d.type === "take" ? "#84cc16" : "#ef4444"; debtListCode += `<div class="history-item" style="border-left: 4px solid ${clr};"><div style="flex:1;"><div style="font-weight:bold;">${d.name} <span style="font-size:10px; color:#64748b;">(${d.account==='cash'?'Naqd':'Plastik'})</span></div><div style="font-size:10px; color:#64748b;">${d.type==='take'?'Olaman':'Beraman'}</div></div><div style="font-weight:bold; color:${clr}; margin-right:10px;">${formatMoney(d.amount)}</div><button onclick="closeDebt(${d.id})" style="background:#10b981; border:none; color:#fff; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">Uzildi ✅</button></div>`; }); }
+            setHtml("debts-list", debtListCode);
         }
 
         function renderReport() {
-            const todayStr = new Date().toISOString().slice(0, 10);
-            let fromD = getVal("report-from-date"); let toD = getVal("report-to-date");
-            if (!fromD || !toD) { fromD = todayStr; toD = todayStr; }
+            const todayStr = new Date().toISOString().slice(0, 10); let fromD = getVal("report-from-date"); let toD = getVal("report-to-date"); if (!fromD || !toD) { fromD = todayStr; toD = todayStr; }
+            const filteredTxs = state.transactions.filter(t => t.date >= fromD && t.date <= toD && (t.profileId === currentProfileId || !t.profileId)); const filteredIncs = state.incomes.filter(i => i.date >= fromD && i.date <= toD && (i.profileId === currentProfileId || !i.profileId));
+            const totalPeriodInc = filteredIncs.reduce((s,i)=>s+i.amount, 0); const totalPeriodExp = filteredTxs.filter(t => t.cat !== "O'tkazma").reduce((s,t)=>s+t.amount, 0); 
+            setTxt("report-month-inc", formatMoney(totalPeriodInc)); setTxt("report-month-exp", formatMoney(totalPeriodExp));
 
-            const filteredTxs = state.transactions.filter(t => t.date >= fromD && t.date <= toD && (t.profileId === currentProfileId || !t.profileId));
-            const filteredIncs = state.incomes.filter(i => i.date >= fromD && i.date <= toD && (i.profileId === currentProfileId || !i.profileId));
-            
-            const totalPeriodInc = filteredIncs.reduce((s,i)=>s+i.amount, 0);
-            const totalPeriodExp = filteredTxs.filter(t => t.cat !== "O'tkazma").reduce((s,t)=>s+t.amount, 0); 
+            const userExp = {}; filteredTxs.forEach(t => { if(t.cat !== "O'tkazma") { const u = t.user || "Siz"; userExp[u] = (userExp[u] || 0) + t.amount; }});
+            let userStatsCode = ""; if (Object.keys(userExp).length > 0) { for (const [user, amt] of Object.entries(userExp)) { userStatsCode += `<div class="user-stat-card"><div style="font-size:11px; color:#94a3b8;">${user}</div><div style="font-weight:bold; font-size:13px;">${formatMoney(amt).replace(" so'm","")}</div></div>`; } } else { userStatsCode = "<div style='color:#475569; font-size:11px;'>Ma'lumot yo'q</div>"; }
+            setHtml("user-stats-container", userStatsCode);
 
-            setTxt("report-month-inc", formatMoney(totalPeriodInc));
-            setTxt("report-month-exp", formatMoney(totalPeriodExp));
-
-            let catsCode = "";
-            const currentCats = getCurrentProfileCategories();
+            let catsCode = ""; const currentCats = getCurrentProfileCategories();
             if (filteredTxs.length === 0) catsCode = "<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Xarajat yo'q.</div>";
-            else {
-                currentCats.forEach(mainCat => {
-                    const catSum = filteredTxs.filter(t => t.cat === mainCat.label).reduce((s,t)=>s+t.amount, 0);
-                    if (catSum > 0) {
-                        const percent = totalPeriodExp > 0 ? Math.round((catSum / totalPeriodExp) * 100) : 0;
-                        catsCode += `<div style="background:#1e293b; padding:10px; border-radius:12px; margin-bottom:8px; border:1px solid #334155;">
-                            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px;">
-                                <span>${mainCat.icon} ${mainCat.label} (${percent}%)</span>
-                                <span style="color:${mainCat.color || '#fff'};">${formatMoney(catSum)}</span>
-                            </div>
-                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${percent}%; background:${mainCat.color || '#3b82f6'};"></div></div>
-                        </div>`;
-                    }
-                });
-            }
+            else { currentCats.forEach(mainCat => { const catSum = filteredTxs.filter(t => t.cat === mainCat.label).reduce((s,t)=>s+t.amount, 0); if (catSum > 0) { const percent = totalPeriodExp > 0 ? Math.round((catSum / totalPeriodExp) * 100) : 0; catsCode += `<div style="background:#1e293b; padding:10px; border-radius:12px; margin-bottom:8px; border:1px solid #334155;"><div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px;"><span>${mainCat.icon} ${mainCat.label} (${percent}%)</span><span style="color:${mainCat.color || '#fff'};">${formatMoney(catSum)}</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${percent}%; background:${mainCat.color || '#3b82f6'};"></div></div></div>`; } }); }
             setHtml("report-cats-analysis", catsCode);
 
-            let chronCode = "";
-            const combined = [...filteredIncs.map(i => ({...i, mode: 'plus'})), ...filteredTxs.map(t => ({...t, mode: 'minus'}))].sort((a,b) => b.id - a.id);
+            let chronCode = ""; const combined = [...filteredIncs.map(i => ({...i, mode: 'plus'})), ...filteredTxs.map(t => ({...t, mode: 'minus'}))].sort((a,b) => b.id - a.id);
             if(combined.length === 0) chronCode = "<div style='text-align:center; color:#475569; font-size:12px; padding:10px;'>Tarix bo'sh.</div>";
-            else {
-                combined.forEach(item => {
-                    const color = item.mode === 'plus' ? '#10b981' : (item.cat === "O'tkazma" ? '#3b82f6' : '#f472b6');
-                    const sign = item.mode === 'plus' ? '+' : '-';
-                    chronCode += `<div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1e293b; font-size:13px;">
-                        <div>
-                            <div style="font-weight:bold; color:${item.mode==='plus'?'#10b981':'#fff'}">${item.desc}</div>
-                            <div style="font-size:10px; color:#64748b;">👤 ${item.user || 'Siz'} | ${item.date} | ${item.time}</div>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
-                            <span style="font-weight:bold; color:${color};">${sign}${formatMoney(item.amount).replace(" so'm", "")}</span>
-                            <button class="delete-btn" onclick="deleteItem('${item.mode==='minus'?'tx':'inc'}', ${item.id})">✕</button>
-                        </div>
-                    </div>`;
-                });
-            }
+            else { combined.forEach(item => { const color = item.mode === 'plus' ? '#10b981' : (item.cat === "O'tkazma" ? '#3b82f6' : '#f472b6'); const sign = item.mode === 'plus' ? '+' : '-'; chronCode += `<div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1e293b; font-size:13px;"><div><div style="font-weight:bold; color:${item.mode==='plus'?'#10b981':'#fff'}">${item.desc}</div><div style="font-size:10px; color:#64748b;">👤 ${item.user || 'Siz'} | ${item.date} | ${item.time}</div></div><div style="display:flex; align-items:center; gap:8px; margin-left:auto;"><span style="font-weight:bold; color:${color};">${sign}${formatMoney(item.amount).replace(" so'm", "")}</span><button class="delete-btn" onclick="deleteItem('${item.mode==='minus'?'tx':'inc'}', ${item.id})">✕</button></div></div>`; }); }
             setHtml("report-chronology", chronCode);
         }
 
         window.downloadExcel = function() {
-            let csv = "\uFEFFSana,Profil,Turi,Odam,Rukun,Kategoriya_2,Izoh,Summa,Hisob\n";
-            const rows = [...state.incomes.map(i => ({...i, tStr: "Kirim"})), ...state.transactions.map(t => ({...t, tStr: "Chiqim"}))].sort((a,b) => b.id - a.id);
-            rows.forEach(r => { 
-                const profName = state.profiles.find(p=>p.id===r.profileId)?.name || 'Umumiy';
-                csv += `${r.date},${profName},${r.tStr},${r.user || 'Siz'},${r.cat || ''},${r.subCat || ''},${r.desc},${r.amount},${r.account==='cash'?'Naqd':'Plastik'}\n`; 
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob);
-            const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", "Oila_Moliya_Hisobot.csv");
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            let csv = "\uFEFFSana,Profil,Turi,Odam,Rukun,Kategoriya_2,Izoh,Summa,Hisob\n"; const rows = [...state.incomes.map(i => ({...i, tStr: "Kirim"})), ...state.transactions.map(t => ({...t, tStr: "Chiqim"}))].sort((a,b) => b.id - a.id);
+            rows.forEach(r => { const profName = state.profiles.find(p=>p.id===r.profileId)?.name || 'Umumiy'; csv += `${r.date},${profName},${r.tStr},${r.user || 'Siz'},${r.cat || ''},${r.subCat || ''},${r.desc},${r.amount},${r.account==='cash'?'Naqd':'Plastik'}\n`; });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", "Oila_Moliya_Hisobot.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
-
+        window.sendToTelegram = function() { if(sessionData.length > 0) tg.sendData(JSON.stringify(sessionData)); else tg.close(); }
+        applyAccessRules = function() { const prof = state.profiles.find(p => p.id === currentProfileId); const isChild = prof && prof.age !== null && prof.age < 16 && prof.id !== "general"; document.getElementById("btn-debts").style.display = isChild ? "none" : "block"; if(isChild && currentTab === "debts") switchTab("home"); document.getElementById("mode-inc").style.display = isChild ? "none" : "block"; document.getElementById("mode-trn").style.display = isChild ? "none" : "block"; if(isChild && addMode !== "expense") setAddMode("expense"); document.getElementById("user-stats-wrapper").style.display = (currentProfileId === "general") ? "block" : "none"; document.getElementById("report-inc-card").style.display = isChild ? "none" : "block"; }
         if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", init); } else { init(); }
     </script>
 </body>
