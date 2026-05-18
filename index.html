@@ -2,12 +2,12 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1 Money Pro - Telegram Mini App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>1 Money Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body style="margin: 0; background-color: #0f172a;">
     
@@ -16,7 +16,8 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         const tg = window.Telegram.WebApp;
-        tg.ready(); tg.expand();
+        
+        try { tg.ready(); tg.expand(); } catch(e) {}
 
         const CATEGORIES = [
           { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B" },
@@ -36,7 +37,7 @@
           { id: "boshqa_k", label: "Boshqa", icon: "💰" },
         ];
 
-        const STORAGE_KEY = "xarajat_pro_v3";
+        const STORAGE_KEY = "xarajat_pro_v4";
 
         function loadData() {
           try {
@@ -67,7 +68,6 @@
           const [selectedCat, setSelectedCat] = useState("oziq");
 
           const [toast, setToast] = useState(null);
-          // Botga yuborish uchun sessiya
           const [sessionData, setSessionData] = useState([]);
 
           useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }, [data]);
@@ -91,14 +91,24 @@
           const monthTotal = monthTx.reduce((s, t) => s + t.amount, 0);
 
           const balance = totalIncome - monthTotal;
-          const budgetPercent = Math.min(100, Math.round((monthTotal / data.budget) * 100));
+          const budgetLimit = data.budget || 5000000;
+          const budgetPercent = Math.min(100, Math.round((monthTotal / budgetLimit) * 100));
           const isBudgetWarning = budgetPercent >= 80;
 
           function handleSave() {
             const amt = parseFloat(amountStr);
             if (!amt || amt <= 0) { showToast("Miqdorni kiriting!", "error"); return; }
             
-            const itemDesc = desc.trim() || (addMode === "expense" ? CATEGORIES.find(c => c.id === selectedCat)?.label : INCOME_SOURCES.find(s => s.id === selectedCat)?.label);
+            let defaultLabel = "";
+            if (addMode === "expense") {
+                const found = CATEGORIES.find(c => c.id === selectedCat);
+                defaultLabel = found ? found.label : "Boshqa";
+            } else {
+                const found = INCOME_SOURCES.find(s => s.id === selectedCat);
+                defaultLabel = found ? found.label : "Boshqa";
+            }
+            
+            const itemDesc = desc.trim() || defaultLabel;
             
             const newItem = {
               id: Date.now(), amount: amt, desc: itemDesc,
@@ -113,7 +123,6 @@
               setData(d => ({ ...d, incomes: [newItem, ...d.incomes] }));
             }
             
-            // Sessiyaga qo'shish (telegramga bittada yuborish uchun)
             setSessionData(prev => [...prev, { amount: amt, category: itemDesc, type: addMode === "expense" ? "minus" : "plus" }]);
             
             showToast("Saqlandi ✓");
@@ -167,13 +176,16 @@
                   </div>
 
                   <div style={{ fontSize:14, color:"#94a3b8", marginBottom:10 }}>So'nggi amallar:</div>
-                  {data.transactions.slice(0, 5).map(t => (
-                    <div key={t.id} style={{ display:"flex", alignItems:"center", background:"#1e293b", padding:12, borderRadius:12, marginBottom:8 }}>
-                      <div style={{ flex:1 }}>{t.desc} <div style={{fontSize:10, color:"#64748b"}}>{t.date}</div></div>
-                      <div style={{ color:"#f472b6", fontWeight:"bold" }}>-{formatMoneyShort(t.amount)}</div>
-                      <button onClick={()=>deleteItem('tx', t.id)} style={{ background:"none", border:"none", color:"#ef4444", marginLeft:10 }}>✕</button>
-                    </div>
-                  ))}
+                  {data.transactions.slice(0, 5).map(t => {
+                    const catObj = CATEGORIES.find(c=>c.id===t.cat) || {};
+                    return (
+                        <div key={t.id} style={{ display:"flex", alignItems:"center", background:"#1e293b", padding:12, borderRadius:12, marginBottom:8 }}>
+                          <div style={{ flex:1 }}>{t.desc} <div style={{fontSize:10, color:"#64748b"}}>{t.date}</div></div>
+                          <div style={{ color:"#f472b6", fontWeight:"bold" }}>-{formatMoneyShort(t.amount)}</div>
+                          <button onClick={()=>deleteItem('tx', t.id)} style={{ background:"none", border:"none", color:"#ef4444", marginLeft:10 }}>✕</button>
+                        </div>
+                    );
+                  })}
 
                   <button onClick={sendToTelegram} style={{ width:"100%", padding:15, background:"#10b981", color:"white", border:"none", borderRadius:12, fontWeight:"bold", marginTop:20 }}>
                     ✅ Telegramga saqlash va chiqish
@@ -211,7 +223,7 @@
 
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr", gap:10 }}>
                     <button onClick={()=>handleNumpad("⌫")} style={{ padding:15, borderRadius:12, border:"none", background:"#334155", color:"#fff", fontSize:20 }}>⌫</button>
-                    <button onClick={handleSave} style={{ padding:15, borderRadius:12, border:"none", background:"#3b82f6", color:"#fff", fontSize:18, fontWeight:"bold" }}>Saqlash (Ro'yxatga)</button>
+                    <button onClick={handleSave} style={{ padding:15, borderRadius:12, border:"none", background:"#3b82f6", color:"#fff", fontSize:18, fontWeight:"bold" }}>Kiritish</button>
                   </div>
                 </div>
               )}
