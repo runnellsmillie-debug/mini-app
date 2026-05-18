@@ -204,7 +204,6 @@
         let sessionData = [];
         let telegramUserName = "Siz";
 
-        // ZIRHLI INTEGRATSIYA: NOM CHALKASHUVLARI TO'LIQ TUZATILDI
         function setTxt(id, text) { const el = document.getElementById(id); if(el) el.innerText = text; }
         function setHtml(id, content) { const el = document.getElementById(id); if(el) el.innerHTML = content; }
         function setVal(id, value) { const el = document.getElementById(id); if(el) el.value = value; }
@@ -501,13 +500,14 @@
             else {
                 combined.forEach(item => {
                     const color = item.mode === 'plus' ? '#10b981' : '#f472b6';
+                    const sign = item.mode === 'plus' ? '+' : '-'; // AMALNING BELGISI TO'LIQ SODDALASHTIRILIB O'RNATILDI!
                     chronCode += `<div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1e293b; font-size:13px;">
                         <div>
                             <div style="font-weight:bold; color:${item.mode==='plus'?'#10b981':'#fff'}">${item.desc}</div>
                             <div style="font-size:10px; color:#64748b;">👤 ${item.user || 'Siz'} | ${item.date} | ${item.time}</div>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
-                            <span style="font-weight:bold; color:${color};">${item.mode==='plus'?'+':'-'}${formatMoney(item.amount).replace(" so'm", "")}</span>
+                            <span style="font-weight:bold; color:${color};">${sign}${formatMoney(item.amount).replace(" so'm", "")}</span>
                             <button class="delete-btn" onclick="deleteItem('${item.mode==='minus'?'tx':'inc'}', ${item.id})">✕</button>
                         </div>
                     </div>`;
@@ -529,7 +529,6 @@
             if(sessionData.length > 0) tg.sendData(JSON.stringify(sessionData)); else tg.close();
         }
 
-        // DOM TO'LIQ ISHGA TUSHISHI PRO-KAFOLATI
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", init);
         } else {
