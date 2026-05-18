@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1Money Pro - Hisobot va Sub-Kategoriyalar</title>
+    <title>1Money Super Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         body { margin: 0; background-color: #0f172a; color: #f8fafc; font-family: -apple-system, sans-serif; }
-        .tab-btn { flex: 1; padding: 12px; border-radius: 14px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
-        .balance-card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 15px; flex: 1; box-sizing: border-box; }
+        .tab-btn { flex: 1; padding: 10px 5px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 12px; }
+        .balance-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 12px; flex: 1; box-sizing: border-box; }
         .num-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 22px; border-radius: 14px; padding: 12px 0; cursor: pointer; }
         .num-btn:active { background: rgba(255,255,255,0.1); }
-        .cat-grid-btn { padding: 14px 5px; border: none; border-radius: 16px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; font-weight: bold; transition: 0.15s; }
-        .cat-grid-btn:active { transform: scale(0.95); }
-        input[type="text"] { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 16px; box-sizing: border-box; outline: none; }
+        .cat-grid-btn { padding: 12px 4px; border: none; border-radius: 14px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: bold; font-size: 11px; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 15px; box-sizing: border-box; outline: none; }
     </style>
 </head>
 <body>
@@ -29,22 +28,21 @@
         
         try { tg.ready(); tg.expand(); } catch(e) {}
 
-        // ICHMA-ICH SUB-KATEGORIYALAR TIZIMI
         const CATEGORIES = [
           { id: "kommunal", label: "Kommunal", icon: "🏠", color: "#FBBF24", subs: [
               { id: "svet", label: "Svet (Elektr)", icon: "⚡" },
               { id: "gaz", label: "Gaz to'lovi", icon: "🔥" },
               { id: "suv", label: "Suv xizmati", icon: "💧" },
-              { id: "musor", label: "Chiqindi/Oshxona", icon: "🧹" }
+              { id: "musor", label: "Chiqindi", icon: "🧹" }
           ]},
           { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B", subs: [
               { id: "bozor", label: "Bozorlik", icon: "🥩" },
-              { id: "magazin", label: "Do'kon/Supermarket", icon: "🍞" },
-              { id: "kafe", label: "Restoran/Kafe", icon: "🍔" }
+              { id: "magazin", label: "Do'kon", icon: "🍞" },
+              { id: "kafe", label: "Kafe/Choyxona", icon: "🍔" }
           ]},
           { id: "avto", label: "Jetour Avto", icon: "🚗", color: "#2196F3", subs: [
-              { id: "benzin", label: "Yoqilg'i (Yoq)", icon: "⛽" },
-              { id: "remont", label: "Zapchast/Usta", icon: "🔧" },
+              { id: "benzin", label: "Yoqilg'i", icon: "⛽" },
+              { id: "remont", label: "Usta/Zapchast", icon: "🔧" },
               { id: "yuvish", label: "Moyka", icon: "🧼" }
           ]},
           { id: "oila", label: "Oila/Bog'cha", icon: "🧸", color: "#8B5CF6", subs: [
@@ -53,51 +51,62 @@
               { id: "ro'zg'or", label: "Kiyim/Xaridlar", icon: "👗" }
           ]},
           { id: "biznes", label: "IMSOA Biznes", icon: "🏢", color: "#607D8B", subs: [
-              { id: "material", label: "Xomashyo/Uskuna", icon: "🧱" },
-              { id: "ishchi", label: "Oyliklar/Ish haqi", icon: "💵" },
+              { id: "material", label: "Xomashyo", icon: "🧱" },
+              { id: "ishchi", label: "Ish haqi", icon: "💵" },
               { id: "boshqa_biz", label: "Boshqa xarajat", icon: "📈" }
           ]},
           { id: "soglik", label: "Sog'liq", icon: "💊", color: "#34D399", subs: [
               { id: "apteka", label: "Dori-darmon", icon: "🍏" },
-              { id: "shifokor", label: "Klinika/Tekshiruv", icon: "🩺" }
+              { id: "shifokor", label: "Tekshiruv", icon: "🩺" }
           ]},
           { id: "boshqa", label: "Boshqa", icon: "📦", color: "#94A3B8", subs: [] }
         ];
 
         const INCOME_SOURCES = [
-          { id: "maosh", label: "Oylik maosh", icon: "💼", color: "#10B981" },
-          { id: "imsoa_k", label: "IMSOA daromad", icon: "💰", color: "#059669" },
-          { id: "qarz_q", label: "Qarz qaytishi", icon: "🤝", color: "#84CC16" },
-          { id: "boshqa_k", label: "Qo'shimcha", icon: "FBBF24" }
+          { id: "maosh", label: "Oylik maosh", icon: "💼" },
+          { id: "imsoa_k", label: "IMSOA foyda", icon: "💰" },
+          { id: "qarz_q", label: "Qarz qaytdi", icon: "🤝" },
+          { id: "boshqa_k", label: "Qo'shimcha", icon: "🎁" }
         ];
 
-        const STORAGE_KEY = "xarajat_pro_v7";
+        const STORAGE_KEY = "xarajat_super_pro_v1";
 
         function loadData() {
           try {
             const raw = localStorage.getItem(STORAGE_KEY);
-            return raw ? JSON.parse(raw) : { transactions: [], incomes: [], budget: 5000000 };
+            return raw ? JSON.parse(raw) : { transactions: [], incomes: [], debts: [], budget: 5000000 };
           } catch {
-            return { transactions: [], incomes: [], budget: 5000000 };
+            return { transactions: [], incomes: [], debts: [], budget: 5000000 };
           }
         }
 
-        // To'liq so'm formatida ko'rsatish
         function formatMoney(n) {
           return new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
         }
 
+        // Taqvandagi kunlarni hisoblash matematikasi
+        function getDaysUntilDay(targetDay) {
+          const now = new Date();
+          const today = now.getDate();
+          if (today <= targetDay) return targetDay - today;
+          const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, targetDay);
+          return Math.ceil((nextMonth - now) / (1000 * 60 * 60 * 24));
+        }
+
         function App() {
           const [data, setData] = useState(loadData);
-          const [tab, setTab] = useState("home"); // home, add, report
+          const [tab, setTab] = useState("home"); // home, add, debts, report
           const [addMode, setAddMode] = useState("expense");
           const [accountType, setAccountType] = useState("card");
-          
-          // Sub-kategoriya navigatsiyasi uchun state
           const [activeMainCat, setActiveMainCat] = useState(null);
           
           const [amountStr, setAmountStr] = useState("");
           const [desc, setDesc] = useState("");
+
+          // Qarzlar uchun state
+          const [debtName, setDebtName] = useState("");
+          const [debtAmount, setDebtAmount] = useState("");
+          const [debtType, setDebtType] = useState("take"); // take (olaman), give (beraman)
 
           const [toast, setToast] = useState(null);
           const [sessionData, setSessionData] = useState([]);
@@ -118,8 +127,8 @@
 
           const allIncomes = data.incomes || [];
           const allTx = data.transactions || [];
+          const allDebts = data.debts || [];
 
-          // Balans hisoblar
           const cashIncome = allIncomes.filter(i => i.account === 'cash').reduce((s,i) => s+i.amount, 0);
           const cardIncome = allIncomes.filter(i => i.account !== 'cash').reduce((s,i) => s+i.amount, 0);
           const cashExp = allTx.filter(t => t.account === 'cash').reduce((s,t) => s+t.amount, 0);
@@ -129,21 +138,17 @@
           const cardBalance = cardIncome - cardExp;
           const totalBalance = cashBalance + cardBalance;
 
-          // Joriy sana va oy kalitlari
           const todayStr = new Date().toISOString().slice(0, 10);
           const monthStr = new Date().toISOString().slice(0, 7);
 
-          // Hisobot uchun filtrlashlar
           const todayTransactions = allTx.filter(t => t.date === todayStr);
           const monthTransactions = allTx.filter(t => t.date.startsWith(monthStr));
-          const monthIncomes = allIncomes.filter(i => i.date.startsWith(monthStr));
-          
           const totalMonthExp = monthTransactions.reduce((s,t)=>s+t.amount, 0);
-          const totalMonthInc = monthIncomes.reduce((s,i)=>s+i.amount, 0);
+          const totalMonthInc = allIncomes.filter(i => i.date.startsWith(monthStr)).reduce((s,i)=>s+i.amount, 0);
 
           function handleCategorySelect(catLabel, catId) {
             const amt = parseFloat(amountStr);
-            if (!amt || amt <= 0) { showToast("Iltimos, avval summani kiriting!", "error"); return; }
+            if (!amt || amt <= 0) { showToast("Avval summani kiriting!", "error"); return; }
             
             const itemDesc = desc.trim() || catLabel;
             const newItem = {
@@ -161,11 +166,49 @@
             }
             
             const methodStr = accountType === "cash" ? "Naqd" : "Plastik";
-            const botCategoryName = activeMainCat ? `${activeMainCat.label} -> ${catLabel}` : catLabel;
-            setSessionData(prev => [...prev, { amount: amt, category: `${botCategoryName} (${methodStr})`, type: addMode === "expense" ? "minus" : "plus" }]);
+            setSessionData(prev => [...prev, { amount: amt, category: `${activeMainCat ? activeMainCat.label+'->'+catLabel : catLabel} (${methodStr})`, type: addMode === "expense" ? "minus" : "plus" }]);
             
-            showToast("Muvaffaqiyatli saqlandi ✓");
+            showToast("Saqlandi ✓");
             setAmountStr(""); setDesc(""); setActiveMainCat(null); setTab("home");
+          }
+
+          function addDebt() {
+            const amt = parseFloat(debtAmount);
+            if (!debtName.trim() || !amt || amt <= 0) { showToast("Ma'lumotlarni to'liq kiriting!", "error"); return; }
+            const newDebt = { id: Date.now(), name: debtName.trim(), amount: amt, type: debtType, date: todayStr };
+            setData(d => ({ ...d, debts: [newDebt, ...(d.debts||[])] }));
+            setDebtName(""); setDebtAmount("");
+            showToast("Qarz daftarga yozildi ✓");
+          }
+
+          function settleDebt(id) {
+            setData(d => ({ ...d, debts: d.debts.filter(debt => debt.id !== id) }));
+            showToast("Qarz uzildi/o'chirildi");
+          }
+
+          function downloadExcel() {
+            let csvContent = "\uFEFF"; 
+            csvContent += "Sana,Turi,Rukun,Izoh,Summa,Hisob turi\n";
+            
+            const rows = [
+                ...allIncomes.map(i => ({...i, tStr: "Kirim"})),
+                ...allTx.map(t => ({...t, tStr: "Chiqim"}))
+            ].sort((a,b) => b.id - a.id);
+
+            rows.forEach(r => {
+                const acc = r.account === 'cash' ? "Naqd" : "Plastik";
+                csvContent += `${r.date},${r.tStr},${r.cat || ''},${r.desc},${r.amount},${acc}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Moliya_Hisobot_${todayStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Excel (CSV) yuklab olindi!");
           }
 
           function sendToTelegram() {
@@ -174,113 +217,124 @@
           }
 
           return (
-            <div style={{ fontFamily: "-apple-system, sans-serif", color: "#f8fafc", padding: "15px", maxWidth: "430px", margin: "0 auto" }}>
+            <div style={{ fontFamily: "-apple-system, sans-serif", color: "#f8fafc", padding: "12px", maxWidth: "430px", margin: "0 auto" }}>
               {toast && (
-                <div style={{ position:"fixed", top:10, left:"50%", transform:"translateX(-50%)", background: toast.type==="error" ? "#EF4444" : "#10B981", padding:"10px 20px", borderRadius:20, zIndex:1000, fontWeight:"bold" }}>
+                <div style={{ position:"fixed", top:10, left:"50%", transform:"translateX(-50%)", background: toast.type==="error" ? "#EF4444" : "#10B981", padding:"10px 20px", borderRadius:20, zIndex:1000, fontWeight:"bold", fontSize:13 }}>
                   {toast.msg}
                 </div>
               )}
 
-              {/* TABS MENYU */}
-              <div style={{ display:"flex", gap:8, marginBottom:15 }}>
+              {/* MENYU TABS */}
+              <div style={{ display:"flex", gap:6, marginBottom:12 }}>
                 <button onClick={() => setTab("home")} className="tab-btn" style={{ background: tab==="home" ? "#3b82f6" : "#1e293b", color:"#fff" }}>Asosiy</button>
                 <button onClick={() => setTab("add")} className="tab-btn" style={{ background: tab==="add" ? "#3b82f6" : "#1e293b", color:"#fff" }}>Kiritish</button>
+                <button onClick={() => setTab("debts")} className="tab-btn" style={{ background: tab==="debts" ? "#3b82f6" : "#1e293b", color:"#fff" }}>Qarzlar 🤝</button>
                 <button onClick={() => setTab("report")} className="tab-btn" style={{ background: tab==="report" ? "#3b82f6" : "#1e293b", color:"#fff" }}>Hisobot 📊</button>
               </div>
 
-              {/* 1. ASOSIY SAHIFA */}
+              {/* TAB 1: ASOSIY SAHIFA */}
               {tab === "home" && (
                 <div style={{ paddingBottom: "60px" }}>
-                  <div style={{ background:"linear-gradient(135deg, #1e293b, #0f172a)", borderRadius:24, padding:20, marginBottom:15, border:"1px solid #334155", textAlign:"center" }}>
-                    <div style={{ color:"#94a3b8", fontSize:12, textTransform:"uppercase", letterSpacing:"1px" }}>Umumiy Balans</div>
-                    <div style={{ fontSize:28, fontWeight:"bold", margin:"8px 0" }}>{formatMoney(totalBalance)}</div>
+                  <div style={{ background:"linear-gradient(135deg, #1e293b, #0f172a)", borderRadius:20, padding:15, marginBottom:12, border:"1px solid #334155", textAlign:"center" }}>
+                    <div style={{ color:"#94a3b8", fontSize:11, textTransform:"uppercase" }}>Umumiy qoldiq</div>
+                    <div style={{ fontSize:26, fontWeight:"bold", margin:"5px 0" }}>{formatMoney(totalBalance)}</div>
                   </div>
 
-                  <div style={{ display:"flex", gap:10, marginBottom:20 }}>
+                  <div style={{ display:"flex", gap:8, marginBottom:12 }}>
                     <div className="balance-card">
-                        <div style={{ fontSize:11, color:"#94a3b8", marginBottom:3 }}>💳 Plastik</div>
-                        <div style={{ fontSize:15, fontWeight:"bold" }}>{formatMoney(cardBalance)}</div>
+                        <div style={{ fontSize:11, color:"#94a3b8" }}>💳 Plastik</div>
+                        <div style={{ fontSize:14, fontWeight:"bold" }}>{formatMoney(cardBalance)}</div>
                     </div>
                     <div className="balance-card">
-                        <div style={{ fontSize:11, color:"#94a3b8", marginBottom:3 }}>💵 Naqd</div>
-                        <div style={{ fontSize:15, fontWeight:"bold" }}>{formatMoney(cashBalance)}</div>
+                        <div style={{ fontSize:11, color:"#94a3b8" }}>💵 Naqd</div>
+                        <div style={{ fontSize:14, fontWeight:"bold" }}>{formatMoney(cashBalance)}</div>
                     </div>
                   </div>
 
-                  <div style={{ fontSize:14, fontWeight:"bold", color:"#94a3b8", marginBottom:10 }}>Bugungi xarajatlar:</div>
+                  {/* 📅 TO'LOVLAR TAQVIMI WIDGETI */}
+                  <div style={{ background:"#1e293b", border:"1px solid #334155", borderRadius:16, padding:12, marginBottom:15 }}>
+                     <div style={{fontSize:12, color:"#94a3b8", fontWeight:"bold", marginBottom:8}}>📅 Rejali yaqin to'lovlar:</div>
+                     <div style={{display:"flex", justifyContent:"space-between", fontSize:13, marginBottom:5, background:"rgba(255,255,255,0.02)", padding:8, borderRadius:8}}>
+                        <span>🧸 Bog'cha puli (5-sana):</span>
+                        <span style={{color: getDaysUntilDay(5) <= 3 ? "#ef4444" : "#fbbf24", fontWeight:"bold"}}>{getDaysUntilDay(5)} kun qoldi</span>
+                     </div>
+                     <div style={{display:"flex", justifyContent:"space-between", fontSize:13, background:"rgba(255,255,255,0.02)", padding:8, borderRadius:8}}>
+                        <span>🏦 Kredit to'lovi (10-sana):</span>
+                        <span style={{color: getDaysUntilDay(10) <= 3 ? "#ef4444" : "#fbbf24", fontWeight:"bold"}}>{getDaysUntilDay(10)} kun qoldi</span>
+                     </div>
+                  </div>
+
+                  <div style={{ fontSize:13, fontWeight:"bold", color:"#94a3b8", marginBottom:8 }}>Bugungi xarajatlar:</div>
                   {todayTransactions.length === 0 ? (
-                    <div style={{textAlign:"center", padding:20, color:"#475569", fontSize:13}}>Bugun hali xarajat kiritilmadi.</div>
+                    <div style={{textAlign:"center", padding:15, color:"#475569", fontSize:12}}>Bugun xarajat yo'q.</div>
                   ) : (
                     todayTransactions.map(t => (
-                        <div key={t.id} style={{ display:"flex", alignItems:"center", background:"#1e293b", padding:12, borderRadius:12, marginBottom:8 }}>
+                        <div key={t.id} style={{ display:"flex", alignItems:"center", background:"#1e293b", padding:10, borderRadius:12, marginBottom:6, fontSize:13 }}>
                           <div style={{ flex:1 }}>
-                             <div style={{fontWeight:"bold", fontSize:14}}>{t.desc}</div>
-                             <div style={{fontSize:10, color:"#64748b"}}>{t.cat} {t.subCat ? `-> ${t.subCat}` : ''} | {t.time}</div>
+                             <div style={{fontWeight:"bold"}}>{t.desc}</div>
+                             <div style={{fontSize:10, color:"#64748b"}}>{t.cat} {t.subCat ? `-> ${t.subCat}` : ''}</div>
                           </div>
                           <div style={{ color:"#f472b6", fontWeight:"bold" }}>-{formatMoney(t.amount)}</div>
                         </div>
                     ))
                   )}
 
-                  <button onClick={sendToTelegram} style={{ width:"100%", padding:15, background:"#10b981", color:"white", border:"none", borderRadius:12, fontWeight:"bold", marginTop:25, fontSize:15 }}>
-                    ✅ Saqlash va Botga yuborish ({sessionData.length})
+                  <button onClick={sendToTelegram} style={{ width:"100%", padding:12, background:"#10b981", color:"white", border:"none", borderRadius:12, fontWeight:"bold", marginTop:20, fontSize:14 }}>
+                    ✅ Telegramga saqlash va chiqish ({sessionData.length})
                   </button>
                 </div>
               )}
 
-              {/* 2. KIRITISH SAHIFA (SUB-KATEGORIYALAR BILAN) */}
+              {/* TAB 2: KIRITISH SAHIFA */}
               {tab === "add" && (
                 <div>
-                  <div style={{ display:"flex", gap:10, marginBottom:12 }}>
+                  <div style={{ display:"flex", gap:8, marginBottom:10 }}>
                     <button onClick={()=>{setAddMode("expense"); setActiveMainCat(null);}} style={{ flex:1, padding:10, borderRadius:10, border:"none", background:addMode==="expense"?"#ef4444":"#1e293b", color:"#fff", fontWeight:"bold" }}>▼ Chiqim</button>
                     <button onClick={()=>{setAddMode("income"); setActiveMainCat(null);}} style={{ flex:1, padding:10, borderRadius:10, border:"none", background:addMode==="income"?"#10b981":"#1e293b", color:"#fff", fontWeight:"bold" }}>▲ Kirim</button>
                   </div>
 
-                  <div style={{ display:"flex", gap:10, marginBottom:12 }}>
+                  <div style={{ display:"flex", gap:8, marginBottom:10 }}>
                     <button onClick={()=>setAccountType("card")} style={{ flex:1, padding:8, borderRadius:8, border:accountType==="card"?"2px solid #3b82f6":"2px solid transparent", background:"#1e293b", color:"#fff", fontSize:12 }}>💳 Plastik</button>
                     <button onClick={()=>setAccountType("cash")} style={{ flex:1, padding:8, borderRadius:8, border:accountType==="cash"?"2px solid #10b981":"2px solid transparent", background:"#1e293b", color:"#fff", fontSize:12 }}>💵 Naqd</button>
                   </div>
 
-                  <div style={{ fontSize:32, fontWeight:"bold", textAlign:"center", marginBottom:12, height:40, color:"#fff" }}>
+                  <div style={{ fontSize:30, fontWeight:"bold", textAlign:"center", marginBottom:10, height:35, color:"#fff" }}>
                     {amountStr ? formatMoney(parseInt(amountStr)).replace(" so'm", "") : "0"}
                   </div>
 
-                  {/* KATEGORIYALAR PANELI (Ustiga bosganda ichidagilar ochiladi) */}
-                  <div style={{ background:"rgba(255,255,255,0.02)", padding:12, borderRadius:16, marginBottom:12, border:"1px dashed #334155" }}>
+                  <div style={{ background:"rgba(255,255,255,0.02)", padding:10, borderRadius:14, marginBottom:10, border:"1px dashed #334155" }}>
                     {activeMainCat ? (
                       <div>
-                        <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10}}>
-                            <span style={{fontSize:13, color:"#94a3b8"}}>Yo'nalish: <b>{activeMainCat.label}</b></span>
-                            <button onClick={()=>setActiveMainCat(null)} style={{background:"#475569", color:"#fff", border:"none", padding:"4px 10px", borderRadius:6, fontSize:11, cursor:"pointer"}}>⬅ Orqaga</button>
+                        <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8}}>
+                            <span style={{fontSize:12, color:"#94a3b8"}}>Yo'nalish: <b>{activeMainCat.label}</b></span>
+                            <button onClick={()=>setActiveMainCat(null)} style={{background:"#475569", color:"#fff", border:"none", padding:"4px 8px", borderRadius:6, fontSize:10}}>⬅ Orqaga</button>
                         </div>
-                        <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8 }}>
+                        <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:6 }}>
                           {activeMainCat.subs.map(sub => (
                             <button key={sub.id} onClick={()=>handleCategorySelect(sub.label, sub.id)} className="cat-grid-btn" style={{ background:"#334155" }}>
-                              <span style={{fontSize:20}}>{sub.icon}</span>
-                              <span style={{fontSize:11}}>{sub.label}</span>
+                              <span style={{fontSize:18}}>{sub.icon}</span><span>{sub.label}</span>
                             </button>
                           ))}
                           <button onClick={()=>handleCategorySelect(activeMainCat.label, activeMainCat.id)} className="cat-grid-btn" style={{ background:"#4b5563" }}>
-                              <span style={{fontSize:20}}>⚙️</span><span style={{fontSize:11}}>Umumiy</span>
+                              <span style={{fontSize:18}}>⚙️</span><span>Umumiy</span>
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:8 }}>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:6 }}>
                         {(addMode === "expense" ? CATEGORIES : INCOME_SOURCES).map(c => (
                           <button key={c.id} onClick={() => { if(addMode==="expense" && c.subs && c.subs.length > 0) { setActiveMainCat(c); } else { handleCategorySelect(c.label, c.id); } }} className="cat-grid-btn" style={{ background: c.color || "#1e293b" }}>
-                            <span style={{fontSize:20}}>{c.icon}</span>
-                            <span style={{fontSize:10, whiteSpace:"nowrap", textOverflow:"ellipsis", overflow:"hidden", width:"100%"}}>{c.label}</span>
+                            <span style={{fontSize:18}}>{c.icon}</span>
+                            <span style={{textOverflow:"ellipsis", overflow:"hidden", width:"100%", whiteSpace:"nowrap"}}>{c.label}</span>
                           </button>
                         ))}
                       </div>
                     )}
                   </div>
 
-                  <input type="text" placeholder="Izoh (ixtiyoriy)..." value={desc} onChange={e=>setDesc(e.target.value)} style={{ marginBottom:12 }} />
+                  <input type="text" placeholder="Izoh..." value={desc} onChange={e=>setDesc(e.target.value)} style={{ marginBottom:10 }} />
 
-                  {/* NUMPAD */}
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8 }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:6 }}>
                     {["1","2","3","4","5","6","7","8","9","C","0","⌫"].map(btn => (
                       <button key={btn} onClick={()=>handleNumpad(btn)} className="num-btn">{btn}</button>
                     ))}
@@ -288,42 +342,87 @@
                 </div>
               )}
 
-              {/* 3. KUNLIK VA OYLIK HISOBOTLAR SAHIFASI */}
+              {/* TAB 3: QARZ DAFTARI */}
+              {tab === "debts" && (
+                <div>
+                  <div style={{ background:"#1e293b", padding:12, borderRadius:16, marginBottom:15, border:"1px solid #334155" }}>
+                     <div style={{fontSize:13, fontWeight:"bold", marginBottom:8}}>🤝 Yangi qarz yozish:</div>
+                     <input type="text" placeholder="Kimga / Kimdan? (Ism)" value={debtName} onChange={e=>setDebtName(e.target.value)} style={{marginBottom:8}} />
+                     <input type="number" placeholder="Summa (so'mda)" value={debtAmount} onChange={e=>setDebtAmount(e.target.value)} style={{marginBottom:10}} />
+                     
+                     <div style={{display:"flex", gap:8, marginBottom:10}}>
+                        <button onClick={()=>setDebtType("take")} style={{flex:1, padding:8, borderRadius:8, border:"none", background:debtType==="take"?"#84cc16":"#334155", color:"#fff", fontWeight:"bold", fontSize:12}}>Menga berishi kerak (Olaman)</button>
+                        <button onClick={()=>setDebtType("give")} style={{flex:1, padding:8, borderRadius:8, border:"none", background:debtType==="give"?"#ef4444":"#334155", color:"#fff", fontWeight:"bold", fontSize:12}}>Men berishim kerak (Beraman)</button>
+                     </div>
+                     <button onClick={addDebt} style={{width:"100%", padding:10, background:"#3b82f6", border:"none", color:"white", fontWeight:"bold", borderRadius:8, fontSize:13}}>Daftarga qo'shish</button>
+                  </div>
+
+                  <div style={{fontSize:13, fontWeight:"bold", color:"#94a3b8", marginBottom:8}}>Faol qarzlar ro'yxati:</div>
+                  {allDebts.length === 0 ? (
+                    <div style={{textAlign:"center", padding:15, color:"#475569", fontSize:12}}>Qarzlar ro'yxati bo'm-bo'sh.</div>
+                  ) : (
+                    allDebts.map(d => (
+                        <div key={d.id} style={{display:"flex", alignItems:"center", background:"#1e293b", padding:10, borderRadius:12, marginBottom:6, fontSize:13, borderLeft: d.type==="take"?"4px solid #84cc16":"4px solid #ef4444"}}>
+                           <div style={{flex:1}}>
+                              <div style={{fontWeight:"bold"}}>{d.name}</div>
+                              <div style={{fontSize:10, color:"#64748b"}}>{d.type==="take"?"Olaman (Menga qarz)":"Beraman (Mening qarzim)"}</div>
+                           </div>
+                           <div style={{fontWeight:"bold", color: d.type==="take"?"#84cc16":"#ef4444", marginRight:10}}>{formatMoney(d.amount)}</div>
+                           <button onClick={()=>settleDebt(d.id)} style={{background:"#334155", border:"none", color:"#fff", padding:"4px 8px", borderRadius:6, fontSize:11}}>Uzilishi</button>
+                        </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* TAB 4: HISOBOT (PROGRESS BAR & EXCEL) */}
               {tab === "report" && (
                 <div style={{ paddingBottom: "40px" }}>
-                  <div style={{ fontSize:16, fontWeight:"bold", color:"#3b82f6", marginBottom:15, borderBottom:"1px solid #1e293b", paddingBottom:5 }}>📊 Shu oylik to'liq hisobot</div>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, borderBottom:"1px solid #1e293b", paddingBottom:5 }}>
+                     <span style={{ fontSize:15, fontWeight:"bold", color:"#3b82f6" }}>📊 Oylik Hisobot</span>
+                     {/* 📥 EXCEL YUKLAB OLISH TUGMASI */}
+                     <button onClick={downloadExcel} style={{ background:"#10b981", color:"#fff", border:"none", padding:"6px 12px", borderRadius:8, fontSize:12, fontWeight:"bold", cursor:"pointer" }}>📥 Excel yuklash</button>
+                  </div>
                   
-                  <div style={{ display:"flex", gap:10, marginBottom:20 }}>
+                  <div style={{ display:"flex", gap:8, marginBottom:15 }}>
                     <div className="balance-card" style={{borderColor:"#10b981"}}>
-                        <div style={{fontSize:11, color:"#94a3b8"}}>Oylik jami kirim</div>
-                        <div style={{fontSize:15, fontWeight:"bold", color:"#10b981"}}>{formatMoney(totalMonthInc)}</div>
+                        <div style={{fontSize:10, color:"#94a3b8"}}>Oylik kirim</div>
+                        <div style={{fontSize:13, fontWeight:"bold", color:"#10b981"}}>{formatMoney(totalMonthInc)}</div>
                     </div>
                     <div className="balance-card" style={{borderColor:"#ef4444"}}>
-                        <div style={{fontSize:11, color:"#94a3b8"}}>Oylik jami chiqim</div>
-                        <div style={{fontSize:15, fontWeight:"bold", color:"#ef4444"}}>{formatMoney(totalMonthExp)}</div>
+                        <div style={{fontSize:10, color:"#94a3b8"}}>Oylik chiqim</div>
+                        <div style={{fontSize:13, fontWeight:"bold", color:"#ef4444"}}>{formatMoney(totalMonthExp)}</div>
                     </div>
                   </div>
 
-                  <div style={{ fontSize:13, fontWeight:"bold", color:"#94a3b8", marginBottom:10 }}>Xarajatlar rukuni bo'yicha:</div>
+                  <div style={{ fontSize:13, fontWeight:"bold", color:"#94a3b8", marginBottom:8 }}>Toifalar bo'yicha vizual tahlil:</div>
                   
                   {monthTransactions.length === 0 ? (
-                    <div style={{textAlign:"center", padding:30, color:"#475569"}}>Bu oy hali hisobot shakllanmadi.</div>
+                    <div style={{textAlign:"center", padding:20, color:"#475569"}}>Bu oy hali xarajat yo'q.</div>
                   ) : (
-                    // Rukunlar bo'yicha guruhlash mantiqi
                     CATEGORIES.map(mainCat => {
                         const catTx = monthTransactions.filter(t => t.cat === mainCat.label);
                         const catSum = catTx.reduce((s,t)=>s+t.amount, 0);
                         if(catSum === 0) return null;
                         
+                        // Rangli Foiz progress barlari matematikasi
+                        const percent = totalMonthExp > 0 ? Math.round((catSum / totalMonthExp) * 100) : 0;
+                        
                         return (
-                            <div key={mainCat.id} style={{ background:"#1e293b", padding:12, borderRadius:14, marginBottom:10, border:"1px solid #334155" }}>
-                                <div style={{ display:"flex", justifyContent:"space-between", fontWeight:"bold", fontSize:14, marginBottom:5 }}>
-                                    <span>{mainCat.icon} {mainCat.label}</span>
+                            <div key={mainCat.id} style={{ background:"#1e293b", padding:10, borderRadius:12, marginBottom:8, border:"1px solid #334155" }}>
+                                <div style={{ display:"flex", justifyScontent:"space-between", fontWeight:"bold", fontSize:13, display:"flex", justifyContent:"space-between" }}>
+                                    <span>{mainCat.icon} {mainCat.label} ({percent}%)</span>
                                     <span style={{color:mainCat.color}}>{formatMoney(catSum)}</span>
                                 </div>
+                                
+                                {/* 📊 VIZUAL PROGRESS BAR CHIZIG'I */}
+                                <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 4, height: 6, marginTop: 6, marginBottom:6, overflow: "hidden" }}>
+                                    <div style={{ height: "100%", width: `${percent}%`, background: mainCat.color, borderRadius:4, transition:"0.3s" }} />
+                                </div>
+
                                 <div style={{fontSize:11, color:"#64748b"}}>
-                                    {catTx.map((t, idx) => (
-                                        <div key={t.id} style={{display:"flex", justifyContent:"space-between", marginTop:3, paddingLeft:15}}>
+                                    {catTx.map(t => (
+                                        <div key={t.id} style={{display:"flex", justifyContent:"space-between", marginTop:2, paddingLeft:10}}>
                                             <span>• {t.desc} {t.subCat ? `(${t.subCat})` : ''}</span>
                                             <span>{formatMoney(t.amount)}</span>
                                         </div>
