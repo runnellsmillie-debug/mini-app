@@ -1,214 +1,226 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="uz">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>1 Money - Telegram Mini App</title>
-    <!-- Telegram Web App skripti -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1 Money Pro - Telegram Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-      :root {
-        --tg-theme-bg-color: #ffffff;
-        --tg-theme-text-color: #000000;
-        --tg-theme-button-color: #2481cc;
-        --tg-theme-button-text-color: #ffffff;
-        --tg-theme-hint-color: #999999;
-      }
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body style="margin: 0; background-color: #0f172a;">
+    
+    <div id="root"></div>
 
-      body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-          Arial, sans-serif;
-        background-color: var(--tg-theme-bg-color, #f4f6f9);
-        color: var(--tg-theme-text-color, #222);
-        margin: 0;
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const tg = window.Telegram.WebApp;
+        tg.ready(); tg.expand();
 
-      .balance-card {
-        background: linear-gradient(135deg, #2481cc, #1a65a4);
-        color: white;
-        width: 100%;
-        max-width: 350px;
-        border-radius: 15px;
-        padding: 20px;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-        box-sizing: border-box;
-      }
+        const CATEGORIES = [
+          { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B" },
+          { id: "bogcha", label: "Bog'cha/Ta'lim", icon: "🧸", color: "#8B5CF6" },
+          { id: "kredit", label: "Kredit to'lovi", icon: "🏦", color: "#F59E0B" },
+          { id: "transport", label: "Transport", icon: "🚗", color: "#4ECDC4" },
+          { id: "kiyim", label: "Kiyim-kechak", icon: "👔", color: "#A78BFA" },
+          { id: "soglik", label: "Sog'liq", icon: "💊", color: "#34D399" },
+          { id: "maishiy", label: "Ro'zg'or/Uy", icon: "🏠", color: "#FBBF24" },
+          { id: "boshqa", label: "Boshqa", icon: "📦", color: "#94A3B8" },
+        ];
 
-      .balance-title {
-        font-size: 14px;
-        opacity: 0.8;
-        text-transform: uppercase;
-      }
-      .balance-amount {
-        font-size: 28px;
-        font-weight: bold;
-        margin: 10px 0;
-      }
+        const INCOME_SOURCES = [
+          { id: "maosh", label: "Oylik maosh", icon: "💼" },
+          { id: "biznes", label: "Biznes/Loyiha", icon: "🏪" },
+          { id: "qaytim", label: "Qarz qaytishi", icon: "🤝" },
+          { id: "boshqa_k", label: "Boshqa", icon: "💰" },
+        ];
 
-      .stats {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 15px;
-      }
-      .stat-item {
-        font-size: 13px;
-      }
-      .stat-income {
-        color: #4cd964;
-        font-weight: bold;
-      }
-      .stat-expense {
-        color: #ff3b30;
-        font-weight: bold;
-      }
+        const STORAGE_KEY = "xarajat_pro_v3";
 
-      .input-group {
-        width: 100%;
-        max-width: 350px;
-        margin-bottom: 15px;
-      }
-
-      input {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid var(--tg-theme-hint-color, #ccc);
-        border-radius: 10px;
-        background-color: var(--tg-theme-bg-color);
-        color: var(--tg-theme-text-color);
-        font-size: 16px;
-        box-sizing: border-box;
-        outline: none;
-      }
-
-      .grid-categories {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        width: 100%;
-        max-width: 350px;
-      }
-
-      .category-btn {
-        background-color: rgba(128, 128, 128, 0.1);
-        border: none;
-        border-radius: 12px;
-        padding: 15px 5px;
-        font-size: 14px;
-        color: var(--tg-theme-text-color);
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 5px;
-        transition: transform 0.1s;
-      }
-
-      .category-btn:active {
-        transform: scale(0.95);
-      }
-      .category-icon {
-        font-size: 24px;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Balans Kartasi -->
-    <div class="balance-card">
-      <div class="balance-title">Umumiy Balans</div>
-      <div class="balance-amount" id="balance">0 UZS</div>
-      <div class="stats">
-        <div class="stat-item">
-          Kirim:<br /><span class="stat-income">+0</span>
-        </div>
-        <div class="stat-item">
-          Chiqim:<br /><span class="stat-expense">-0</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Summa kiritish joyi -->
-    <div class="input-group">
-      <input
-        type="number"
-        id="amount-input"
-        placeholder="Summani kiriting (masalan: 50000)"
-        inputmode="numeric"
-      />
-    </div>
-
-    <!-- Kategoriyalar -->
-    <div class="grid-categories">
-      <button class="category-btn" onclick="sendData('Oziq-ovqat', 'minus')">
-        <span class="category-icon">🍔</span><span>Taom</span>
-      </button>
-      <button class="category-btn" onclick="sendData('Transport', 'minus')">
-        <span class="category-icon">🚖</span><span>Yo'l</span>
-      </button>
-      <button class="category-btn" onclick="sendData('Xaridlar', 'minus')">
-        <span class="category-icon">🛍️</span><span>Xarid</span>
-      </button>
-      <button class="category-btn" onclick="sendData('Kommunal', 'minus')">
-        <span class="category-icon">🏠</span><span>Uy</span>
-      </button>
-      <button class="category-btn" onclick="sendData('Ko\'ngilochar', 'minus')">
-        <span class="category-icon">🎮</span><span>Oyin</span>
-      </button>
-      <button
-        class="category-btn"
-        onclick="sendData('Oylik', 'plus')"
-        style="background-color: rgba(76, 217, 100, 0.15)"
-      >
-        <span class="category-icon">📈</span
-        ><span style="color: #4cd964; font-weight: bold">Kirim</span>
-      </button>
-    </div>
-
-    <script>
-      // Telegram Web App'ni ishga tushirish
-      const tg = window.Telegram.WebApp;
-      tg.ready(); // Telegramga interfeys tayyorligini bildirish
-      tg.expand(); // Ilovani butun ekranga ochish
-
-      // Ranglarni Telegram mavzusiga moslash
-      document.documentElement.style.setProperty(
-        "--tg-theme-bg-color",
-        tg.themeParams.bg_color,
-      );
-      document.documentElement.style.setProperty(
-        "--tg-theme-text-color",
-        tg.themeParams.text_color,
-      );
-      document.documentElement.style.setProperty(
-        "--tg-theme-hint-color",
-        tg.themeParams.hint_color,
-      );
-
-      function sendData(category, type) {
-        const amountInput = document.getElementById("amount-input");
-        const amount = amountInput.value;
-
-        if (!amount || amount <= 0) {
-          alert("Iltimos, oldin summani kiriting!");
-          return;
+        function loadData() {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? JSON.parse(raw) : { transactions: [], incomes: [], budget: 5000000 };
+          } catch {
+            return { transactions: [], incomes: [], budget: 5000000 };
+          }
         }
 
-        // Ma'lumotni JSON formatida botga qaytarish
-        const data = {
-          amount: parseInt(amount),
-          category: category,
-          type: type,
-        };
+        function formatMoneyShort(n) {
+          if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + "M";
+          if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + "K";
+          return n;
+        }
 
-        // Telegram botga ma'lumotni yuborish va ilovani yopish
-        tg.sendData(JSON.stringify(data));
-      }
+        function formatMoney(n) {
+          return new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
+        }
+
+        function App() {
+          const [data, setData] = useState(loadData);
+          const [tab, setTab] = useState("home");
+          const [addMode, setAddMode] = useState("expense");
+          
+          const [amountStr, setAmountStr] = useState("");
+          const [desc, setDesc] = useState("");
+          const [selectedCat, setSelectedCat] = useState("oziq");
+
+          const [toast, setToast] = useState(null);
+          // Botga yuborish uchun sessiya
+          const [sessionData, setSessionData] = useState([]);
+
+          useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }, [data]);
+
+          const showToast = (msg, type = "success") => {
+            setToast({ msg, type });
+            setTimeout(() => setToast(null), 3000);
+          };
+
+          const handleNumpad = (val) => {
+            if (val === "C") setAmountStr("");
+            else if (val === "⌫") setAmountStr(prev => prev.slice(0, -1));
+            else if (val === "000") setAmountStr(prev => prev ? prev + "000" : prev);
+            else setAmountStr(prev => prev + val);
+          };
+
+          const monthKey = new Date().toISOString().slice(0, 7);
+          const monthIncomes = data.incomes.filter(i => i.monthKey === monthKey);
+          const totalIncome = monthIncomes.reduce((s, i) => s + i.amount, 0);
+          const monthTx = data.transactions.filter(t => t.date.startsWith(monthKey));
+          const monthTotal = monthTx.reduce((s, t) => s + t.amount, 0);
+
+          const balance = totalIncome - monthTotal;
+          const budgetPercent = Math.min(100, Math.round((monthTotal / data.budget) * 100));
+          const isBudgetWarning = budgetPercent >= 80;
+
+          function handleSave() {
+            const amt = parseFloat(amountStr);
+            if (!amt || amt <= 0) { showToast("Miqdorni kiriting!", "error"); return; }
+            
+            const itemDesc = desc.trim() || (addMode === "expense" ? CATEGORIES.find(c => c.id === selectedCat)?.label : INCOME_SOURCES.find(s => s.id === selectedCat)?.label);
+            
+            const newItem = {
+              id: Date.now(), amount: amt, desc: itemDesc,
+              cat: selectedCat, type: addMode === "expense" ? "minus" : "plus",
+              date: new Date().toISOString().slice(0, 10), time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })
+            };
+
+            if (addMode === "expense") {
+              setData(d => ({ ...d, transactions: [newItem, ...d.transactions] }));
+            } else {
+              newItem.monthKey = monthKey;
+              setData(d => ({ ...d, incomes: [newItem, ...d.incomes] }));
+            }
+            
+            // Sessiyaga qo'shish (telegramga bittada yuborish uchun)
+            setSessionData(prev => [...prev, { amount: amt, category: itemDesc, type: addMode === "expense" ? "minus" : "plus" }]);
+            
+            showToast("Saqlandi ✓");
+            setAmountStr(""); setDesc(""); setTab("home");
+          }
+
+          function sendToTelegram() {
+            if(sessionData.length > 0) {
+                tg.sendData(JSON.stringify(sessionData));
+            } else {
+                tg.close();
+            }
+          }
+
+          function deleteItem(type, id) {
+            if(type === 'tx') setData(d => ({ ...d, transactions: d.transactions.filter(t => t.id !== id) }));
+            else setData(d => ({ ...d, incomes: d.incomes.filter(i => i.id !== id) }));
+            showToast("O'chirildi");
+          }
+
+          return (
+            <div style={{ fontFamily: "-apple-system, sans-serif", color: "#f8fafc", padding: "15px", maxWidth: "430px", margin: "0 auto" }}>
+              {toast && (
+                <div style={{ position:"fixed", top:10, left:"50%", transform:"translateX(-50%)", background: toast.type==="error" ? "#EF4444" : "#10B981", padding:"10px 20px", borderRadius:20, zIndex:1000 }}>
+                  {toast.msg}
+                </div>
+              )}
+
+              {/* TABS */}
+              <div style={{ display:"flex", gap:10, marginBottom:15 }}>
+                <button onClick={() => setTab("home")} style={{ flex:1, padding:10, borderRadius:12, border:"none", background: tab==="home" ? "#3b82f6" : "#1e293b", color:"#fff" }}>Asosiy</button>
+                <button onClick={() => setTab("add")} style={{ flex:1, padding:10, borderRadius:12, border:"none", background: tab==="add" ? "#3b82f6" : "#1e293b", color:"#fff" }}>Qo'shish</button>
+              </div>
+
+              {/* HOME */}
+              {tab === "home" && (
+                <div>
+                  {isBudgetWarning && (
+                    <div style={{ background:"rgba(239,68,68,0.2)", border:"1px solid #ef4444", borderRadius:12, padding:10, marginBottom:15 }}>
+                      ⚠️ <b>DIQQAT:</b> Byudjetning {budgetPercent}% qismi sarflandi!
+                    </div>
+                  )}
+
+                  <div style={{ background:"linear-gradient(135deg, #1e293b, #0f172a)", borderRadius:20, padding:20, marginBottom:20, border:"1px solid #334155" }}>
+                    <div style={{ color:"#94a3b8", fontSize:12 }}>Joriy qoldiq</div>
+                    <div style={{ fontSize:32, fontWeight:"bold", margin:"5px 0", color: balance < 0 ? "#ef4444" : "#fff" }}>{formatMoney(balance)}</div>
+                    <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginTop:15 }}>
+                      <span style={{color:"#10b981"}}>▲ {formatMoneyShort(totalIncome)}</span>
+                      <span style={{color:"#f472b6"}}>▼ {formatMoneyShort(monthTotal)}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize:14, color:"#94a3b8", marginBottom:10 }}>So'nggi amallar:</div>
+                  {data.transactions.slice(0, 5).map(t => (
+                    <div key={t.id} style={{ display:"flex", alignItems:"center", background:"#1e293b", padding:12, borderRadius:12, marginBottom:8 }}>
+                      <div style={{ flex:1 }}>{t.desc} <div style={{fontSize:10, color:"#64748b"}}>{t.date}</div></div>
+                      <div style={{ color:"#f472b6", fontWeight:"bold" }}>-{formatMoneyShort(t.amount)}</div>
+                      <button onClick={()=>deleteItem('tx', t.id)} style={{ background:"none", border:"none", color:"#ef4444", marginLeft:10 }}>✕</button>
+                    </div>
+                  ))}
+
+                  <button onClick={sendToTelegram} style={{ width:"100%", padding:15, background:"#10b981", color:"white", border:"none", borderRadius:12, fontWeight:"bold", marginTop:20 }}>
+                    ✅ Telegramga saqlash va chiqish
+                  </button>
+                </div>
+              )}
+
+              {/* ADD */}
+              {tab === "add" && (
+                <div>
+                  <div style={{ display:"flex", gap:10, marginBottom:15 }}>
+                    <button onClick={()=>setAddMode("expense")} style={{ flex:1, padding:10, borderRadius:8, border:"none", background:addMode==="expense"?"#ef4444":"#1e293b", color:"#fff" }}>▼ Chiqim</button>
+                    <button onClick={()=>setAddMode("income")} style={{ flex:1, padding:10, borderRadius:8, border:"none", background:addMode==="income"?"#10b981":"#1e293b", color:"#fff" }}>▲ Kirim</button>
+                  </div>
+
+                  <div style={{ fontSize:36, fontWeight:"bold", textAlign:"center", marginBottom:15, height:45 }}>
+                    {amountStr ? formatMoney(parseInt(amountStr)).replace(" so'm", "") : "0"}
+                  </div>
+
+                  <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:10, marginBottom:15 }}>
+                    {(addMode === "expense" ? CATEGORIES : INCOME_SOURCES).map(c => (
+                      <button key={c.id} onClick={()=>setSelectedCat(c.id)} style={{ minWidth:70, padding:10, borderRadius:12, border:"none", background: selectedCat===c.id ? c.color : "#1e293b", color:"#fff", display:"flex", flexDirection:"column", alignItems:"center" }}>
+                        <span style={{fontSize:20}}>{c.icon}</span><span style={{fontSize:10, marginTop:5}}>{c.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <input type="text" placeholder="Izoh..." value={desc} onChange={e=>setDesc(e.target.value)} style={{ width:"100%", padding:12, borderRadius:12, border:"none", background:"#1e293b", color:"#fff", marginBottom:15, boxSizing:"border-box" }} />
+
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:10, marginBottom:10 }}>
+                    {["1","2","3","4","5","6","7","8","9","C","0","000"].map(btn => (
+                      <button key={btn} onClick={()=>handleNumpad(btn)} style={{ padding:15, borderRadius:12, border:"none", background:"#1e293b", color:"#fff", fontSize:20, fontWeight:"bold" }}>{btn}</button>
+                    ))}
+                  </div>
+
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr", gap:10 }}>
+                    <button onClick={()=>handleNumpad("⌫")} style={{ padding:15, borderRadius:12, border:"none", background:"#334155", color:"#fff", fontSize:20 }}>⌫</button>
+                    <button onClick={handleSave} style={{ padding:15, borderRadius:12, border:"none", background:"#3b82f6", color:"#fff", fontSize:18, fontWeight:"bold" }}>Saqlash (Ro'yxatga)</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
-  </body>
+</body>
 </html>
