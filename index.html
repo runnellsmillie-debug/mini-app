@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1Money Super Pro v2</title>
+    <title>1Money Professional Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.22.20/babel.min.js"></script>
     <style>
-        body { margin: 0; background-color: #0f172a; color: #f8fafc; font-family: -apple-system, sans-serif; }
-        .tab-btn { flex: 1; padding: 10px 5px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 12px; }
+        body { margin: 0; background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-user-select: none; user-select: none; }
+        .tab-btn { flex: 1; padding: 12px; border-radius: 14px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px; }
         .balance-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 12px; flex: 1; box-sizing: border-box; }
-        .num-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 22px; border-radius: 14px; padding: 12px 0; cursor: pointer; }
-        .num-btn:active { background: rgba(255,255,255,0.1); }
-        .cat-grid-btn { padding: 12px 4px; border: none; border-radius: 14px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: bold; font-size: 11px; }
+        .num-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; font-size: 22px; border-radius: 14px; padding: 12px 0; cursor: pointer; outline: none; }
+        .num-btn:active { background: rgba(255, 255, 255, 0.15); }
+        .cat-grid-btn { padding: 12px 4px; border: none; border-radius: 14px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: bold; font-size: 11px; transition: 0.1s; }
+        .cat-grid-btn:active { transform: scale(0.95); }
         input[type="text"], input[type="number"] { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 15px; box-sizing: border-box; outline: none; }
     </style>
 </head>
@@ -69,7 +70,7 @@
           { id: "boshqa_k", label: "Qo'shimcha", icon: "🎁" }
         ];
 
-        const STORAGE_KEY = "xarajat_super_pro_v2";
+        const STORAGE_KEY = "xarajat_super_pro_v3";
 
         function loadData() {
           try {
@@ -102,10 +103,9 @@
           const [amountStr, setAmountStr] = useState("");
           const [desc, setDesc] = useState("");
 
-          // Qarzlar davlatlari
           const [debtName, setDebtName] = useState("");
           const [debtAmount, setDebtAmount] = useState("");
-          const [debtType, setDebtType] = useState("take"); // take (olaman), give (beraman)
+          const [debtType, setDebtType] = useState("take"); 
           const [debtAccount, setDebtAccount] = useState("card");
 
           const [toast, setToast] = useState(null);
@@ -129,7 +129,6 @@
           const allTx = data.transactions || [];
           const allDebts = data.debts || [];
 
-          // Live Balans hisoblari
           const cashIncome = allIncomes.filter(i => i.account === 'cash').reduce((s,i) => s+i.amount, 0);
           const cardIncome = allIncomes.filter(i => i.account !== 'cash').reduce((s,i) => s+i.amount, 0);
           const cashExp = allTx.filter(t => t.account === 'cash').reduce((s,t) => s+t.amount, 0);
@@ -171,26 +170,21 @@
             
             showToast("Muvaffaqiyatli saqlandi ✓");
             setAmountStr(""); setDesc(""); setActiveMainCat(null);
-            // Sahifadan chiqib ketmaydi, kiritish oynasida qoladi!
           }
 
-          // QARZ KIRITILGANDA BALANSDAN AYIRISH YOKI QO'SHISH
           function addDebt() {
             const amt = parseFloat(debtAmount);
             if (!debtName.trim() || !amt || amt <= 0) { showToast("Ma'lumotlarni to'liq kiriting!", "error"); return; }
             
             const newDebt = { id: Date.now(), name: debtName.trim(), amount: amt, type: debtType, account: debtAccount, date: todayStr };
             
-            // Avtomatik balans amalini yaratish
             if (debtType === "take") {
-                // Menga berishi kerak (Men unga qarz berdim) -> Chiqim
                 const txItem = {
                     id: Date.now() + 1, amount: amt, desc: `Qarz berildi: ${debtName.trim()}`,
                     cat: "Boshqa", type: "minus", account: debtAccount, date: todayStr, time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })
                 };
                 setData(d => ({ ...d, debts: [newDebt, ...(d.debts||[])], transactions: [txItem, ...(d.transactions||[])] }));
             } else {
-                // Men berishim kerak (Men qarz oldim) -> Kirim
                 const incItem = {
                     id: Date.now() + 1, amount: amt, desc: `Qarz olindi: ${debtName.trim()}`,
                     cat: "Boshqa", type: "plus", account: debtAccount, date: todayStr, monthKey: monthStr, time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })
@@ -202,18 +196,15 @@
             showToast("Qarz yozildi va balans yangilandi ✓");
           }
 
-          // QARZ UZILGANDA TESKARI AMAL BILAN BALANSNI TO'G'RILASH
           function settleDebt(debt) {
             const timeStr = new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
             if (debt.type === "take") {
-                // Bergan qarzim qaytib keldi -> Kirim
                 const incItem = {
                     id: Date.now(), amount: debt.amount, desc: `Qarz qaytdi: ${debt.name}`,
                     cat: "Boshqa", type: "plus", account: debt.account, date: todayStr, monthKey: monthStr, time: timeStr
                 };
                 setData(d => ({ ...d, debts: d.debts.filter(x => x.id !== debt.id), incomes: [incItem, ...(d.incomes||[])] }));
             } else {
-                // Olgan qarzimni qaytarib berdim -> Chiqim
                 const txItem = {
                     id: Date.now(), amount: debt.amount, desc: `Qarz to'landi: ${debt.name}`,
                     cat: "Boshqa", type: "minus", account: debt.account, date: todayStr, time: timeStr
@@ -255,12 +246,7 @@
 
           return (
             <div style={{ fontFamily: "-apple-system, sans-serif", color: "#f8fafc", padding: "12px", maxWidth: "430px", margin: "0 auto" }}>
-              {toast && (
-                <div style={{ position:"fixed", top:10, left:"50%", transform:"translateX(-50%)", background: toast.type==="error" ? "#EF4444" : "#10B981", padding:"10px 20px", borderRadius:20, zIndex:1000, fontWeight:"bold", fontSize:13 }}>
-                  {toast.msg}
-                </div>
-              )}
-
+              
               {/* TABS MENYU */}
               <div style={{ display:"flex", gap:6, marginBottom:12 }}>
                 <button onClick={() => setTab("home")} className="tab-btn" style={{ background: tab==="home" ? "#3b82f6" : "#1e293b", color:"#fff" }}>Asosiy</button>
@@ -308,10 +294,10 @@
                         <div key={t.id} style={{ display:"flex", alignItems:"center", background:"#1e293b", padding:10, borderRadius:12, marginBottom:6, fontSize:13 }}>
                           <div style={{ flex:1 }}>
                              <div style={{fontWeight:"bold"}}>{t.desc}</div>
-                             <div style={{fontSize:10, color:"#64748b"}}>{t.date} | {t.time}</div>
+                             <div style={{fontSize:10, color:"#64748b"}}>Informatsiya: {t.date} | {t.time}</div>
                           </div>
                           <div style={{ color:"#f472b6", fontWeight:"bold" }}>-{formatMoney(t.amount)}</div>
-                          <button onClick={()=>deleteItem('tx', t.id)} style={{ background:"none", border:"none", color:"#ef4444", marginLeft:10 }}>✕</button>
+                          <button onClick={()=>deleteItem('tx', t.id)} style={{ background:"none", border:"none", color:"#ef4444", marginLeft:10, cursor:"pointer" }}>✕</button>
                         </div>
                     ))
                   )}
@@ -393,10 +379,10 @@
                      </div>
 
                      <div style={{display:"flex", gap:8, marginBottom:10}}>
-                        <button onClick={()=>setDebtType("take")} style={{flex:1, padding:8, borderRadius:8, border:"none", background:debtType==="take"?"#84cc16":"#334155", color:"#fff", fontWeight:"bold", fontSize:11}}>Menga qaytaradi (Balans kamayadi)</button>
-                        <button onClick={()=>setDebtType("give")} style={{flex:1, padding:8, borderRadius:8, border:"none", background:debtType==="give"?"#ef4444":"#334155", color:"#fff", fontWeight:"bold", fontSize:11}}>Men qaytaraman (Balans ko'payadi)</button>
+                        <button onClick={()=>setDebtType("take")} style={{flex:1, padding:8, borderRadius:8, border:"none", background:debtType==="take"?"#84cc16":"#334155", color:"#fff", fontWeight:"bold", fontSize:11}}>Menga qaytaradi (Olaman)</button>
+                        <button onClick={()=>setDebtType("give")} style={{flex:1, padding:8, borderRadius:8, border:"none", background:debtType==="give"?"#ef4444":"#334155", color:"#fff", fontWeight:"bold", fontSize:11}}>Men qaytaraman (Beraman)</button>
                      </div>
-                     <button onClick={addDebt} style={{width:"100%", padding:10, background:"#3b82f6", border:"none", color:"white", fontWeight:"bold", borderRadius:8, fontSize:13}}>Balansga hisoblab qo'shish</button>
+                     <button onClick={addDebt} style={{width:"100%", padding:10, background:"#3b82f6", border:"none", color:"white", fontWeight:"bold", borderRadius:8, fontSize:13}}>Balansga qo'shish</button>
                   </div>
 
                   <div style={{fontSize:13, fontWeight:"bold", color:"#94a3b8", marginBottom:8}}>Faol qarzlar:</div>
@@ -410,28 +396,28 @@
                               <div style={{fontSize:10, color:"#64748b"}}>{d.type==="take"?"Olaman (Menga beradi)":"Beraman (Men berishim shart)"}</div>
                            </div>
                            <div style={{fontWeight:"bold", color: d.type==="take"?"#84cc16":"#ef4444", marginRight:10}}>{formatMoney(d.amount)}</div>
-                           <button onClick={()=>settleDebt(d)} style={{background:"#10b981", border:"none", color:"#fff", padding:"6px 10px", borderRadius:6, fontSize:11, fontWeight:"bold"}}>Uzildi ✅</button>
+                           <button onClick={()=>settleDebt(d)} style={{background:"#10b981", border:"none", color:"#fff", padding:"6px 10px", borderRadius:6, fontSize:11, fontWeight:"bold", cursor:"pointer"}}>Uzildi ✅</button>
                         </div>
                     ))
                   )}
                 </div>
               )}
 
-              {/* TAB 4: HISOBOT (KUNLIK XRONOLOGIYA BILAN) */}
+              {/* TAB 4: HISOBOT */}
               {tab === "report" && (
                 <div style={{ paddingBottom: "60px" }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, borderBottom:"1px solid #1e293b", paddingBottom:5 }}>
                      <span style={{ fontSize:15, fontWeight:"bold", color:"#3b82f6" }}>📊 Oylik Hisobot</span>
-                     <button onClick={downloadExcel} style={{ background:"#10b981", color:"#fff", border:"none", padding:"6px 12px", borderRadius:8, fontSize:12, fontWeight:"bold" }}>📥 Excel yuklash</button>
+                     <button onClick={downloadExcel} style={{ background:"#10b981", color:"#fff", border:"none", padding:"6px 12px", borderRadius:8, fontSize:12, fontWeight:"bold", cursor:"pointer" }}>📥 Excel yuklash</button>
                   </div>
                   
                   <div style={{ display:"flex", gap:8, marginBottom:15 }}>
                     <div className="balance-card" style={{borderColor:"#10b981"}}>
-                        <div style={{fontSize:10, color:"#94a3b8"}}>Oylik kirim</div>
+                        <div style={{fontSize:10, color:"#94a3b8"}}>Oylik jami kirim</div>
                         <div style={{fontSize:13, fontWeight:"bold", color:"#10b981"}}>{formatMoney(totalMonthInc)}</div>
                     </div>
                     <div className="balance-card" style={{borderColor:"#ef4444"}}>
-                        <div style={{fontSize:10, color:"#94a3b8"}}>Oylik chiqim</div>
+                        <div style={{fontSize:10, color:"#94a3b8"}}>Oylik jami chiqim</div>
                         <div style={{fontSize:13, fontWeight:"bold", color:"#ef4444"}}>{formatMoney(totalMonthExp)}</div>
                     </div>
                   </div>
@@ -448,19 +434,19 @@
                         
                         return (
                             <div key={mainCat.id} style={{ background:"#1e293b", padding:10, borderRadius:12, marginBottom:8, border:"1px solid #334155" }}>
-                                <div style={{ display:"flex", justifyScontent:"space-between", fontWeight:"bold", fontSize:13, display:"flex", justifyContent:"space-between" }}>
+                                <div style={{ display:"flex", justifyContent:"space-between", fontWeight:"bold", fontSize:13 }}>
                                     <span>{mainCat.icon} {mainCat.label} ({percent}%)</span>
-                                    <span style={{color:mainCat.color}}>{formatMoney(catSum)}</span>
+                                    <span style={{color:mainCat.color || "#fff"}}>{formatMoney(catSum)}</span>
                                 </div>
                                 <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 4, height: 5, marginTop: 5, overflow: "hidden" }}>
-                                    <div style={{ height: "100%", width: `${percent}%`, background: mainCat.color, borderRadius:4 }} />
+                                    <div style={{ height: "100%", width: `${percent}%`, background: mainCat.color || "#3b82f6", borderRadius:4 }} />
                                 </div>
                             </div>
                         );
                     })
                   )}
 
-                  {/* KUNLIK XARAJATLAR CHRONOLOGIYASI (KUNMA-KUN CHIQADI) */}
+                  {/* KUNLIK XARAJATLAR XRONOLOGIYASI */}
                   <div style={{ fontSize:13, fontWeight:"bold", color:"#94a3b8", marginTop:20, marginBottom:8 }}>📅 Kunlik xarajatlar xronologiyasi:</div>
                   <div style={{ background:"rgba(255,255,255,0.02)", padding:10, borderRadius:16 }}>
                      {allTx.length === 0 && allIncomes.length === 0 ? (
@@ -472,14 +458,14 @@
                         ].sort((a,b) => b.id - a.id).map(item => (
                             <div key={item.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 0", borderBottom:"1px solid #1e293b", fontSize:13 }}>
                                <div>
-                                  <div style={{fontWeight:"bold", color: item.mode==='plus'?'#10b981':'#fff'}}>{item.desc}</div>
-                                  <div style={{fontSize:10, color:"#64748b"}}>Sana: {item.date} | Vaqt: {item.time}</div>
+                                  <div style={{fontWeight:"bold", color: item.mode=='plus'?'#10b981':'#fff'}}>{item.desc}</div>
+                                  <div style={{fontSize:10, color:"#64748b"}}>Informatsiya: {item.date} | {item.time}</div>
                                </div>
                                <div style={{display:"flex", alignItems:"center", gap:8}}>
-                                  <span style={{fontWeight:"bold", color: item.mode==='plus'?'#10b981':'#f472b6'}}>
-                                     {item.mode==='plus'?'+':'-'}{formatMoney(item.amount).replace(" so'm", "")}
+                                  <span style={{fontWeight:"bold", color: item.mode=='plus'?'#10b981':'#f472b6'}}>
+                                     {item.mode=='plus'?'+':'-'}{formatMoney(item.amount).replace(" so'm", "")}
                                   </span>
-                                  <button onClick={()=>deleteItem(item.mode==='minus'?'tx':'inc', item.id)} style={{background:"none", border:"none", color:"#ef4444", fontWeight:"bold", cursor:"pointer", fontSize:14}}>✕</button>
+                                  <button onClick={()=>deleteItem(item.mode=='minus'?'tx':'inc', item.id)} style={{background:"none", border:"none", color:"#ef4444", fontWeight:"bold", cursor:"pointer", fontSize:14}}>✕</button>
                                </div>
                             </div>
                         ))
