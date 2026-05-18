@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1Money Super Pro</title>
+    <title>1Money Super Pro v2</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -69,7 +69,7 @@
           { id: "boshqa_k", label: "Qo'shimcha", icon: "🎁" }
         ];
 
-        const STORAGE_KEY = "xarajat_super_pro_v1";
+        const STORAGE_KEY = "xarajat_super_pro_v2";
 
         function loadData() {
           try {
@@ -84,7 +84,6 @@
           return new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
         }
 
-        // Taqvandagi kunlarni hisoblash matematikasi
         function getDaysUntilDay(targetDay) {
           const now = new Date();
           const today = now.getDate();
@@ -95,7 +94,7 @@
 
         function App() {
           const [data, setData] = useState(loadData);
-          const [tab, setTab] = useState("home"); // home, add, debts, report
+          const [tab, setTab] = useState("home"); 
           const [addMode, setAddMode] = useState("expense");
           const [accountType, setAccountType] = useState("card");
           const [activeMainCat, setActiveMainCat] = useState(null);
@@ -103,10 +102,11 @@
           const [amountStr, setAmountStr] = useState("");
           const [desc, setDesc] = useState("");
 
-          // Qarzlar uchun state
+          // Qarzlar davlatlari
           const [debtName, setDebtName] = useState("");
           const [debtAmount, setDebtAmount] = useState("");
           const [debtType, setDebtType] = useState("take"); // take (olaman), give (beraman)
+          const [debtAccount, setDebtAccount] = useState("card");
 
           const [toast, setToast] = useState(null);
           const [sessionData, setSessionData] = useState([]);
@@ -129,6 +129,7 @@
           const allTx = data.transactions || [];
           const allDebts = data.debts || [];
 
+          // Live Balans hisoblari
           const cashIncome = allIncomes.filter(i => i.account === 'cash').reduce((s,i) => s+i.amount, 0);
           const cardIncome = allIncomes.filter(i => i.account !== 'cash').reduce((s,i) => s+i.amount, 0);
           const cashExp = allTx.filter(t => t.account === 'cash').reduce((s,t) => s+t.amount, 0);
@@ -168,28 +169,63 @@
             const methodStr = accountType === "cash" ? "Naqd" : "Plastik";
             setSessionData(prev => [...prev, { amount: amt, category: `${activeMainCat ? activeMainCat.label+'->'+catLabel : catLabel} (${methodStr})`, type: addMode === "expense" ? "minus" : "plus" }]);
             
-            showToast("Saqlandi ✓");
-            setAmountStr(""); setDesc(""); setActiveMainCat(null); setTab("home");
+            showToast("Muvaffaqiyatli saqlandi ✓");
+            setAmountStr(""); setDesc(""); setActiveMainCat(null);
+            // Sahifadan chiqib ketmaydi, kiritish oynasida qoladi!
           }
 
+          // QARZ KIRITILGANDA BALANSDAN AYIRISH YOKI QO'SHISH
           function addDebt() {
             const amt = parseFloat(debtAmount);
             if (!debtName.trim() || !amt || amt <= 0) { showToast("Ma'lumotlarni to'liq kiriting!", "error"); return; }
-            const newDebt = { id: Date.now(), name: debtName.trim(), amount: amt, type: debtType, date: todayStr };
-            setData(d => ({ ...d, debts: [newDebt, ...(d.debts||[])] }));
+            
+            const newDebt = { id: Date.now(), name: debtName.trim(), amount: amt, type: debtType, account: debtAccount, date: todayStr };
+            
+            // Avtomatik balans amalini yaratish
+            if (debtType === "take") {
+                // Menga berishi kerak (Men unga qarz berdim) -> Chiqim
+                const txItem = {
+                    id: Date.now() + 1, amount: amt, desc: `Qarz berildi: ${debtName.trim()}`,
+                    cat: "Boshqa", type: "minus", account: debtAccount, date: todayStr, time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })
+                };
+                setData(d => ({ ...d, debts: [newDebt, ...(d.debts||[])], transactions: [txItem, ...(d.transactions||[])] }));
+            } else {
+                // Men berishim kerak (Men qarz oldim) -> Kirim
+                const incItem = {
+                    id: Date.now() + 1, amount: amt, desc: `Qarz olindi: ${debtName.trim()}`,
+                    cat: "Boshqa", type: "plus", account: debtAccount, date: todayStr, monthKey: monthStr, time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })
+                };
+                setData(d => ({ ...d, debts: [newDebt, ...(d.debts||[])], incomes: [incItem, ...(d.incomes||[])] }));
+            }
+
             setDebtName(""); setDebtAmount("");
-            showToast("Qarz daftarga yozildi ✓");
+            showToast("Qarz yozildi va balans yangilandi ✓");
           }
 
-          function settleDebt(id) {
-            setData(d => ({ ...d, debts: d.debts.filter(debt => debt.id !== id) }));
-            showToast("Qarz uzildi/o'chirildi");
+          // QARZ UZILGANDA TESKARI AMAL BILAN BALANSNI TO'G'RILASH
+          function settleDebt(debt) {
+            const timeStr = new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+            if (debt.type === "take") {
+                // Bergan qarzim qaytib keldi -> Kirim
+                const incItem = {
+                    id: Date.now(), amount: debt.amount, desc: `Qarz qaytdi: ${debt.name}`,
+                    cat: "Boshqa", type: "plus", account: debt.account, date: todayStr, monthKey: monthStr, time: timeStr
+                };
+                setData(d => ({ ...d, debts: d.debts.filter(x => x.id !== debt.id), incomes: [incItem, ...(d.incomes||[])] }));
+            } else {
+                // Olgan qarzimni qaytarib berdim -> Chiqim
+                const txItem = {
+                    id: Date.now(), amount: debt.amount, desc: `Qarz to'landi: ${debt.name}`,
+                    cat: "Boshqa", type: "minus", account: debt.account, date: todayStr, time: timeStr
+                };
+                setData(d => ({ ...d, debts: d.debts.filter(x => x.id !== debt.id), transactions: [txItem, ...(d.transactions||[])] }));
+            }
+            showToast("Qarz yopildi va balans yangilandi ✓");
           }
 
           function downloadExcel() {
             let csvContent = "\uFEFF"; 
             csvContent += "Sana,Turi,Rukun,Izoh,Summa,Hisob turi\n";
-            
             const rows = [
                 ...allIncomes.map(i => ({...i, tStr: "Kirim"})),
                 ...allTx.map(t => ({...t, tStr: "Chiqim"}))
@@ -211,9 +247,10 @@
             showToast("Excel (CSV) yuklab olindi!");
           }
 
-          function sendToTelegram() {
-            if(sessionData.length > 0) tg.sendData(JSON.stringify(sessionData));
-            else tg.close();
+          function deleteItem(type, id) {
+            if(type === 'tx') setData(d => ({ ...d, transactions: d.transactions.filter(t => t.id !== id) }));
+            else setData(d => ({ ...d, incomes: d.incomes.filter(i => i.id !== id) }));
+            showToast("O'chirildi");
           }
 
           return (
@@ -224,7 +261,7 @@
                 </div>
               )}
 
-              {/* MENYU TABS */}
+              {/* TABS MENYU */}
               <div style={{ display:"flex", gap:6, marginBottom:12 }}>
                 <button onClick={() => setTab("home")} className="tab-btn" style={{ background: tab==="home" ? "#3b82f6" : "#1e293b", color:"#fff" }}>Asosiy</button>
                 <button onClick={() => setTab("add")} className="tab-btn" style={{ background: tab==="add" ? "#3b82f6" : "#1e293b", color:"#fff" }}>Kiritish</button>
@@ -251,7 +288,6 @@
                     </div>
                   </div>
 
-                  {/* 📅 TO'LOVLAR TAQVIMI WIDGETI */}
                   <div style={{ background:"#1e293b", border:"1px solid #334155", borderRadius:16, padding:12, marginBottom:15 }}>
                      <div style={{fontSize:12, color:"#94a3b8", fontWeight:"bold", marginBottom:8}}>📅 Rejali yaqin to'lovlar:</div>
                      <div style={{display:"flex", justifyContent:"space-between", fontSize:13, marginBottom:5, background:"rgba(255,255,255,0.02)", padding:8, borderRadius:8}}>
@@ -264,22 +300,23 @@
                      </div>
                   </div>
 
-                  <div style={{ fontSize:13, fontWeight:"bold", color:"#94a3b8", marginBottom:8 }}>Bugungi xarajatlar:</div>
+                  <div style={{ fontSize:13, fontWeight:"bold", color:"#94a3b8", marginBottom:8 }}>Bugungi tezkor xarajatlar:</div>
                   {todayTransactions.length === 0 ? (
-                    <div style={{textAlign:"center", padding:15, color:"#475569", fontSize:12}}>Bugun xarajat yo'q.</div>
+                    <div style={{textAlign:"center", padding:15, color:"#475569", fontSize:12}}>Bugun xarajat kiritilmadi.</div>
                   ) : (
-                    todayTransactions.map(t => (
+                    todayTransactions.slice(0, 5).map(t => (
                         <div key={t.id} style={{ display:"flex", alignItems:"center", background:"#1e293b", padding:10, borderRadius:12, marginBottom:6, fontSize:13 }}>
                           <div style={{ flex:1 }}>
                              <div style={{fontWeight:"bold"}}>{t.desc}</div>
-                             <div style={{fontSize:10, color:"#64748b"}}>{t.cat} {t.subCat ? `-> ${t.subCat}` : ''}</div>
+                             <div style={{fontSize:10, color:"#64748b"}}>{t.date} | {t.time}</div>
                           </div>
                           <div style={{ color:"#f472b6", fontWeight:"bold" }}>-{formatMoney(t.amount)}</div>
+                          <button onClick={()=>deleteItem('tx', t.id)} style={{ background:"none", border:"none", color:"#ef4444", marginLeft:10 }}>✕</button>
                         </div>
                     ))
                   )}
 
-                  <button onClick={sendToTelegram} style={{ width:"100%", padding:12, background:"#10b981", color:"white", border:"none", borderRadius:12, fontWeight:"bold", marginTop:20, fontSize:14 }}>
+                  <button onClick={sendToTelegram} style={{ width:"100%", padding:14, background:"#10b981", color:"white", border:"none", borderRadius:12, fontWeight:"bold", marginTop:20, fontSize:14 }}>
                     ✅ Telegramga saqlash va chiqish ({sessionData.length})
                   </button>
                 </div>
@@ -346,42 +383,46 @@
               {tab === "debts" && (
                 <div>
                   <div style={{ background:"#1e293b", padding:12, borderRadius:16, marginBottom:15, border:"1px solid #334155" }}>
-                     <div style={{fontSize:13, fontWeight:"bold", marginBottom:8}}>🤝 Yangi qarz yozish:</div>
-                     <input type="text" placeholder="Kimga / Kimdan? (Ism)" value={debtName} onChange={e=>setDebtName(e.target.value)} style={{marginBottom:8}} />
+                     <div style={{fontSize:13, fontWeight:"bold", marginBottom:8}}>🤝 Yangi qarz amali:</div>
+                     <input type="text" placeholder="Ism yozing..." value={debtName} onChange={e=>setDebtName(e.target.value)} style={{marginBottom:8}} />
                      <input type="number" placeholder="Summa (so'mda)" value={debtAmount} onChange={e=>setDebtAmount(e.target.value)} style={{marginBottom:10}} />
                      
-                     <div style={{display:"flex", gap:8, marginBottom:10}}>
-                        <button onClick={()=>setDebtType("take")} style={{flex:1, padding:8, borderRadius:8, border:"none", background:debtType==="take"?"#84cc16":"#334155", color:"#fff", fontWeight:"bold", fontSize:12}}>Menga berishi kerak (Olaman)</button>
-                        <button onClick={()=>setDebtType("give")} style={{flex:1, padding:8, borderRadius:8, border:"none", background:debtType==="give"?"#ef4444":"#334155", color:"#fff", fontWeight:"bold", fontSize:12}}>Men berishim kerak (Beraman)</button>
+                     <div style={{display:"flex", gap:6, marginBottom:8}}>
+                        <button onClick={()=>setDebtAccount("card")} style={{flex:1, padding:6, borderRadius:6, border:debtAccount==="card"?"1px solid #3b82f6":"none", background:"#334155", color:"#fff", fontSize:11}}>💳 Plastik hisobga</button>
+                        <button onClick={()=>setDebtAccount("cash")} style={{flex:1, padding:6, borderRadius:6, border:debtAccount==="cash"?"1px solid #10b981":"none", background:"#334155", color:"#fff", fontSize:11}}>💵 Naqd hisobga</button>
                      </div>
-                     <button onClick={addDebt} style={{width:"100%", padding:10, background:"#3b82f6", border:"none", color:"white", fontWeight:"bold", borderRadius:8, fontSize:13}}>Daftarga qo'shish</button>
+
+                     <div style={{display:"flex", gap:8, marginBottom:10}}>
+                        <button onClick={()=>setDebtType("take")} style={{flex:1, padding:8, borderRadius:8, border:"none", background:debtType==="take"?"#84cc16":"#334155", color:"#fff", fontWeight:"bold", fontSize:11}}>Menga qaytaradi (Balans kamayadi)</button>
+                        <button onClick={()=>setDebtType("give")} style={{flex:1, padding:8, borderRadius:8, border:"none", background:debtType==="give"?"#ef4444":"#334155", color:"#fff", fontWeight:"bold", fontSize:11}}>Men qaytaraman (Balans ko'payadi)</button>
+                     </div>
+                     <button onClick={addDebt} style={{width:"100%", padding:10, background:"#3b82f6", border:"none", color:"white", fontWeight:"bold", borderRadius:8, fontSize:13}}>Balansga hisoblab qo'shish</button>
                   </div>
 
-                  <div style={{fontSize:13, fontWeight:"bold", color:"#94a3b8", marginBottom:8}}>Faol qarzlar ro'yxati:</div>
+                  <div style={{fontSize:13, fontWeight:"bold", color:"#94a3b8", marginBottom:8}}>Faol qarzlar:</div>
                   {allDebts.length === 0 ? (
-                    <div style={{textAlign:"center", padding:15, color:"#475569", fontSize:12}}>Qarzlar ro'yxati bo'm-bo'sh.</div>
+                    <div style={{textAlign:"center", padding:15, color:"#475569", fontSize:12}}>Hozircha qarzlar yo'q.</div>
                   ) : (
                     allDebts.map(d => (
                         <div key={d.id} style={{display:"flex", alignItems:"center", background:"#1e293b", padding:10, borderRadius:12, marginBottom:6, fontSize:13, borderLeft: d.type==="take"?"4px solid #84cc16":"4px solid #ef4444"}}>
                            <div style={{flex:1}}>
-                              <div style={{fontWeight:"bold"}}>{d.name}</div>
-                              <div style={{fontSize:10, color:"#64748b"}}>{d.type==="take"?"Olaman (Menga qarz)":"Beraman (Mening qarzim)"}</div>
+                              <div style={{fontWeight:"bold"}}>{d.name} <span style={{fontSize:10, color:"#64748b"}}>({d.account==='cash'?'Naqd':'Plastik'})</span></div>
+                              <div style={{fontSize:10, color:"#64748b"}}>{d.type==="take"?"Olaman (Menga beradi)":"Beraman (Men berishim shart)"}</div>
                            </div>
                            <div style={{fontWeight:"bold", color: d.type==="take"?"#84cc16":"#ef4444", marginRight:10}}>{formatMoney(d.amount)}</div>
-                           <button onClick={()=>settleDebt(d.id)} style={{background:"#334155", border:"none", color:"#fff", padding:"4px 8px", borderRadius:6, fontSize:11}}>Uzilishi</button>
+                           <button onClick={()=>settleDebt(d)} style={{background:"#10b981", border:"none", color:"#fff", padding:"6px 10px", borderRadius:6, fontSize:11, fontWeight:"bold"}}>Uzildi ✅</button>
                         </div>
                     ))
                   )}
                 </div>
               )}
 
-              {/* TAB 4: HISOBOT (PROGRESS BAR & EXCEL) */}
+              {/* TAB 4: HISOBOT (KUNLIK XRONOLOGIYA BILAN) */}
               {tab === "report" && (
-                <div style={{ paddingBottom: "40px" }}>
+                <div style={{ paddingBottom: "60px" }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, borderBottom:"1px solid #1e293b", paddingBottom:5 }}>
                      <span style={{ fontSize:15, fontWeight:"bold", color:"#3b82f6" }}>📊 Oylik Hisobot</span>
-                     {/* 📥 EXCEL YUKLAB OLISH TUGMASI */}
-                     <button onClick={downloadExcel} style={{ background:"#10b981", color:"#fff", border:"none", padding:"6px 12px", borderRadius:8, fontSize:12, fontWeight:"bold", cursor:"pointer" }}>📥 Excel yuklash</button>
+                     <button onClick={downloadExcel} style={{ background:"#10b981", color:"#fff", border:"none", padding:"6px 12px", borderRadius:8, fontSize:12, fontWeight:"bold" }}>📥 Excel yuklash</button>
                   </div>
                   
                   <div style={{ display:"flex", gap:8, marginBottom:15 }}>
@@ -395,17 +436,14 @@
                     </div>
                   </div>
 
-                  <div style={{ fontSize:13, fontWeight:"bold", color:"#94a3b8", marginBottom:8 }}>Toifalar bo'yicha vizual tahlil:</div>
-                  
+                  <div style={{ fontSize:13, fontWeight:"bold", color:"#94a3b8", marginBottom:8 }}>Toifalar bo'yicha sarf-xarajat:</div>
                   {monthTransactions.length === 0 ? (
-                    <div style={{textAlign:"center", padding:20, color:"#475569"}}>Bu oy hali xarajat yo'q.</div>
+                    <div style={{textAlign:"center", padding:15, color:"#475569", fontSize:12}}>Bu oy hali xarajat yo'q.</div>
                   ) : (
                     CATEGORIES.map(mainCat => {
                         const catTx = monthTransactions.filter(t => t.cat === mainCat.label);
                         const catSum = catTx.reduce((s,t)=>s+t.amount, 0);
                         if(catSum === 0) return null;
-                        
-                        // Rangli Foiz progress barlari matematikasi
                         const percent = totalMonthExp > 0 ? Math.round((catSum / totalMonthExp) * 100) : 0;
                         
                         return (
@@ -414,24 +452,39 @@
                                     <span>{mainCat.icon} {mainCat.label} ({percent}%)</span>
                                     <span style={{color:mainCat.color}}>{formatMoney(catSum)}</span>
                                 </div>
-                                
-                                {/* 📊 VIZUAL PROGRESS BAR CHIZIG'I */}
-                                <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 4, height: 6, marginTop: 6, marginBottom:6, overflow: "hidden" }}>
-                                    <div style={{ height: "100%", width: `${percent}%`, background: mainCat.color, borderRadius:4, transition:"0.3s" }} />
-                                </div>
-
-                                <div style={{fontSize:11, color:"#64748b"}}>
-                                    {catTx.map(t => (
-                                        <div key={t.id} style={{display:"flex", justifyContent:"space-between", marginTop:2, paddingLeft:10}}>
-                                            <span>• {t.desc} {t.subCat ? `(${t.subCat})` : ''}</span>
-                                            <span>{formatMoney(t.amount)}</span>
-                                        </div>
-                                    ))}
+                                <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 4, height: 5, marginTop: 5, overflow: "hidden" }}>
+                                    <div style={{ height: "100%", width: `${percent}%`, background: mainCat.color, borderRadius:4 }} />
                                 </div>
                             </div>
                         );
                     })
                   )}
+
+                  {/* KUNLIK XARAJATLAR CHRONOLOGIYASI (KUNMA-KUN CHIQADI) */}
+                  <div style={{ fontSize:13, fontWeight:"bold", color:"#94a3b8", marginTop:20, marginBottom:8 }}>📅 Kunlik xarajatlar xronologiyasi:</div>
+                  <div style={{ background:"rgba(255,255,255,0.02)", padding:10, borderRadius:16 }}>
+                     {allTx.length === 0 && allIncomes.length === 0 ? (
+                        <div style={{textAlign:"center", color:"#475569", fontSize:12, padding:10}}>Tarix bo'm-bo'sh.</div>
+                     ) : (
+                        [
+                          ...allIncomes.map(i => ({...i, mode: 'plus'})),
+                          ...allTx.map(t => ({...t, mode: 'minus'}))
+                        ].sort((a,b) => b.id - a.id).map(item => (
+                            <div key={item.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 0", borderBottom:"1px solid #1e293b", fontSize:13 }}>
+                               <div>
+                                  <div style={{fontWeight:"bold", color: item.mode==='plus'?'#10b981':'#fff'}}>{item.desc}</div>
+                                  <div style={{fontSize:10, color:"#64748b"}}>Sana: {item.date} | Vaqt: {item.time}</div>
+                               </div>
+                               <div style={{display:"flex", alignItems:"center", gap:8}}>
+                                  <span style={{fontWeight:"bold", color: item.mode==='plus'?'#10b981':'#f472b6'}}>
+                                     {item.mode==='plus'?'+':'-'}{formatMoney(item.amount).replace(" so'm", "")}
+                                  </span>
+                                  <button onClick={()=>deleteItem(item.mode==='minus'?'tx':'inc', item.id)} style={{background:"none", border:"none", color:"#ef4444", fontWeight:"bold", cursor:"pointer", fontSize:14}}>✕</button>
+                               </div>
+                            </div>
+                        ))
+                     )}
+                  </div>
                 </div>
               )}
 
