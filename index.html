@@ -16,22 +16,26 @@
         .widget-box { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
         .mode-selector, .acc-selector { display: flex; gap: 8px; margin-bottom: 10px; }
         .mode-btn, .acc-btn { flex: 1; padding: 10px; border-radius: 10px; border: none; font-weight: bold; color: #fff; background: #1e293b; cursor: pointer; font-size: 13px; }
-        .num-display { fontSize: 30px; font-weight: bold; text-align: center; margin-bottom: 10px; height: 35px; color: #fff; font-size: 28px; }
+        .num-display { font-size: 32px; font-weight: bold; text-align: center; margin-bottom: 10px; height: 40px; color: #fff; }
         .grid-container { background: rgba(255,255,255,0.02); padding: 10px; border-radius: 14px; margin-bottom: 10px; border: 1px dashed #334155; }
         .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
         .sub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .cat-grid-btn { padding: 12px 2px; border: none; border-radius: 14px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: bold; font-size: 11px; }
+        .cat-grid-btn { padding: 12px 2px; border: none; border-radius: 14px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: bold; font-size: 11px; transition: 0.1s; }
+        .cat-grid-btn:active { transform: scale(0.95); }
         .num-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
-        .num-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; font-size: 22px; border-radius: 14px; padding: 12px 0; cursor: pointer; }
+        .num-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; font-size: 22px; border-radius: 14px; padding: 14px 0; cursor: pointer; outline: none; }
         .num-btn:active { background: rgba(255, 255, 255, 0.15); }
         .input-text { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 15px; box-sizing: border-box; outline: none; margin-bottom: 10px; }
         .history-item { display: flex; align-items: center; background: #1e293b; padding: 10px; border-radius: 12px; margin-bottom: 6px; font-size: 13px; }
-        .progress-bar-bg { background: rgba(255,255,255,0.05); border-radius: 4px; height: 6px; marginTop: 5px; overflow: hidden; margin: 6px 0; }
-        .progress-bar-fill { height: 100%; borderRadius: 4px; }
-        .delete-btn { background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer; font-size: 14px; margin-left: auto; padding: 5px; }
+        .progress-bar-bg { background: rgba(255,255,255,0.05); border-radius: 4px; height: 6px; overflow: hidden; margin: 6px 0; }
+        .progress-bar-fill { height: 100%; border-radius: 4px; }
+        .delete-btn { background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer; font-size: 16px; margin-left: auto; padding: 5px; }
+        #toast-msg { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 20px; z-index: 9999; font-weight: bold; font-size: 14px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
+
+    <div id="toast-msg"></div>
 
     <div class="tabs">
         <button id="btn-home" class="tab-btn active" onclick="switchTab('home')">Asosiy</button>
@@ -68,7 +72,7 @@
         </div>
         <div style="font-size: 13px; font-weight: bold; color: #94a3b8; margin-bottom: 8px;">Bugungi tezkor xarajatlar:</div>
         <div id="home-today-list"></div>
-        <button onclick="sendToTelegram()" style="width:100%; padding:14px; background:#10b981; color:white; border:none; border-radius:12; font-weight:bold; margin-top:20px; font-size:14px; border-radius:12px; cursor:pointer;">
+        <button onclick="sendToTelegram()" style="width:100%; padding:14px; background:#10b981; color:white; border:none; border-radius:12px; font-weight:bold; margin-top:20px; font-size:14px; cursor:pointer;">
             ✅ Telegramga saqlash va chiqish (<span id="session-count">0</span>)
         </button>
     </div>
@@ -84,7 +88,7 @@
         </div>
         <div id="num-display" class="num-display">0</div>
         <div class="grid-container" id="cats-container"></div>
-        <input type="text" id="add-desc" placeholder="Izoh yozing (ixtiyoriy)..." />
+        <input type="text" id="add-desc" class="input-text" placeholder="Izoh yozing (ixtiyoriy)..." />
         <div class="num-grid">
             <button class="num-btn" onclick="pressNum('1')">1</button>
             <button class="num-btn" onclick="pressNum('2')">2</button>
@@ -97,19 +101,18 @@
             <button class="num-btn" onclick="pressNum('9')">9</button>
             <button class="num-btn" style="color:#ef4444;" onclick="pressNum('C')">C</button>
             <button class="num-btn" onclick="pressNum('0')">0</button>
-            <button class="num-btn" onclick="pressNum('000')">000</button>
+            <button class="num-btn" onclick="pressNum('⌫')">⌫</button>
         </div>
-        <div style="display: flex; gap: 8px;">
-            <button class="num-btn" style="flex: 1;" onclick="pressNum('⌫')">⌫</button>
-            <button class="num-btn" style="flex: 2; background: #3b82f6; font-weight: bold; font-size: 16px;" onclick="saveTransaction()">Kiritish (Saqlash)</button>
+        <div style="text-align: center; color: #64748b; font-size: 11px; margin-top: 5px;">
+            💡 Pulni yozib, tepadagi toifani bossangiz avtomatik saqlanadi!
         </div>
     </div>
 
     <div id="tab-debts" style="display: none;">
         <div class="widget-box">
             <div style="font-size: 13px; font-weight: bold; margin-bottom: 8px;">🤝 Yangi qarz amali:</div>
-            <input type="text" id="debt-name" placeholder="Ism yozing..." class="input-text" style="margin-bottom:8px;" />
-            <input type="number" id="debt-amount" placeholder="Summa (so'mda)..." class="input-text" style="margin-bottom:8px;" />
+            <input type="text" id="debt-name" placeholder="Ism yozing..." class="input-text" />
+            <input type="number" id="debt-amount" placeholder="Summa (so'mda)..." class="input-text" />
             <div class="acc-selector">
                 <button id="debt-acc-card" class="acc-btn" style="border:1px solid #3b82f6;" onclick="setDebtAccount('card')">💳 Plastik hisobga</button>
                 <button id="debt-acc-cash" class="acc-btn" onclick="setDebtAccount('cash')">💵 Naqd hisobga</button>
@@ -118,7 +121,7 @@
                 <button id="debt-type-take" class="mode-btn" style="background:#84cc16;" onclick="setDebtType('take')">Menga qaytaradi</button>
                 <button id="debt-type-give" class="mode-btn" onclick="setDebtType('give')">Men qaytaraman</button>
             </div>
-            <button onclick="saveDebt()" style="width:100%; padding:10px; background:#3b82f6; border:none; color:white; font-weight:bold; border-radius:8px; cursor:pointer;">Balansga qo'shish</button>
+            <button onclick="saveDebt()" style="width:100%; padding:12px; background:#3b82f6; border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer; font-size:14px;">Balansga qo'shish</button>
         </div>
         <div style="font-size:13px; font-weight:bold; color:#94a3b8; margin-bottom:8px;">Faol qarzlar:</div>
         <div id="debts-list"></div>
@@ -146,7 +149,6 @@
     </div>
 
     <script>
-        // DATA MODEL & CATEGORIES
         const CATEGORIES = [
           { id: "kommunal", label: "Kommunal", icon: "🏠", color: "#FBBF24", subs: [
               { id: "svet", label: "Svet", icon: "⚡" }, { id: "gaz", label: "Gaz", icon: "🔥" }, { id: "suv", label: "Suv", icon: "💧" }, { id: "musor", label: "Chiqindi", icon: "🧹" }
@@ -186,7 +188,14 @@
         let debtAccount = "card";
         let sessionData = [];
 
-        // LOAD DATA INITIALIZATION
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById("toast-msg");
+            toast.innerText = msg;
+            toast.style.background = isError ? "#EF4444" : "#10B981";
+            toast.style.display = "block";
+            setTimeout(() => { toast.style.display = "none"; }, 2500);
+        }
+
         function init() {
             const raw = localStorage.getItem("xarajat_super_pro_v3");
             if (raw) { try { state = JSON.parse(raw); } catch(e) {} }
@@ -201,7 +210,6 @@
             render();
         }
 
-        // NAVIGATION
         function switchTab(tabId) {
             currentTab = tabId;
             document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -214,11 +222,9 @@
             render();
         }
 
-        // NUMPAD INPUTS
         function pressNum(val) {
             if (val === "C") amountStr = "";
             else if (val === "⌫") amountStr = amountStr.slice(0, -1);
-            else if (val === "000") amountStr = amountStr ? amountStr + "000" : "";
             else if (amountStr.length < 10) amountStr += val;
             
             document.getElementById("num-display").innerText = amountStr ? new Intl.NumberFormat("uz-UZ").format(parseInt(amountStr)) : "0";
@@ -250,9 +256,11 @@
             document.getElementById("debt-type-give").style.background = type === "give" ? "#ef4444" : "#334155";
         }
 
-        // RENDER LOGIC
+        function formatMoney(n) {
+            return new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
+        }
+
         function render() {
-            // Live Balance Calculations
             const cashInc = state.incomes.filter(i => i.account === 'cash').reduce((s,i) => s + i.amount, 0);
             const cardInc = state.incomes.filter(i => i.account !== 'cash').reduce((s,i) => s + i.amount, 0);
             const cashExp = state.transactions.filter(t => t.account === 'cash').reduce((s,t) => s + t.amount, 0);
@@ -266,23 +274,22 @@
             document.getElementById("main-card-balance").innerText = formatMoney(cardBalance);
             document.getElementById("main-cash-balance").innerText = formatMoney(cashBalance);
 
-            // Rejali To'lovlar Days calculation
             const now = new Date(); const today = now.getDate();
             const daysLeft = (d) => today <= d ? d - today : Math.ceil((new Date(now.getFullYear(), now.getMonth() + 1, d) - now) / 86400000);
             document.getElementById("days-bogcha").innerText = daysLeft(5) + " kun qoldi";
             document.getElementById("days-kredit").innerText = daysLeft(10) + " kun qoldi";
 
-            if (currentTab === "home") renderHome(state.transactions);
+            if (currentTab === "home") renderHome();
             if (currentTab === "add") renderCats();
             if (currentTab === "debts") renderDebts();
-            if (currentTab === "report") renderReport(totalMonthExp = state.transactions.filter(t => t.date.startsWith(new Date().toISOString().slice(0, 7))).reduce((s,t)=>s+t.amount, 0));
+            if (currentTab === "report") renderReport();
         }
 
-        function renderHome(txs) {
+        function renderHome() {
             const todayStr = new Date().toISOString().slice(0, 10);
-            const todayTxs = txs.filter(t => t.date === todayStr).slice(0, 5);
+            const todayTxs = state.transactions.filter(t => t.date === todayStr).slice(0, 5);
             let html = "";
-            if(todayTxs.length === 0) html = "<div style='textAlign:center; padding:15px; color:#475569; font-size:12px;'>Bugun xarajat kiritilmadi.</div>";
+            if(todayTxs.length === 0) html = "<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Bugun xarajat kiritilmadi.</div>";
             else {
                 todayTxs.forEach(t => {
                     html += `<div class="history-item">
@@ -304,7 +311,7 @@
             if (addMode === "income") {
                 let html = "<div class='cat-grid'>";
                 INCOME_SOURCES.forEach(s => {
-                    html += `<button class="cat-grid-btn" style="background:#1e293b;" onclick="finalSelect('${s.label}')">
+                    html += `<button class="cat-grid-btn" style="background:#1e293b; border:1px solid #334155;" onclick="finalSelect('${s.label}')">
                         <span style="font-size:18px;">${s.icon}</span><span>${s.label}</span>
                     </button>`;
                 });
@@ -316,7 +323,7 @@
                 let html = `<div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <span style="font-size:12px; color:#94a3b8;">Yo'nalish: <b>${activeMainCat.label}</b></span>
-                        <button onclick="backToMainCats()" style="background:#475569; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px;">⬅ Orqaga</button>
+                        <button onclick="backToMainCats()" style="background:#475569; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">⬅ Orqaga</button>
                     </div><div class='sub-grid'>`;
                 activeMainCat.subs.forEach(sub => {
                     html += `<button class="cat-grid-btn" style="background:#334155;" onclick="finalSelect('${sub.label}')">
@@ -346,10 +353,9 @@
 
         function backToMainCats() { activeMainCat = null; renderCats(); }
 
-        // CORE LOGIC: SAVE AND DELETE
         function finalSelect(label) {
             const amt = parseFloat(amountStr);
-            if (!amt || amt <= 0) { alert("Iltimos, avval summani kiriting!"); return; }
+            if (!amt || amt <= 0) { showToast("Iltimos, avval summani kiriting!", true); return; }
             
             const d = new Date();
             const item = {
@@ -367,19 +373,13 @@
             amountStr = ""; document.getElementById("add-desc").value = ""; activeMainCat = null;
             document.getElementById("num-display").innerText = "0";
             saveState();
-            alert("Muvaffaqiyatli saqlandi ✓");
+            showToast("Muvaffaqiyatli saqlandi ✓");
         }
 
-        function saveTransaction() {
-            if(!amountStr) { alert("Summa kiritilmagan!"); return; }
-            alert("Iltimos, pastdagi toifalardan birini bosing!");
-        }
-
-        function addDebt() { saveDebt(); }
         function saveDebt() {
             const name = document.getElementById("debt-name").value.trim();
             const amt = parseFloat(document.getElementById("debt-amount").value);
-            if (!name || !amt || amt <= 0) { alert("Ma'lumotlarni to'liq kiriting!"); return; }
+            if (!name || !amt || amt <= 0) { showToast("Ma'lumotlarni to'liq kiriting!", true); return; }
 
             const item = { id: Date.now(), name: name, amount: amt, type: debtType, account: debtAccount, date: new Date().toISOString().slice(0,10) };
             state.debts.unshift(item);
@@ -388,11 +388,12 @@
             if (debtType === "take") {
                 state.transactions.unshift({ id: Date.now()+1, amount: amt, desc: `Qarz berildi: ${name}`, cat: "Boshqa", account: debtAccount, date: item.date, time: timeStr });
             } else {
-                state.incomes.unshift({ id: Date.now()+1, amount: amt, desc: `Qarz olindi: ${name}`, cat: "Boshqa", account: debtAccount, date: item.date, time: timeStr });
+                state.incomes.unshift({ id: Date.now()+1, amount: amt, desc: `Qarz olindi: ${name}`, cat: "Boshqa", account: debtAccount, date: item.date, time: timeStr, monthKey: item.date.slice(0, 7) });
             }
             
             document.getElementById("debt-name").value = ""; document.getElementById("debt-amount").value = "";
             saveState();
+            showToast("Qarz balansga qo'shildi ✓");
         }
 
         function closeDebt(id) {
@@ -402,24 +403,25 @@
             const todayStr = new Date().toISOString().slice(0, 10);
 
             if (debt.type === "take") {
-                state.incomes.unshift({ id: Date.now(), amount: debt.amount, desc: `Qarz qaytdi: ${debt.name}`, cat: "Boshqa", account: debt.account, date: todayStr, time: timeStr });
+                state.incomes.unshift({ id: Date.now(), amount: debt.amount, desc: `Qarz qaytdi: ${debt.name}`, cat: "Boshqa", account: debt.account, date: todayStr, time: timeStr, monthKey: todayStr.slice(0, 7) });
             } else {
                 state.transactions.unshift({ id: Date.now(), amount: debt.amount, desc: `Qarz to'landi: ${debt.name}`, cat: "Boshqa", account: debt.account, date: todayStr, time: timeStr });
             }
             state.debts = state.debts.filter(x => x.id !== id);
             saveState();
+            showToast("Qarz yopildi ✓");
         }
 
         function deleteItem(type, id) {
             if(type === 'tx') state.transactions = state.transactions.filter(t => t.id !== id);
             else state.incomes = state.incomes.filter(i => i.id !== id);
             saveState();
+            showToast("O'chirildi");
         }
 
-        // DEBTS RENDERING
         function renderDebts() {
             let html = "";
-            if (state.debts.length === 0) html = "<div style='textAlign:center; padding:15px; color:#475569; font-size:12px;'>Hozircha faol qarzlar yo'q.</div>";
+            if (state.debts.length === 0) html = "<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Hozircha qarzlar yo'q.</div>";
             else {
                 state.debts.forEach(d => {
                     const color = d.type === "take" ? "#84cc16" : "#ef4444";
@@ -436,17 +438,17 @@
             document.getElementById("debts-list").innerHTML = html;
         }
 
-        // REPORTS & EXCEL RENDERING
-        function renderReport(totalMonthExp) {
+        function renderReport() {
             const monthStr = new Date().toISOString().slice(0, 7);
             const mIncs = state.incomes.filter(i => i.date.startsWith(monthStr));
             const mTxs = state.transactions.filter(t => t.date.startsWith(monthStr));
+            
             const totalMonthInc = mIncs.reduce((s,i)=>s+i.amount, 0);
+            const totalMonthExp = mTxs.reduce((s,t)=>s+t.amount, 0);
 
             document.getElementById("report-month-inc").innerText = formatMoney(totalMonthInc);
             document.getElementById("report-month-exp").innerText = formatMoney(totalMonthExp);
 
-            // Analysis Bars
             let catsHtml = "";
             if (mTxs.length === 0) catsHtml = "<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Bu oy xarajat kiritilmadi.</div>";
             else {
@@ -469,7 +471,6 @@
             }
             document.getElementById("report-cats-analysis").innerHTML = catsHtml;
 
-            // Chronology List with Delete Buttons
             let chronHtml = "";
             const combined = [
                 ...state.incomes.map(i => ({...i, mode: 'plus'})),
@@ -522,8 +523,8 @@
             else tg.close();
         }
 
-        // START INITIALIZATION
-        window.onload = init;
+        // TIZIMNI ZURRIYAT BILAN DARXOL ISHGA TUSHIRISH
+        init();
     </script>
 </body>
 </html>
