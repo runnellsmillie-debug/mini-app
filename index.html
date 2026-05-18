@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1Money Ultimate ERP v4</title>
+    <title>1Money Ultimate ERP v5</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-user-select: none; user-select: none; padding: 12px; max-width: 430px; margin: 0 auto; box-sizing: border-box; }
@@ -20,7 +20,7 @@
         .grid-container { background: rgba(255,255,255,0.02); padding: 10px; border-radius: 14px; margin-bottom: 10px; border: 1px dashed #334155; }
         .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
         .sub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .cat-grid-btn { padding: 12px 2px; border: none; border-radius: 14px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: bold; font-size: 11px; transition: 0.1s; text-align:center; }
+        .cat-grid-btn { padding: 12px 2px; border: none; border-radius: 14px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content:center; gap: 4px; font-weight: bold; font-size: 10px; transition: 0.1s; text-align:center; min-height:65px;}
         .cat-grid-btn:active { transform: scale(0.95); }
         .num-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
         .num-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; font-size: 22px; border-radius: 14px; padding: 14px 0; cursor: pointer; outline: none; }
@@ -81,7 +81,6 @@
                 <div style="font-size:11px; color:#94a3b8; margin-bottom:5px;">Mavjud to'lovlar:</div>
                 <div id="scheduled-edit-list"></div>
             </div>
-
             <div id="scheduled-list-container"></div>
         </div>
 
@@ -108,7 +107,10 @@
         </div>
 
         <div id="num-display" class="num-display">0</div>
+        
+        <div style="text-align: center; color: #64748b; font-size: 11px; margin-bottom: 6px;" id="stay-hint"></div>
         <div class="grid-container" id="cats-container"></div>
+        
         <input type="text" id="add-desc" class="input-text" placeholder="Izoh yozing (ixtiyoriy)..." />
         
         <div class="num-grid">
@@ -176,39 +178,46 @@
     </div>
 
     <script>
-        // 3-QAVATLI MUKAMMAL STRUKTURA (Faqat Oziq-ovqat uchun yangilandi)
+        // 100% PROFESSIONAL 3 QAVATLI STRUKTURA
         const CATEGORIES = [
-          { 
-            id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B", 
-            subs: [ 
-                { id: "supermarket", label: "Supermarket", icon: "🏪", items: [
-                    { id: "gosht_s", label: "Go'sht/Tovuq", icon: "🥩" },
-                    { id: "meva_s", label: "Meva/Sabzavot", icon: "🍅" },
-                    { id: "non_s", label: "Non/Pishiriq", icon: "🍞" },
-                    { id: "sut_s", label: "Sut/Tuxum", icon: "🥛" },
-                    { id: "boshqa_s", label: "Mayda-chuyda", icon: "🍬" }
-                ]},
-                { id: "bozor", label: "Bozor", icon: "⚖️", items: [
-                    { id: "gosht_b", label: "Go'sht mahsulotlari", icon: "🥩" },
-                    { id: "meva_b", label: "Sabzavot/Meva", icon: "🍅" },
-                    { id: "quruq_b", label: "Quruq meva/Yong'oq", icon: "🥜" },
-                    { id: "rozgor_b", label: "Ro'zg'or uchun", icon: "🛍️" }
-                ]},
-                { id: "dokon", label: "Do'kon (Mahalla)", icon: "🏪", items: [
-                    { id: "non_d", label: "Non va bulochka", icon: "🍞" },
-                    { id: "suv_d", label: "Ichimliklar", icon: "🧃" },
-                    { id: "shirin_d", label: "Shirinlik/Muzqaymoq", icon: "🍦" }
-                ]},
-                { id: "kafe", label: "Kafe / Choyxona", icon: "🍔", items: [] } // Items yo'q bo'lsa to'g'ridan-to'g'ri saqlaydi
-            ]
-          },
-          // QOLGANLARI HOZIRCHA 2-QAVATLI
-          { id: "kommunal", label: "Kommunal", icon: "🏠", color: "#FBBF24", subs: [ { id: "svet", label: "Svet", icon: "⚡" }, { id: "gaz", label: "Gaz", icon: "🔥" }, { id: "suv", label: "Suv", icon: "💧" }, { id: "musor", label: "Chiqindi", icon: "🧹" } ]},
-          { id: "avto", label: "Jetour Avto", icon: "🚗", color: "#2196F3", subs: [ { id: "benzin", label: "Yoqilg'i", icon: "⛽" }, { id: "remont", label: "Usta", icon: "🔧" }, { id: "yuvish", label: "Moyka", icon: "🧼" } ]},
-          { id: "oila", label: "Oila/Bolalar", icon: "🧸", color: "#8B5CF6", subs: [ { id: "bogcha", label: "Bog'cha", icon: "👶" }, { id: "maktab", label: "Kurslar", icon: "📚" }, { id: "rozgor", label: "Kiyim-kechak", icon: "👗" } ]},
-          { id: "biznes", label: "IMSOA Biznes", icon: "🏢", color: "#607D8B", subs: [ { id: "material", label: "Xomashyo", icon: "🧱" }, { id: "ishchi", label: "Ish haqi", icon: "💵" }, { id: "boshqa_biz", label: "Boshqa", icon: "📈" } ]},
-          { id: "soglik", label: "Sog'liq", icon: "💊", color: "#34D399", subs: [ { id: "apteka", label: "Dori", icon: "🍏" }, { id: "shifokor", label: "Klinika", icon: "🩺" } ]},
-          { id: "boshqa", label: "Boshqa", icon: "📦", color: "#94A3B8", subs: [] }
+          { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B", subs: [ 
+              { id: "supermarket", label: "Supermarket", icon: "🏪", items: [ { id: "gosht_s", label: "Go'sht/Tovuq", icon: "🥩" }, { id: "meva_s", label: "Meva/Sabzavot", icon: "🍅" }, { id: "non_s", label: "Non/Pishiriq", icon: "🍞" }, { id: "sut_s", label: "Sut/Tuxum", icon: "🥛" }, { id: "boshqa_s", label: "Mayda-chuyda", icon: "🍬" } ]},
+              { id: "bozor", label: "Bozor", icon: "⚖️", items: [ { id: "gosht_b", label: "Go'sht/Qassob", icon: "🥩" }, { id: "meva_b", label: "Sabzavot/Meva", icon: "🍅" }, { id: "quruq_b", label: "Quruq meva/Yong'oq", icon: "🥜" }, { id: "rozgor_b", label: "Ro'zg'or uchun", icon: "🛍️" } ]},
+              { id: "dokon", label: "Do'kon/Mahalla", icon: "🏪", items: [ { id: "non_d", label: "Non/Bulochka", icon: "🍞" }, { id: "suv_d", label: "Ichimliklar", icon: "🧃" }, { id: "shirin_d", label: "Shirinlik", icon: "🍦" } ]},
+              { id: "kafe", label: "Kafe/Choyxona", icon: "🍔", items: [] } 
+          ]},
+          { id: "uy", label: "Uy / Kommunal", icon: "🏠", color: "#FBBF24", subs: [ 
+              { id: "kommunal", label: "Kommunal to'lov", icon: "🧾", items: [ { id: "svet", label: "Svet", icon: "⚡" }, { id: "gaz", label: "Gaz", icon: "🔥" }, { id: "suv", label: "Suv", icon: "💧" }, { id: "musor", label: "Chiqindi", icon: "🧹" } ]},
+              { id: "aloqa", label: "Aloqa/Internet", icon: "📡", items: [ { id: "tel", label: "Telefon/Paynet", icon: "📱" }, { id: "wifi", label: "Uy interneti", icon: "🌐" } ]},
+              { id: "jihoz", label: "Jihoz/Ta'mir", icon: "🛠️", items: [ { id: "mat", label: "Material/Qurilish", icon: "🧱" }, { id: "mebel", label: "Mebel/Texnika", icon: "🛋️" }, { id: "usta_uy", label: "Usta xizmati", icon: "👨‍🔧" } ]},
+              { id: "xoja", label: "Xo'jalik mollari", icon: "🧽", items: [ { id: "kukun", label: "Kukun/Sovun", icon: "🧼" }, { id: "idish", label: "Idish-tovoq", icon: "🍽️" } ]}
+          ]},
+          { id: "avto", label: "Jetour Avto", icon: "🚗", color: "#2196F3", subs: [ 
+              { id: "zapravka", label: "Yoqilg'i", icon: "⛽", items: [ { id: "benzin", label: "Benzin", icon: "⛽" }, { id: "gaz_a", label: "Gaz (Metan/Propan)", icon: "💨" } ]},
+              { id: "servis", label: "Usta/Servis", icon: "🔧", items: [ { id: "moy", label: "Moy almashtirish", icon: "🛢️" }, { id: "xodovoy", label: "Zapchast/Xodovoy", icon: "⚙️" }, { id: "shina", label: "Balon/Vulkanizatsiya", icon: "🛞" } ]},
+              { id: "moyka", label: "Moyka/Tozalik", icon: "🧼", items: [ { id: "yuvish", label: "Kuzov/Salon", icon: "🚿" }, { id: "xim", label: "Ximchistka", icon: "✨" } ]},
+              { id: "tyun", label: "Tyuning/Hujjat", icon: "🛡️", items: [ { id: "aks", label: "Aksessuar/Chexol", icon: "💺" }, { id: "sugurta", label: "Sug'urta/Jarima", icon: "📜" } ]}
+          ]},
+          { id: "oila", label: "Oila / Bolalar", icon: "🧸", color: "#8B5CF6", subs: [ 
+              { id: "kiyim", label: "Kiyim-kechak", icon: "👕", items: [ { id: "erkak", label: "Kattalarga", icon: "👔" }, { id: "bolalar", label: "Bolalarga", icon: "👶" }, { id: "oyoq", label: "Oyoq kiyim", icon: "👞" } ]},
+              { id: "talim", label: "Ta'lim/Bog'cha", icon: "📚", items: [ { id: "bogcha", label: "Bog'cha to'lovi", icon: "🏫" }, { id: "maktab", label: "Maktab/Repetitor", icon: "📖" }, { id: "kitob", label: "Kanselyariya", icon: "✏️" } ]},
+              { id: "dam", label: "Ko'ngilochar", icon: "🎡", items: [ { id: "park", label: "Park/Attraksion", icon: "🎢" }, { id: "oyin", label: "O'yinchoqlar", icon: "🤖" }, { id: "kino", label: "Kino/Teatr", icon: "🍿" } ]}
+          ]},
+          { id: "biznes", label: "IMSOA Biznes", icon: "🏢", color: "#607D8B", subs: [ 
+              { id: "xom", label: "Xomashyo", icon: "🧱", items: [ { id: "kimyo", label: "Kimyoviy vosita", icon: "🧪" }, { id: "uskuna", label: "Uskuna/Aparat", icon: "⚙️" }, { id: "qur", label: "Qurilish materiali", icon: "🏗️" } ]},
+              { id: "ishchi", label: "Ishchilar", icon: "👨‍🏭", items: [ { id: "maosh_b", label: "Oylik maosh", icon: "💵" }, { id: "ovqat", label: "Obed/Choy-chaqa", icon: "🍲" } ]},
+              { id: "obyekt", label: "Obyekt xarajati", icon: "🏭", items: [ { id: "kom_b", label: "Svet/Suv (Obyekt)", icon: "⚡" }, { id: "soliq", label: "Soliq/Arenda", icon: "📄" } ]}
+          ]},
+          { id: "soglik", label: "Sog'liq / Go'zallik", icon: "💊", color: "#34D399", subs: [ 
+              { id: "apteka", label: "Apteka", icon: "🏥", items: [ { id: "dori", label: "Dori-darmon", icon: "💊" }, { id: "vitamin", label: "Vitamin/Gigiyena", icon: "🧴" } ]},
+              { id: "shifo", label: "Shifokor", icon: "🩺", items: [ { id: "korik", label: "Ko'rik/Analiz", icon: "🔬" }, { id: "tish", label: "Stomatolog", icon: "🦷" } ]},
+              { id: "salon", label: "Go'zallik/Salon", icon: "✂️", items: [ { id: "sart", label: "Sartarosh", icon: "💈" }, { id: "kosm", label: "Kosmetika", icon: "💄" } ]}
+          ]},
+          { id: "boshqa", label: "Moliya / Boshqa", icon: "📦", color: "#94A3B8", subs: [ 
+              { id: "majbur", label: "Majburiyatlar", icon: "🏦", items: [ { id: "kredit", label: "Kredit to'lovi", icon: "💳" } ]},
+              { id: "ehson", label: "Xayriya/Ehson", icon: "🤲", items: [ { id: "zakot", label: "Zakot/Sadaqa", icon: "🕊️" }, { id: "hadya", label: "Sovg'a/To'y", icon: "🎁" } ]},
+              { id: "kutilmagan", label: "Kutilmagan", icon: "❓", items: [] }
+          ]}
         ];
         
         const INCOME_SOURCES = [
@@ -219,9 +228,9 @@
         let state = { transactions: [], incomes: [], debts: [], scheduled: [] };
         let currentTab = "home"; let addMode = "expense"; let accountType = "card"; let transferDir = "card-to-cash";
         
-        // 3-QAVAT UCHUN STATE'LAR
+        // 3-QAVAT STATE'LARI (Tozalanmaydi!)
         let activeMainCat = null; 
-        let activeSubCat = null; // YANGI QO'SHILDI
+        let activeSubCat = null; 
         
         let amountStr = ""; let debtType = "take"; let debtAccount = "card";
         let sessionData = []; let telegramUserName = "Siz";
@@ -240,14 +249,14 @@
         }
 
         function init() {
-            const raw = localStorage.getItem("xarajat_ultimate_v3");
+            const raw = localStorage.getItem("xarajat_ultimate_v4");
             if (raw) { try { state = JSON.parse(raw); } catch(e) {} }
             if (!state.transactions) state.transactions = []; if (!state.incomes) state.incomes = [];
             if (!state.debts) state.debts = []; if (!state.scheduled) state.scheduled = [];
             render();
         }
 
-        function saveState() { localStorage.setItem("xarajat_ultimate_v3", JSON.stringify(state)); render(); }
+        function saveState() { localStorage.setItem("xarajat_ultimate_v4", JSON.stringify(state)); render(); }
 
         window.switchTab = function(tabId) {
             currentTab = tabId;
@@ -278,6 +287,7 @@
             document.getElementById("transfer-acc-selector").style.display = mode === "transfer" ? "flex" : "none";
             document.getElementById("cats-container").style.display = mode === "transfer" ? "none" : "block";
             document.getElementById("btn-do-transfer").style.display = mode === "transfer" ? "block" : "none";
+            setHtml("stay-hint", "");
             renderCats();
         }
 
@@ -308,7 +318,6 @@
 
         function formatMoney(n) { return new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm"; }
 
-        // REJALI TO'LOVLAR
         window.toggleScheduledSetup = function() {
             const p = document.getElementById("scheduled-setup-panel");
             if(p) p.style.display = p.style.display === "none" ? "block" : "none";
@@ -407,60 +416,60 @@
             setTxt("session-count", sessionData.length);
         }
 
-        // 3 QAVATLI MUKAMMAL CHIZISH (RENDER)
+        // 3-QAVATLI RENDER (MUZLAMAYDI)
         function renderCats() {
             if(addMode === "transfer") return;
             const container = document.getElementById("cats-container"); if(!container) return;
             
             if (addMode === "income") {
                 let code = "<div class='cat-grid'>";
-                INCOME_SOURCES.forEach(s => { code += `<button class="cat-grid-btn" style="background:#1e293b; border:1px solid #334155;" onclick="finalSelect('${s.label}')"><span style="font-size:18px;">${s.icon}</span><span>${s.label}</span></button>`; });
+                INCOME_SOURCES.forEach(s => { code += `<button class="cat-grid-btn" style="background:#1e293b; border:1px solid #334155;" onclick="finalSelect('${s.label}')"><span style="font-size:20px;">${s.icon}</span><span>${s.label}</span></button>`; });
                 container.innerHTML = code + "</div>"; return;
             }
             
-            // UCHINCHI QAVAT (MAHSULOTLAR)
+            // 3-QAVAT (Mahsulotlar)
             if (activeSubCat) {
                 let code = `<div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-size:11px; color:#94a3b8;">${activeMainCat.label} ➔ <b style="color:#fff">${activeSubCat.label}</b></span><button onclick="backToMainCats()" style="background:#475569; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">⬅ Orqaga</button></div><div class='sub-grid'>`;
                 activeSubCat.items.forEach(item => { 
-                    code += `<button class="cat-grid-btn" style="background:#3b82f6;" onclick="finalSelect('${item.label}')"><span style="font-size:18px;">${item.icon}</span><span>${item.label}</span></button>`; 
+                    code += `<button class="cat-grid-btn" style="background:#3b82f6;" onclick="finalSelect('${item.label}')"><span style="font-size:22px;">${item.icon}</span><span>${item.label}</span></button>`; 
                 });
                 container.innerHTML = code + `</div></div>`;
             } 
-            // IKKINCHI QAVAT (SUPERMARKET/BOZOR)
+            // 2-QAVAT (Papkalar)
             else if (activeMainCat) {
                 let code = `<div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-size:12px; color:#94a3b8;">Rukun: <b>${activeMainCat.label}</b></span><button onclick="backToMainCats()" style="background:#475569; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">⬅ Orqaga</button></div><div class='sub-grid'>`;
                 activeMainCat.subs.forEach(sub => { 
                     const isFolder = sub.items && sub.items.length > 0;
                     const action = isFolder ? `clickSubCat('${sub.id}')` : `finalSelect('${sub.label}')`;
                     const fIcon = isFolder ? "📂" : "";
-                    code += `<button class="cat-grid-btn" style="background:#334155;" onclick="${action}"><span style="font-size:18px;">${sub.icon}</span><span>${sub.label} ${fIcon}</span></button>`; 
+                    code += `<button class="cat-grid-btn" style="background:#334155;" onclick="${action}"><span style="font-size:22px;">${sub.icon}</span><span>${sub.label} <br/>${fIcon}</span></button>`; 
                 });
-                container.innerHTML = code + `<button class="cat-grid-btn" style="background:#4b5563;" onclick="finalSelect('${activeMainCat.label}')"><span style="font-size:18px;">⚙️</span><span>Umumiy</span></button></div></div>`;
+                container.innerHTML = code + `<button class="cat-grid-btn" style="background:#4b5563;" onclick="finalSelect('${activeMainCat.label}')"><span style="font-size:22px;">⚙️</span><span>Umumiy</span></button></div></div>`;
             } 
-            // BIRINCHI QAVAT (ASOSIY EKRAN)
+            // 1-QAVAT (Asosiy)
             else {
                 let code = "<div class='cat-grid'>";
-                CATEGORIES.forEach(c => { code += `<button class="cat-grid-btn" style="background:${c.color};" onclick="clickMainCat('${c.id}')"><span style="font-size:18px;">${c.icon}</span><span>${c.label}</span></button>`; });
+                CATEGORIES.forEach(c => { code += `<button class="cat-grid-btn" style="background:${c.color};" onclick="clickMainCat('${c.id}')"><span style="font-size:20px;">${c.icon}</span><span>${c.label}</span></button>`; });
                 container.innerHTML = code + "</div>";
             }
         }
 
         window.clickMainCat = function(id) {
             const cat = CATEGORIES.find(c => c.id === id);
-            if (cat && cat.subs && cat.subs.length > 0) { activeMainCat = cat; renderCats(); }
+            if (cat && cat.subs && cat.subs.length > 0) { activeMainCat = cat; renderCats(); setHtml("stay-hint",""); }
             else if(cat) { finalSelect(cat.label); }
         }
 
-        // Papka bosilganda ishlaydi
         window.clickSubCat = function(id) {
             const sub = activeMainCat.subs.find(s => s.id === id);
-            if(sub && sub.items && sub.items.length > 0) { activeSubCat = sub; renderCats(); }
+            if(sub && sub.items && sub.items.length > 0) { activeSubCat = sub; renderCats(); setHtml("stay-hint",""); }
             else { finalSelect(sub ? sub.label : 'Xato'); }
         }
 
         window.backToMainCats = function() { 
             if(activeSubCat) { activeSubCat = null; } 
             else { activeMainCat = null; }
+            setHtml("stay-hint","");
             renderCats(); 
         }
 
@@ -471,10 +480,9 @@
             
             if(!finalDesc) {
                 if(label === "Oylik maosh") finalDesc = OY_NOMLARI[d.getMonth()] + " oyligi";
-                else finalDesc = label; // Bo'sh bo'lsa oxirgi bosilgan tugma nomi tushadi
+                else finalDesc = label; 
             }
 
-            // Uch qavatli yo'lni aniqlash (Masalan: Supermarket -> Go'sht)
             let path = "";
             if (activeSubCat) path = activeSubCat.label + " ➔ " + label;
             else if (activeMainCat) path = label;
@@ -488,8 +496,19 @@
             if (addMode === "expense") state.transactions.unshift(item); else state.incomes.unshift(item);
             sessionData.push({ amount: amt, category: `${item.desc} [${telegramUserName}]`, type: addMode==='expense'?'minus':'plus' });
             
-            amountStr = ""; if(descEl) descEl.value = ""; activeMainCat = null; activeSubCat = null; setTxt("num-display", "0");
-            saveState(); showToast("Saqlandi ✓");
+            amountStr = ""; if(descEl) descEl.value = ""; 
+            setTxt("num-display", "0");
+            saveState(); 
+
+            // ASOSIY MO'JIZA SHU YERDA: Papkadan chiqib ketmaymiz, faqat xabar beramiz
+            if (activeSubCat || activeMainCat) {
+                setHtml("stay-hint", `✅ Oxirgi amal: <b>${formatMoney(amt)}</b> (${label}). Yana kiriting yoki Orqaga bosing!`);
+                renderCats(); // Ekranni yangilash
+            } else {
+                setHtml("stay-hint", "");
+            }
+            
+            showToast("Saqlandi ✓");
         }
 
         window.executeTransfer = function() {
