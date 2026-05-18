@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1Money Family ERP v10</title>
+    <title>1Money Family ERP v11</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-user-select: none; user-select: none; padding: 12px; max-width: 430px; margin: 0 auto; box-sizing: border-box; }
@@ -39,7 +39,7 @@
         .num-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
         .num-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; font-size: 22px; border-radius: 14px; padding: 14px 0; cursor: pointer; outline: none; }
         .num-btn:active { background: rgba(255, 255, 255, 0.15); }
-        .input-text { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 15px; box-sizing: border-box; outline: none; margin-bottom: 10px; }
+        .input-text { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 15px; box-sizing: border-box; outline: none; margin-bottom: 10px; transition: 0.3s; }
         
         .history-item { display: flex; align-items: center; background: #1e293b; padding: 10px; border-radius: 12px; margin-bottom: 6px; font-size: 13px; }
         .delete-btn { background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer; font-size: 16px; margin-left: auto; padding: 5px; }
@@ -57,9 +57,10 @@
         
         /* Smart Tags (Avto toifalar) */
         .tags-wrapper { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-        .smart-tag { background: #1e293b; color: #fff; border: 1px solid #3b82f6; padding: 6px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: 0.1s; }
+        .smart-tag { background: #1e293b; color: #fff; border: 1px solid #3b82f6; padding: 6px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: 0.1s; display:flex; align-items:center; gap:4px; }
         .smart-tag:active { transform: scale(0.95); background: #3b82f6; }
         .scheduled-item { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); padding: 12px; border-radius: 12px; margin-bottom: 8px; }
+        .user-stat-card { background: #334155; padding: 8px 12px; border-radius: 10px; flex: 1; text-align: center; }
     </style>
 </head>
 <body>
@@ -73,13 +74,13 @@
             <div style="display:flex; gap:6px; margin-bottom:10px;">
                 <input type="number" id="prof-age" class="input-text" placeholder="Yoshi" style="flex:1; margin:0;" />
                 <select id="prof-role" class="input-text" style="flex:2; margin:0;">
-                    <option value="parent_m">Ota (Erkak)</option>
-                    <option value="parent_f">Ona (Ayol)</option>
                     <option value="child_m">O'g'il farzand</option>
                     <option value="child_f">Qiz farzand</option>
+                    <option value="parent_m">Ota (Erkak)</option>
+                    <option value="parent_f">Ona (Ayol)</option>
                 </select>
             </div>
-            <input type="text" id="prof-emoji" class="input-text" placeholder="Emoji (Masalan: 👧)" value="" />
+            <input type="text" id="prof-emoji" class="input-text" placeholder="Emoji (Ixtiyoriy)" value="" />
             <div style="display:flex; gap:10px; margin-top:10px;">
                 <button onclick="closeModal('modal-overlay')" style="flex:1; padding:12px; border-radius:10px; border:none; background:#334155; color:#fff; font-weight:bold;">Bekor</button>
                 <button onclick="saveNewProfile()" style="flex:1; padding:12px; border-radius:10px; border:none; background:#10b981; color:#fff; font-weight:bold;">Saqlash</button>
@@ -150,38 +151,27 @@
 
         <div id="planned-expenses-section" style="display:block;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 13px; font-weight: bold; color: #3b82f6;">🛒 Bozorlik / Xarid Rejasi:</div>
+                <div style="font-size: 13px; font-weight: bold; color: #3b82f6;">🛒 Reja / Bozorlik:</div>
                 <button onclick="togglePlanSetup()" style="background:#3b82f6; border:none; color:#fff; font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer; font-weight:bold;">➕ Reja Tuzish</button>
             </div>
             
             <div id="plan-setup-panel" style="display:none; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid #3b82f6;">
                 <div style="display:flex; gap:6px; margin-bottom:10px;">
-                    <select id="smart-plan-cat" class="filter-select" onchange="updateSmartPlanDropdowns()" style="flex:1;">
-                        <option value="Oziq-ovqat">Oziq-ovqat (Bozorlik)</option>
-                        <option value="Xo'jalik/Uy">Uy / Xo'jalik</option>
-                        <option value="Kiyim">Kiyim / Poyabzal</option>
-                        <option value="Ta'lim">Ta'lim / Maktab</option>
-                        <option value="Avto">Avto / Ehtiyot qism</option>
-                    </select>
+                    <select id="smart-plan-cat" class="filter-select" onchange="updateSmartPlanDropdowns()" style="flex:1;"></select>
                     <select id="smart-plan-subcat" class="filter-select" onchange="renderSmartTags()" style="flex:1;"></select>
                 </div>
                 
-                <div style="font-size:10px; color:#94a3b8; margin-bottom:6px;">1-Klikda tanlang (Avto Hajmga o'tadi):</div>
+                <div style="font-size:10px; color:#94a3b8; margin-bottom:6px;">Shu yerdan tanlang (Avtomatik tushadi):</div>
                 <div id="smart-tags-container" class="tags-wrapper"></div>
                 
                 <hr style="border:none; border-top:1px dashed #475569; margin:10px 0;">
                 <div style="display:flex; gap:6px; margin-bottom:6px;">
                     <input type="text" id="plan-name" class="input-text" placeholder="Nima? (Mas: 🍅 Pomidor)" style="flex:2; margin:0;" />
-                    <input type="text" id="plan-qty" class="input-text" placeholder="Hajmi/Soni" style="flex:1; margin:0; background:#334155;" />
+                    <input type="text" id="plan-qty" class="input-text" placeholder="Hajmi/Soni (2 kg)" style="flex:1; margin:0; background:#334155; border:1px solid #10b981;" />
                 </div>
                 <div style="display:flex; gap:6px; margin-bottom:10px;">
                     <select id="plan-market" class="filter-select" style="flex:1; margin:0; height:42px;">
-                        <option value="Bozor">Bozor</option>
-                        <option value="Korzinka">Korzinka</option>
-                        <option value="Makro">Makro</option>
-                        <option value="Uzum Market">Uzum Market</option>
-                        <option value="Kiyim Do'koni">Do'kon</option>
-                        <option value="Boshqa">Boshqa</option>
+                        <option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Makro">Makro</option><option value="Uzum">Uzum Market</option><option value="Do'kon">Do'kon</option><option value="Boshqa">Boshqa</option>
                     </select>
                     <input type="number" id="plan-price" class="input-text" placeholder="Taxminiy narx" style="flex:1; margin:0; height:42px;" />
                 </div>
@@ -190,12 +180,12 @@
 
             <div style="display:flex; gap:6px; margin-bottom:10px;">
                 <select id="filter-market" class="filter-select" onchange="renderPlanned()" style="flex:1;">
-                    <option value="all">Barcha manzillar</option>
-                    <option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Makro">Makro</option><option value="Uzum Market">Uzum Market</option><option value="Do'kon">Do'kon</option>
+                    <option value="all">Manzil: Barcha</option>
+                    <option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Makro">Makro</option><option value="Uzum">Uzum Market</option><option value="Do'kon">Do'kon</option>
                 </select>
                 <select id="filter-cat" class="filter-select" onchange="renderPlanned()" style="flex:1;">
-                    <option value="all">Barcha toifalar</option>
-                    <option value="Oziq-ovqat">Oziq-ovqat</option><option value="Xo'jalik/Uy">Xo'jalik</option><option value="Kiyim">Kiyim</option>
+                    <option value="all">Toifa: Barcha</option>
+                    <option value="Oziq-ovqat">Oziq-ovqat</option><option value="Xo'jalik/Uy">Xo'jalik</option><option value="Kiyim">Kiyim</option><option value="Ta'lim">Ta'lim</option><option value="O'yinchoq">O'yinchoq</option>
                 </select>
             </div>
 
@@ -206,7 +196,6 @@
             <div style="font-size: 13px; font-weight: bold; color: #94a3b8; margin-bottom: 8px;"><span id="home-history-title">Bugungi amallar:</span></div>
             <div id="home-today-list"></div>
         </div>
-
         <button onclick="sendToTelegram()" style="width:100%; padding:14px; background:#10b981; color:white; border:none; font-weight:bold; margin-top:20px; font-size:14px; border-radius:12px; cursor:pointer;">
             ✅ Telegramga saqlash (<span id="session-count">0</span>)
         </button>
@@ -226,7 +215,6 @@
             <button id="trn-dir-card-cash" class="acc-btn" style="border: 1px solid #3b82f6; background:#3b82f6;" onclick="setTransferDir('card-to-cash')">💳 Plastik ➔ 💵 Naqd</button>
             <button id="trn-dir-cash-card" class="acc-btn" onclick="setTransferDir('cash-to-card')">💵 Naqd ➔ 💳 Plastik</button>
         </div>
-
         <div id="num-display" class="num-display">0</div>
         <div style="text-align: center; color: #64748b; font-size: 11px; margin-bottom: 6px;" id="stay-hint"></div>
         <div class="grid-container" id="cats-container"></div>
@@ -279,7 +267,7 @@
         function showToast(msg, isError=false) { const t = document.getElementById("toast-msg"); if(t){ t.innerText=msg; t.style.background=isError?"#EF4444":"#10B981"; t.style.display="block"; setTimeout(()=>t.style.display="none", 2500); } }
 
         // ==========================================
-        // SMART WISHLIST TAGS (EMOJILAR BILAN MAXSUS)
+        // SMART WISHLIST TAGS (BOZORLIK SHABLONLARI)
         // ==========================================
         const PLAN_TAGS = {
             "Oziq-ovqat": {
@@ -294,25 +282,19 @@
                 "Tozalik/Gigiyena": ["🫧 Kir kukuni", "🧼 Fairy", "🧼 Atir sovun", "🧴 Shampun", "🧻 Tualet qog'ozi", "🧻 Salfetka", "🪥 Tish pastasi", "🧹 Shvabra", "🧽 Gubka", "🧴 Xlor"]
             },
             "Kiyim": {
-                "Asosiy": ["👕 Futbolka", "👔 Ko'ylak", "👖 Shim/Jinsi", "🧥 Kurtka", "👟 Krossovka", "👞 Tuflik", "🧦 Paypoq", "🩲 Ichki kiyim", "🧢 Bosh kiyim", "🧣 Qishlik"]
+                "Bolalar uchun": ["👕 Futbolka", "👖 Shim/Jinsi", "🧥 Kurtka", "👟 Krossovka", "🧦 Paypoq", "🩲 Ichki kiyim", "🧢 Kepka", "🎒 Sumka/Ryukzak", "👗 Ko'ylak", "🥿 Tuflik"],
+                "Kattalar uchun": ["👕 Futbolka", "👔 Ko'ylak", "👖 Shim", "🧥 Kastyum/Kurtka", "👞 Tuflik", "👗 Ayollar ko'ylagi", "🧣 Qishlik kiyim"]
             },
             "Ta'lim": {
                 "Kanselyariya": ["📓 Daftar", "🖊️ Ruchka", "✏️ Qalam", "🎒 Sumka", "📏 Chizg'ich", "📚 Kitob", "🖍️ Bo'yoq/Qalam", "🧼 O'chirg'ich", "📎 Sкрепka/Kley"]
             },
             "Avto": {
                 "Ehtiyot qism": ["🛢️ Motor moyi", "⚙️ Filtr", "🛞 Balon", "🔋 Akkumulyator", "🧪 Antifriz", "💡 Lampochka", "🛑 Nakladka", "🧴 Oyna suvi", "🧽 Salon tozalagich"]
+            },
+            "O'yinchoq": {
+                "Bolalar uchun": ["🚗 O'yinchoq mashina", "🧸 Ayiqcha/Yumshoq", "🧩 Konstruktor/Lego", "🚁 Dron", "🪆 Qo'g'irchoq"]
             }
         };
-
-        const CATS_GENERAL = [
-          { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B", subs: [ { id: "bozor", label: "Bozor", icon: "⚖️", items: [ {id:"gosht_b", label:"Go'sht/Tovuq", icon:"🥩"}, {id:"meva_b", label:"Sabzavot/Meva", icon:"🍅"}, {id:"quruq", label:"Yong'oq/Quruq", icon:"🥜"}, {id:"bosh", label:"Yog'/Guruch/Shakar", icon:"🍚"} ]}, { id: "supermarket", label: "Supermarket", icon: "🏪", items: [ {id:"sut", label:"Sut/Pishloq/Tuxum", icon:"🥛"}, {id:"non", label:"Non/Pishiriq", icon:"🍞"}, {id:"shirin", label:"Shirinlik/Sharbat", icon:"🍫"}, {id:"mayda", label:"Mayda-chuyda", icon:"🍬"} ]}, { id: "dokon", label: "Do'kon", icon: "🏪", items: [ {id:"non2", label:"Non/Sut", icon:"🍞"}, {id:"ich", label:"Suv/Ichimlik", icon:"🧃"} ]}, { id: "kafe", label: "Kafe/Choyxona", icon: "🍔", items: [ {id:"ovqat", label:"Tushlik/Kechki", icon:"🍲"}, {id:"dost", label:"Do'stlar/Choyxona", icon:"🍻"} ]} ]},
-          { id: "uy", label: "Uy / Kommunal", icon: "🏠", color: "#FBBF24", subs: [ { id: "kommunal", label: "Kommunal to'lov", icon: "🧾", items: [ {id:"svet", label:"Svet", icon:"⚡"}, {id:"gaz", label:"Gaz", icon:"🔥"}, {id:"suv", label:"Suv", icon:"💧"}, {id:"musor", label:"Musor", icon:"🧹"}, {id:"dom", label:"Domkom", icon:"🏢"} ]}, { id: "aloqa", label: "Aloqa/Internet", icon: "📡", items: [ {id:"tel", label:"Mobil aloqa", icon:"📱"}, {id:"wifi", label:"Uy interneti", icon:"🌐"} ]}, { id: "xoja", label: "Xo'jalik mollari", icon: "🧽", items: [ {id:"kukun", label:"Kukun/Suyuqlik", icon:"🧼"}, {id:"gig", label:"Salfetka/Qog'oz", icon:"🧻"}, {id:"idish", label:"Idish-tovoq", icon:"🍽️"} ]}, { id: "jihoz", label: "Ta'mir/Mebel", icon: "🛠️", items: [ {id:"remont", label:"Qurilish materiali", icon:"🧱"}, {id:"mebel", label:"Mebel/Texnika", icon:"🛋️"}, {id:"usta", label:"Usta", icon:"👨‍🔧"} ]} ]},
-          { id: "avto", label: "Avto (Jetour)", icon: "🚗", color: "#2196F3", subs: [ { id: "zapravka", label: "Yoqilg'i", icon: "⛽", items: [ {id:"b80", label:"Benzin Ai-80", icon:"⛽"}, {id:"b92", label:"Benzin Ai-92+", icon:"⛽"}, {id:"metan", label:"Metan/Propan", icon:"💨"} ]}, { id: "servis", label: "Servis/Zapchast", icon: "🔧", items: [ {id:"moy", label:"Moy/Filtr", icon:"🛢️"}, {id:"xodovoy", label:"Xodovoy/Motor", icon:"⚙️"}, {id:"balon", label:"Akkumulyator/Shina", icon:"🛞"} ]}, { id: "moyka", label: "Moyka", icon: "🧼", items: [ {id:"kuzov", label:"Kuzov/Salon", icon:"🚿"}, {id:"xim", label:"Ximchistka", icon:"✨"} ]}, { id: "tyun", label: "Qo'shimcha", icon: "🛡️", items: [ {id:"sugurta", label:"Sug'urta/Texnik ko'rik", icon:"📜"}, {id:"jarima", label:"Jarima", icon:"📸"}, {id:"salon", label:"Chexol/Aksessuar", icon:"💺"} ]} ]},
-          { id: "oila", label: "Oila / Bolalar", icon: "🧸", color: "#8B5CF6", subs: [ { id: "kiyim", label: "Kiyim/Poyabzal", icon: "👕", items: [ {id:"erkak", label:"Ota-onaga", icon:"👔"}, {id:"bola", label:"Bolalarga", icon:"👶"}, {id:"oyoq", label:"Oyoq kiyim", icon:"👟"} ]}, { id: "talim", label: "Ta'lim/Maktab", icon: "📚", items: [ {id:"bogcha", label:"Bog'cha to'lovi", icon:"🏫"}, {id:"maktab", label:"Maktab/Repetitor", icon:"📖"}, {id:"kitob", label:"Kanselyariya", icon:"✏️"} ]}, { id: "dam", label: "Ko'ngilochar", icon: "🎡", items: [ {id:"park", label:"Park/Attraksion", icon:"🎢"}, {id:"oyin", label:"O'yinchoq", icon:"🤖"}, {id:"kino", label:"Kino/Sayohat", icon:"🍿"} ]} ]},
-          { id: "soglik", label: "Sog'liq/Go'zallik", icon: "💊", color: "#34D399", subs: [ { id: "apteka", label: "Apteka", icon: "🏥", items: [ {id:"dori", label:"Dori-darmon", icon:"💊"}, {id:"vit", label:"Vitamin/Kosmetika", icon:"🧴"} ]}, { id: "shifo", label: "Shifokor", icon: "🩺", items: [ {id:"korik", label:"Ko'rik/Analiz", icon:"🔬"}, {id:"tish", label:"Stomatolog", icon:"🦷"} ]}, { id: "salon", label: "Salon/Sport", icon: "✂️", items: [ {id:"sart", label:"Sartarosh/Salon", icon:"✂️"}, {id:"sport", label:"Sport/Fitnes", icon:"🏋️"} ]} ]},
-          { id: "biznes", label: "IMSOA Biznes", icon: "🏢", color: "#607D8B", subs: [ { id: "xom", label: "Xomashyo", icon: "🧱", items: []}, { id: "ishchi", label: "Ishchilar", icon: "👨‍🏭", items: []}, { id: "obyekt", label: "Obyekt xarajati", icon: "🏭", items: []} ]},
-          { id: "boshqa", label: "Boshqa", icon: "📦", color: "#94A3B8", subs: [ { id: "majbur", label: "Kredit/Qarz", icon: "🏦", items: []}, { id: "ehson", label: "Ehson/Xayriya", icon: "🤲", items: []}, { id: "kutilmagan", label: "Kutilmagan", icon: "❓", items: []} ]}
-        ];
 
         const INCOME_SOURCES = [ { id: "maosh", label: "Oylik maosh", icon: "💼" }, { id: "imsoa_k", label: "IMSOA foyda", icon: "💰" }, { id: "boshqa_k", label: "Qo'shimcha", icon: "🎁" } ];
         const OY_NOMLARI = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
@@ -325,20 +307,34 @@
         try { if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) { telegramUserName = window.Telegram.WebApp.initDataUnsafe.user.first_name; } } catch(e) {}
 
         function init() {
-            const raw = localStorage.getItem("xarajat_erp_v10");
+            const raw = localStorage.getItem("xarajat_erp_v11");
             if (raw) { try { state = JSON.parse(raw); } catch(e) {} }
-            if (!state.profiles || state.profiles.length === 0) state.profiles = [{ id: "general", name: "Umumiy", icon: "🏠", age: null, role: "parent_m" }];
+            
+            // INITIAL DEFAULT PROFILES
+            if (!state.profiles || state.profiles.length === 0) { 
+                state.profiles = [
+                    { id: "general", name: "Umumiy", icon: "🏠", age: null, role: "parent_m" },
+                    { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", age: null, role: "home" }
+                ]; 
+            } else if (!state.profiles.find(p => p.id === "home_profile")) {
+                state.profiles.splice(1, 0, { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", age: null, role: "home" });
+            }
+
             if (!state.transactions) state.transactions = []; if (!state.incomes) state.incomes = []; if (!state.debts) state.debts = []; if (!state.scheduled) state.scheduled = []; if (!state.planned) state.planned = [];
-            renderProfilesBar(); render(); updateSmartPlanDropdowns();
+            renderProfilesBar(); render(); updatePlanCatOptions();
         }
-        function saveState() { localStorage.setItem("xarajat_erp_v10", JSON.stringify(state)); render(); }
+        function saveState() { localStorage.setItem("xarajat_erp_v11", JSON.stringify(state)); render(); }
 
         function renderProfilesBar() {
             let html = ""; state.profiles.forEach(p => { const isActive = p.id === currentProfileId ? "active" : ""; html += `<div class="profile-item ${isActive}" onclick="selectProfile('${p.id}')"><div class="profile-avatar">${p.icon}</div><div class="profile-name">${p.name}</div></div>`; });
             html += `<div class="profile-item" onclick="openProfileModal()"><div class="profile-avatar" style="border-style:dashed;">➕</div><div class="profile-name">Qo'shish</div></div>`;
             setHtml("profiles-container", html);
         }
-        window.selectProfile = function(id) { currentProfileId = id; activeMainCat = null; activeSubCat = null; renderProfilesBar(); applyAccessRules(); render(); }
+
+        window.selectProfile = function(id) { 
+            currentProfileId = id; activeMainCat = null; activeSubCat = null; 
+            renderProfilesBar(); applyAccessRules(); updatePlanCatOptions(); render(); 
+        }
         window.openProfileModal = function() { showModal("modal-overlay"); }
         window.closeProfileModal = function() { closeModal("modal-overlay"); }
         window.saveNewProfile = function() {
@@ -351,25 +347,42 @@
 
         function applyAccessRules() {
             const prof = state.profiles.find(p => p.id === currentProfileId);
-            const isChild = prof && prof.age !== null && prof.age < 16 && prof.id !== "general";
+            const isChild = prof && prof.age !== null && prof.age < 16 && prof.id !== "general" && prof.id !== "home_profile";
+            
             document.getElementById("btn-debts").style.display = isChild ? "none" : "block"; if(isChild && currentTab === "debts") switchTab("home");
             document.getElementById("mode-inc").style.display = isChild ? "none" : "block"; document.getElementById("mode-trn").style.display = isChild ? "none" : "block";
             if(isChild && addMode !== "expense") setAddMode("expense");
+            
             document.getElementById("user-stats-wrapper").style.display = (currentProfileId === "general") ? "block" : "none";
             document.getElementById("report-inc-card").style.display = isChild ? "none" : "block";
+            document.getElementById("today-expenses-section").style.display = isChild ? "none" : "block";
         }
 
         window.switchTab = function(tabId) {
             currentTab = tabId; document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
             const activeBtn = document.getElementById("btn-" + tabId); if(activeBtn) activeBtn.classList.add("active");
             ["home", "add", "debts", "report"].forEach(t => { const el = document.getElementById("tab-"+t); if(el) el.style.display = t === tabId ? "block" : "none"; });
-            if(tabId === 'add') applyAccessRules(); render();
+            if(tabId === 'add') applyAccessRules(); if(tabId === 'home') updatePlanCatOptions(); render();
         }
 
         // ==========================================
-        // 1-KLIK SMART PLAN & HAJM SO'RASH
+        // DYNAMIC PLAN CATEGORIES BY PROFILE
         // ==========================================
-        window.togglePlanSetup = function() { const p = document.getElementById("plan-setup-panel"); if(p) { p.style.display = p.style.display === "none" ? "block" : "none"; updateSmartPlanDropdowns(); } }
+        window.updatePlanCatOptions = function() {
+            const catEl = document.getElementById("smart-plan-cat"); if(!catEl) return;
+            const prof = state.profiles.find(p=>p.id===currentProfileId);
+            const isChild = prof && prof.age !== null && prof.age < 16 && prof.id !== "general" && prof.id !== "home_profile";
+            
+            let cats = [];
+            if (isChild) { cats = ["Kiyim", "Ta'lim", "O'yinchoq"]; } 
+            else if (prof.id === "home_profile") { cats = ["Oziq-ovqat", "Xo'jalik/Uy", "Avto"]; } 
+            else { cats = Object.keys(PLAN_TAGS); } // All cats
+            
+            catEl.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join("");
+            updateSmartPlanDropdowns();
+        }
+
+        window.togglePlanSetup = function() { const p = document.getElementById("plan-setup-panel"); if(p) { p.style.display = p.style.display === "none" ? "block" : "none"; updatePlanCatOptions(); } }
         
         window.updateSmartPlanDropdowns = function() {
             const catEl = document.getElementById("smart-plan-cat"); const subcatEl = document.getElementById("smart-plan-subcat");
@@ -391,10 +404,18 @@
         }
 
         window.quickAddPlan = function(tag, cat) {
-            setVal("plan-name", tag);
+            const nameInput = document.getElementById("plan-name");
             const qtyInput = document.getElementById("plan-qty");
+            nameInput.value = tag;
+            qtyInput.value = ""; 
+            
+            // Visual Green Flash Effect
+            nameInput.style.backgroundColor = "rgba(16, 185, 129, 0.3)";
+            nameInput.style.borderColor = "#10b981";
+            setTimeout(() => { nameInput.style.backgroundColor = "#1e293b"; nameInput.style.borderColor = "#334155"; }, 600);
+            
             qtyInput.focus();
-            showToast("Soni yoki Hajmini yozing (Mas: 2 kg)");
+            showToast("Nom tanlandi! Endi hajmini (Mas: 2 kg) yozing");
         }
 
         window.addPlannedItemManual = function() {
@@ -406,19 +427,17 @@
         }
 
         window.toggleSkipPlan = function(id) { const today = new Date().toISOString().slice(0, 10); const item = state.planned.find(p => p.id === id); if(item) { item.skipDate = (item.skipDate === today) ? null : today; saveState(); } }
-
         window.openBuyModal = function(id) { const item = state.planned.find(p => p.id === id); if(!item) return; buyPlanId = id; setTxt("buy-modal-item-name", `✅ Olinyapti: ${item.text}`); setVal("buy-modal-price", item.estPrice || ""); showModal("buy-modal"); }
-
         window.confirmBuyItem = function() {
             const actPrice = parseFloat(getVal("buy-modal-price")); if(!actPrice || actPrice <= 0) { showToast("Haqiqiy narxni kiriting!", true); return; }
             const item = state.planned.find(p => p.id === buyPlanId); if(!item) return;
             const d = new Date(); state.transactions.unshift({ id: Date.now(), amount: actPrice, desc: `${item.text}`, cat: item.cat, subCat: item.market, account: accountType, date: d.toISOString().slice(0, 10), time: d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }), user: telegramUserName, profileId: item.profileId });
-            state.planned = state.planned.filter(x => x.id !== buyPlanId); closeModal("buy-modal"); saveState(); showToast("Xarid qilindi va yozildi! ✅");
+            state.planned = state.planned.filter(x => x.id !== buyPlanId); closeModal("buy-modal"); saveState(); showToast("Sotib olindi va xarajatga yozildi! ✅");
         }
 
         window.renderPlanned = function() {
             const fCat = getVal("filter-cat"); const fMar = getVal("filter-market"); const today = new Date().toISOString().slice(0, 10);
-            let myPlans = state.planned.filter(p => p.profileId === currentProfileId || currentProfileId === "general");
+            let myPlans = state.planned.filter(p => p.profileId === currentProfileId || currentProfileId === "general" || (currentProfileId === "home_profile" && p.profileId === "home_profile"));
             if(fCat && fCat !== "all") myPlans = myPlans.filter(p => p.cat === fCat); if(fMar && fMar !== "all") myPlans = myPlans.filter(p => p.market === fMar);
             let planHtml = "";
             myPlans.forEach(p => {
@@ -428,7 +447,6 @@
                     <div style="flex:1;">
                         <div style="font-weight:bold; color:#3b82f6; font-size:14px; text-decoration:${isSkipped ? 'line-through' : 'none'};">${p.text}</div>
                         <div style="font-size:11px; color:#64748b; margin-top:2px;">📍 ${p.market} | 🏷️ ${p.cat}</div>
-                        <div style="font-size:11px; color:#64748b; margin-top:2px;">💰 Reja: <b style="color:#fff;">${formatMoney(p.estPrice)}</b></div>
                     </div>
                     <button onclick="openBuyModal('${p.id}')" style="background:#10b981; border:none; color:#fff; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer;" ${isSkipped ? 'disabled' : ''}>Sotib oldim</button>
                 </div>`;
@@ -469,7 +487,7 @@
         }
 
         function renderHome() {
-            const prof = state.profiles.find(p => p.id === currentProfileId); const isChild = prof && prof.age !== null && prof.age < 16 && prof.id !== "general";
+            const prof = state.profiles.find(p => p.id === currentProfileId); const isChild = prof && prof.age !== null && prof.age < 16 && prof.id !== "general" && prof.id !== "home_profile";
             if (isChild) { document.getElementById("today-expenses-section").style.display = "none"; } else {
                 document.getElementById("today-expenses-section").style.display = "block"; const todayStr = new Date().toISOString().slice(0, 10);
                 const myTxs = state.transactions.filter(t => t.date === todayStr && (t.profileId === currentProfileId || currentProfileId === 'general')); const myIncs = state.incomes.filter(i => i.date === todayStr && (i.profileId === currentProfileId || currentProfileId === 'general'));
@@ -481,7 +499,7 @@
             }
         }
 
-        // ADD TAB & CATEGORIES
+        // KATEGORIYALAR RENDER
         window.pressNum = function(val) { if (val === "C") amountStr = ""; else if (val === "⌫") amountStr = amountStr.slice(0, -1); else if (amountStr.length < 10) amountStr += val; setTxt("num-display", amountStr ? new Intl.NumberFormat("uz-UZ").format(parseInt(amountStr)) : "0"); }
         window.setAddMode = function(mode) { addMode = mode; activeMainCat = null; activeSubCat = null; document.getElementById("mode-exp").style.background = mode === "expense" ? "#ef4444" : "#1e293b"; document.getElementById("mode-inc").style.background = mode === "income" ? "#10b981" : "#1e293b"; document.getElementById("mode-trn").style.background = mode === "transfer" ? "#3b82f6" : "#1e293b"; document.getElementById("normal-acc-selector").style.display = mode === "transfer" ? "none" : "flex"; document.getElementById("transfer-acc-selector").style.display = mode === "transfer" ? "flex" : "none"; document.getElementById("cats-container").style.display = mode === "transfer" ? "none" : "block"; document.getElementById("btn-do-transfer").style.display = mode === "transfer" ? "block" : "none"; setHtml("stay-hint", ""); renderCats(); }
         window.setAccountType = function(acc) { accountType = acc; document.getElementById("acc-card").style.border = acc === "card" ? "1px solid #3b82f6" : "none"; document.getElementById("acc-cash").style.border = acc === "cash" ? "1px solid #10b981" : "none"; }
@@ -492,10 +510,19 @@
 
         function renderCats() {
             if(addMode === "transfer") return; const container = document.getElementById("cats-container"); if(!container) return;
+            const prof = state.profiles.find(p=>p.id===currentProfileId); const isFemale = prof && prof.role && prof.role.endsWith('_f');
+            const isChild = prof && prof.age !== null && prof.age < 16 && prof.id !== "general" && prof.id !== "home_profile";
+            const isHome = prof && prof.id === "home_profile";
+
+            let M_CATS = [];
+            if(isChild) { M_CATS = [{ id: "talim", label: "Maktab", icon: "📚", color: "#8B5CF6"}, { id: "kiyim", label: "Kiyim", icon: isFemale?"👗":"👕", color: isFemale?"#E91E63":"#2196F3"}, { id: "texnika", label: "Gadjet", icon: "💻", color: "#607D8B"}, { id: "chontak", label: "Cho'ntak", icon: "💵", color: "#10B981"}, { id: "kngil", label: "Ko'ngilochar", icon: "🎢", color: "#FF6B6B"}]; }
+            else if(isHome) { M_CATS = [{ id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B"}, { id: "uy", label: "Uy / Kommunal", icon: "🏠", color: "#FBBF24"}]; }
+            else { M_CATS = [{ id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B" }, { id: "uy", label: "Uy/Kommunal", icon: "🏠", color: "#FBBF24"}, { id: "avto", label: "Avto", icon: "🚗", color: "#2196F3"}, { id: "oila", label: "Oila", icon: "🧸", color: "#8B5CF6"}, { id: "biz", label: "Biznes", icon: "🏢", color: "#607D8B"}, { id: "sog", label: "Sog'liq", icon: "💊", color: "#34D399"}, { id: "boshqa", label: "Boshqa", icon: "📦", color: "#94A3B8"}]; }
+
             if (addMode === "income") { let code = "<div class='cat-grid'>"; INCOME_SOURCES.forEach(s => { code += `<button class="cat-grid-btn" style="background:#1e293b; border:1px solid #334155;" onclick="finalSelect('${s.label}')"><span style="font-size:20px;">${s.icon}</span><span>${s.label}</span></button>`; }); container.innerHTML = code + "</div>"; return; }
             if (activeSubCat) { let code = `<div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-size:11px; color:#94a3b8;">${activeMainCat.label} ➔ <b style="color:#fff">${activeSubCat.label}</b></span><button onclick="backToMainCats()" style="background:#475569; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">⬅ Orqaga</button></div><div class='sub-grid'>`; activeSubCat.items.forEach(item => { code += `<button class="cat-grid-btn" style="background:#3b82f6;" onclick="finalSelect('${item.label}')"><span style="font-size:22px;">${item.icon}</span><span>${item.label}</span></button>`; }); container.innerHTML = code + `</div></div>`;
             } else if (activeMainCat && activeMainCat.subs && activeMainCat.subs.length > 0) { let code = `<div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><span style="font-size:12px; color:#94a3b8;">Rukun: <b>${activeMainCat.label}</b></span><button onclick="backToMainCats()" style="background:#475569; color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">⬅ Orqaga</button></div><div class='sub-grid'>`; activeMainCat.subs.forEach(sub => { const isFolder = sub.items && sub.items.length > 0; const action = isFolder ? `clickSubCat('${sub.id}')` : `finalSelect('${sub.label}')`; const fIcon = isFolder ? "📂" : ""; code += `<button class="cat-grid-btn" style="background:#334155;" onclick="${action}"><span style="font-size:22px;">${sub.icon}</span><span>${sub.label} <br/>${fIcon}</span></button>`; }); container.innerHTML = code + `<button class="cat-grid-btn" style="background:#4b5563;" onclick="finalSelect('${activeMainCat.label}')"><span style="font-size:22px;">⚙️</span><span>Umumiy</span></button></div></div>`;
-            } else { let code = "<div class='cat-grid'>"; CATS_GENERAL.forEach(c => { code += `<button class="cat-grid-btn" style="background:${c.color};" onclick="clickMainCat('${c.id}')"><span style="font-size:20px;">${c.icon}</span><span>${c.label}</span></button>`; }); container.innerHTML = code + "</div>"; }
+            } else { let code = "<div class='cat-grid'>"; M_CATS.forEach(c => { code += `<button class="cat-grid-btn" style="background:${c.color};" onclick="clickMainCat('${c.id}')"><span style="font-size:20px;">${c.icon}</span><span>${c.label}</span></button>`; }); container.innerHTML = code + "</div>"; }
         }
 
         window.clickMainCat = function(id) { const cat = CATS_GENERAL.find(c => c.id === id); if (cat && cat.subs && cat.subs.length > 0) { activeMainCat = cat; renderCats(); setHtml("stay-hint",""); } else if(cat) { finalSelect(cat.label); } }
