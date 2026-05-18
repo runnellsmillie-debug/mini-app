@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1Money Pro Ultimate v3</title>
+    <title>1Money Pro Ultimate</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-user-select: none; user-select: none; padding: 12px; max-width: 430px; margin: 0 auto; box-sizing: border-box; }
@@ -86,7 +86,7 @@
             <div id="scheduled-list-container"></div>
         </div>
 
-        <div style="font-size: 13px; font-weight: bold; color: #94a3b8; margin-bottom: 8px;">Bugungi tezkor xarajatlar:</div>
+        <div style="font-size: 13px; font-weight: bold; color: #94a3b8; margin-bottom: 8px;">Bugungi so'nggi amallar (Kirim / Chiqim):</div>
         <div id="home-today-list"></div>
         <button onclick="sendToTelegram()" style="width:100%; padding:14px; background:#10b981; color:white; border:none; font-weight:bold; margin-top:20px; font-size:14px; border-radius:12px; cursor:pointer;">
             ✅ Telegramga saqlash va chiqish (<span id="session-count">0</span>)
@@ -215,15 +215,8 @@
             }
         } catch(e) {}
 
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById("toast-msg");
-            if(!toast) return;
-            toast.innerText = msg; toast.style.background = isError ? "#EF4444" : "#10B981";
-            toast.style.display = "block"; setTimeout(() => { toast.style.display = "none"; }, 2500);
-        }
-
         function init() {
-            const raw = localStorage.getItem("xarajat_super_pro_v5");
+            const raw = localStorage.getItem("xarajat_ultimate_v1");
             if (raw) { try { state = JSON.parse(raw); } catch(e) {} }
             if (!state.transactions) state.transactions = [];
             if (!state.incomes) state.incomes = [];
@@ -242,7 +235,7 @@
         }
 
         function saveState() {
-            localStorage.setItem("xarajat_super_pro_v5", JSON.stringify(state));
+            localStorage.setItem("xarajat_ultimate_v1", JSON.stringify(state));
             render();
         }
 
@@ -319,6 +312,10 @@
             return Math.ceil((new Date(now.getFullYear(), now.getMonth() + 1, targetDay) - now) / 86400000);
         }
 
+        function formatMoney(n) {
+            return new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
+        }
+
         function render() {
             const cashInc = state.incomes.filter(i => i.account === 'cash').reduce((s,i) => s + i.amount, 0);
             const cardInc = state.incomes.filter(i => i.account !== 'cash').reduce((s,i) => s + i.amount, 0);
@@ -350,18 +347,29 @@
 
         function renderHome() {
             const todayStr = new Date().toISOString().slice(0, 10);
-            const todayTxs = state.transactions.filter(t => t.date === todayStr).slice(0, 5);
+            const todayTxs = state.transactions.filter(t => t.date === todayStr);
+            const todayIncs = state.incomes.filter(i => i.date === todayStr);
+
+            // 🟢 VA 🔴 KINOLARNI ASOSIY SAHIFADA BIRLASHTIRIB KO'RSATISH
+            const todayCombined = [
+                ...todayIncs.map(i => ({...i, mode: 'plus'})),
+                ...todayTxs.map(t => ({...t, mode: 'minus'}))
+            ].sort((a,b) => b.id - a.id).slice(0, 5);
+
             let homeListCode = "";
-            if(todayTxs.length === 0) homeListCode = "<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Bugun xarajat kiritilmadi.</div>";
-            else {
-                todayTxs.forEach(t => {
+            if(todayCombined.length === 0) {
+                homeListCode = "<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Bugun hech qanday amal kiritilmadi.</div>";
+            } else {
+                todayCombined.forEach(item => {
+                    const color = item.mode === 'plus' ? '#10b981' : '#f472b6';
+                    const sign = item.mode === 'plus' ? '+' : '-';
                     homeListCode += `<div class="history-item">
                         <div>
-                            <div style="font-weight:bold;">${t.desc}</div>
-                            <div style="font-size:10px; color:#64748b;">👤 ${t.user || 'Siz'} | ${t.date} | ${t.time}</div>
+                            <div style="font-weight:bold; color:${item.mode==='plus'?'#10b981':'#fff'}">${item.desc}</div>
+                            <div style="font-size:10px; color:#64748b;">👤 ${item.user || 'Siz'} | ${item.date} | ${item.time}</div>
                         </div>
-                        <div style="color:#f472b6; font-weight:bold; margin-left:auto;">-${formatMoney(t.amount)}</div>
-                        <button class="delete-btn" onclick="deleteItem('tx', ${t.id})">✕</button>
+                        <div style="color:${color}; font-weight:bold; margin-left:auto;">${sign}${formatMoney(item.amount).replace(" so'm", "")}</div>
+                        <button class="delete-btn" onclick="deleteItem('${item.mode==='minus'?'tx':'inc'}', ${item.id})">✕</button>
                     </div>`;
                 });
             }
@@ -476,8 +484,30 @@
             setTxt("report-month-exp", formatMoney(totalPeriodExp));
 
             let catsCode = "";
-            if (filteredTxs.length === 0) catsCode = "<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Bu davrda xarajat yo'q.</div>";
-            else {
+            
+            // KIRIM MANBALARI TAHLILI PROGRESS BARDA
+            if (totalPeriodInc > 0) {
+                catsCode += `<div style='font-size:11px; color:#10b981; font-weight:bold; margin-bottom:5px;'>▲ Kirimlar tahlili:</div>`;
+                INCOME_SOURCES.forEach(src => {
+                    const srcSum = filteredIncs.filter(i => i.cat === src.label || i.desc === src.label).reduce((s,i)=>s+i.amount, 0);
+                    if (srcSum > 0) {
+                        const pct = Math.round((srcSum / totalPeriodInc) * 100);
+                        catsCode += `<div style="background:#1e293b; padding:10px; border-radius:12px; margin-bottom:8px; border:1px solid #334155;">
+                            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px;">
+                                <span>${src.icon} ${src.label} (${pct}%)</span>
+                                <span style="color:#10b981;">${formatMoney(srcSum)}</span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%; background:#10b981;"></div></div>
+                        </div>`;
+                    }
+                });
+            }
+
+            // CHIQUVCHI XARAJATLAR TAHLILI
+            if (filteredTxs.length === 0) {
+                catsCode += "<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Bu davrda xarajat yo'q.</div>";
+            } else {
+                catsCode += `<div style='font-size:11px; color:#f472b6; font-weight:bold; margin-top:10px; margin-bottom:5px;'>▼ Xarajatlar tahlili:</div>`;
                 CATEGORIES.forEach(mainCat => {
                     const catSum = filteredTxs.filter(t => t.cat === mainCat.label).reduce((s,t)=>s+t.amount, 0);
                     if (catSum > 0) {
@@ -500,7 +530,7 @@
             else {
                 combined.forEach(item => {
                     const color = item.mode === 'plus' ? '#10b981' : '#f472b6';
-                    const sign = item.mode === 'plus' ? '+' : '-'; // AMALNING BELGISI TO'LIQ SODDALASHTIRILIB O'RNATILDI!
+                    const sign = item.mode === 'plus' ? '+' : '-';
                     chronCode += `<div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1e293b; font-size:13px;">
                         <div>
                             <div style="font-weight:bold; color:${item.mode==='plus'?'#10b981':'#fff'}">${item.desc}</div>
