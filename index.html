@@ -3,13 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1 Money Pro</title>
+    <title>1Money Clone - Telegram Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { margin: 0; background-color: #121212; color: #ffffff; font-family: -apple-system, sans-serif; overflow: hidden; touch-action: none; }
+        .circle-btn { position: absolute; width: 60px; height: 60px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; border: none; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .circle-btn:active { transform: scale(0.9); }
+        .center-circle { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 130px; height: 130px; border-radius: 50%; background: #1e1e1e; border: 4px solid #333; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; box-shadow: inset 0 0 15px rgba(0,0,0,0.5); }
+        .numpad-btn { background: #1e1e1e; border: 1px solid #2a2a2a; color: #fff; font-size: 24px; padding: 15px 0; border-radius: 12px; cursor: pointer; }
+        .numpad-btn:active { background: #333; }
+        /* 1Money style colors */
+        .color-expense { color: #ff5252; }
+        .color-income { color: #4caf50; }
+    </style>
 </head>
-<body style="margin: 0; background-color: #0f172a;">
+<body>
     
     <div id="root"></div>
 
@@ -19,253 +30,180 @@
         
         try { tg.ready(); tg.expand(); } catch(e) {}
 
-        const CATEGORIES = [
-          { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B" },
-          { id: "bogcha", label: "Bog'cha/Ta'lim", icon: "🧸", color: "#8B5CF6" },
-          { id: "kredit", label: "Kredit to'lovi", icon: "🏦", color: "#F59E0B" },
-          { id: "transport", label: "Transport", icon: "🚗", color: "#4ECDC4" },
-          { id: "kiyim", label: "Kiyim-kechak", icon: "👔", color: "#A78BFA" },
-          { id: "soglik", label: "Sog'liq", icon: "💊", color: "#34D399" },
-          { id: "maishiy", label: "Ro'zg'or/Uy", icon: "🏠", color: "#FBBF24" },
-          { id: "boshqa", label: "Boshqa", icon: "📦", color: "#94A3B8" },
+        const EXPENSE_CATS = [
+          { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF9800" },
+          { id: "oila", label: "Oila/Bolalar", icon: "🧸", color: "#E91E63" },
+          { id: "jetour", label: "Jetour", icon: "🚗", color: "#2196F3" },
+          { id: "kredit", label: "Kredit/Uy", icon: "🏠", color: "#9C27B0" },
+          { id: "imsoa", label: "IMSOA xarajati", icon: "🏢", color: "#607D8B" },
+          { id: "soglik", label: "Sog'liq", icon: "💊", color: "#F44336" },
+          { id: "kiyim", label: "Kiyim", icon: "👔", color: "#00BCD4" },
+          { id: "boshqa", label: "Boshqa", icon: "📦", color: "#795548" }
         ];
 
-        const INCOME_SOURCES = [
-          { id: "maosh", label: "Oylik maosh", icon: "💼" },
-          { id: "biznes", label: "Biznes/Loyiha", icon: "🏪" },
-          { id: "qaytim", label: "Qarz qaytishi", icon: "🤝" },
-          { id: "boshqa_k", label: "Boshqa", icon: "💰" },
+        const INCOME_CATS = [
+          { id: "maosh", label: "Oylik maosh", icon: "💼", color: "#4CAF50" },
+          { id: "imsoa_kirim", label: "IMSOA daromad", icon: "💰", color: "#009688" },
+          { id: "qarz", label: "Qarz qaytdi", icon: "🤝", color: "#CDDC39" },
+          { id: "boshqa_k", label: "Qo'shimcha", icon: "🎁", color: "#FFC107" }
         ];
 
-        const STORAGE_KEY = "xarajat_pro_v5";
+        const STORAGE_KEY = "1money_clone_v1";
 
         function loadData() {
           try {
             const raw = localStorage.getItem(STORAGE_KEY);
-            return raw ? JSON.parse(raw) : { transactions: [], incomes: [], budget: 5000000 };
+            return raw ? JSON.parse(raw) : { transactions: [] };
           } catch {
-            return { transactions: [], incomes: [], budget: 5000000 };
+            return { transactions: [] };
           }
         }
 
-        // Qisqartirish olib tashlandi, faqat to'liq summa ishlatiladi
         function formatMoney(n) {
-          return new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
+          if (!n) return "0";
+          return new Intl.NumberFormat("uz-UZ").format(n);
         }
 
         function App() {
           const [data, setData] = useState(loadData);
-          const [tab, setTab] = useState("home");
-          const [addMode, setAddMode] = useState("expense");
-          const [accountType, setAccountType] = useState("card"); // "card" yoki "cash"
-          
+          const [type, setType] = useState("expense"); // expense or income
+          const [account, setAccount] = useState("card"); // card or cash
           const [amountStr, setAmountStr] = useState("");
-          const [desc, setDesc] = useState("");
-          const [selectedCat, setSelectedCat] = useState("oziq");
-
+          
           const [toast, setToast] = useState(null);
           const [sessionData, setSessionData] = useState([]);
 
           useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }, [data]);
 
-          const showToast = (msg, type = "success") => {
-            setToast({ msg, type });
-            setTimeout(() => setToast(null), 3000);
+          const showToast = (msg, isError = false) => {
+            setToast({ msg, color: isError ? "#F44336" : "#4CAF50" });
+            setTimeout(() => setToast(null), 2500);
           };
 
           const handleNumpad = (val) => {
             if (val === "C") setAmountStr("");
             else if (val === "⌫") setAmountStr(prev => prev.slice(0, -1));
-            else if (val === "000") setAmountStr(prev => prev ? prev + "000" : prev);
-            else setAmountStr(prev => prev + val);
+            else if (amountStr.length < 10) setAmountStr(prev => prev + val);
           };
 
-          // Hamma vaqtdagi balanslarni hisoblash (Naqd va Plastik uchun)
-          const allIncomes = data.incomes || [];
-          const allTx = data.transactions || [];
-
-          const cashIncome = allIncomes.filter(i => i.account === 'cash').reduce((s,i) => s+i.amount, 0);
-          const cardIncome = allIncomes.filter(i => i.account !== 'cash').reduce((s,i) => s+i.amount, 0);
-          const cashExp = allTx.filter(t => t.account === 'cash').reduce((s,t) => s+t.amount, 0);
-          const cardExp = allTx.filter(t => t.account !== 'cash').reduce((s,t) => s+t.amount, 0);
-
-          const cashBalance = cashIncome - cashExp;
-          const cardBalance = cardIncome - cardExp;
+          // Hisob-kitoblar
+          const cashBalance = data.transactions.filter(t => t.account === 'cash').reduce((s,t) => t.type==='income' ? s+t.amount : s-t.amount, 0);
+          const cardBalance = data.transactions.filter(t => t.account === 'card').reduce((s,t) => t.type==='income' ? s+t.amount : s-t.amount, 0);
           const totalBalance = cashBalance + cardBalance;
 
-          // Faqat joriy oy statistikasini hisoblash (Kirim/Chiqim)
-          const monthKey = new Date().toISOString().slice(0, 7);
-          const monthIncomes = allIncomes.filter(i => i.monthKey === monthKey);
-          const monthTotalIncome = monthIncomes.reduce((s, i) => s + i.amount, 0);
-          const monthTx = allTx.filter(t => t.date.startsWith(monthKey));
-          const monthTotalExp = monthTx.reduce((s, t) => s + t.amount, 0);
-
-          const budgetLimit = data.budget || 5000000;
-          const budgetPercent = Math.min(100, Math.round((monthTotalExp / budgetLimit) * 100));
-          const isBudgetWarning = budgetPercent >= 80;
-
-          function handleSave() {
-            const amt = parseFloat(amountStr);
-            if (!amt || amt <= 0) { showToast("Iltimos, summani kiriting!", "error"); return; }
-            
-            let defaultLabel = "";
-            if (addMode === "expense") {
-                const found = CATEGORIES.find(c => c.id === selectedCat);
-                defaultLabel = found ? found.label : "Boshqa";
-            } else {
-                const found = INCOME_SOURCES.find(s => s.id === selectedCat);
-                defaultLabel = found ? found.label : "Boshqa";
+          // Xarajatni saqlash (1Money mantiqi: Kategoriya bosilganda saqlanadi)
+          const handleCategoryClick = (cat) => {
+            const amt = parseInt(amountStr);
+            if (!amt || amt <= 0) { 
+                showToast("Avval summani kiriting!", true); 
+                return; 
             }
-            
-            const itemDesc = desc.trim() || defaultLabel;
-            
+
             const newItem = {
-              id: Date.now(), amount: amt, desc: itemDesc,
-              cat: selectedCat, type: addMode === "expense" ? "minus" : "plus",
-              account: accountType, // Qaysi hisobdanligi saqlanadi
-              date: new Date().toISOString().slice(0, 10), time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })
+              id: Date.now(), 
+              amount: amt, 
+              desc: cat.label,
+              cat: cat.id, 
+              type: type, 
+              account: account,
+              date: new Date().toISOString().slice(0, 10)
             };
 
-            if (addMode === "expense") {
-              setData(d => ({ ...d, transactions: [newItem, ...(d.transactions||[])] }));
-            } else {
-              newItem.monthKey = monthKey;
-              setData(d => ({ ...d, incomes: [newItem, ...(d.incomes||[])] }));
-            }
+            setData(d => ({ ...d, transactions: [newItem, ...(d.transactions||[])] }));
             
-            // Botga yuboriladigan xabarga hisob turini ham qo'shamiz (Python kodni o'zgartirmaslik uchun)
-            const methodStr = accountType === "cash" ? "💵 Naqd" : "💳 Plastik";
-            setSessionData(prev => [...prev, { amount: amt, category: `${itemDesc} (${methodStr})`, type: addMode === "expense" ? "minus" : "plus" }]);
+            // Telegram bot uchun
+            const methodStr = account === "cash" ? "💵 Naqd" : "💳 Plastik";
+            setSessionData(prev => [...prev, { amount: amt, category: `${cat.label} (${methodStr})`, type: type === "expense" ? "minus" : "plus" }]);
             
-            showToast("Muvaffaqiyatli saqlandi ✓");
-            setAmountStr(""); setDesc(""); setTab("home");
-          }
+            showToast(`${cat.label} ga saqlandi!`);
+            setAmountStr(""); // Summani tozalash
+          };
 
           function sendToTelegram() {
-            if(sessionData.length > 0) {
-                tg.sendData(JSON.stringify(sessionData));
-            } else {
-                tg.close();
-            }
+            if(sessionData.length > 0) tg.sendData(JSON.stringify(sessionData));
+            else tg.close();
           }
 
-          function deleteItem(type, id) {
-            if(type === 'tx') setData(d => ({ ...d, transactions: d.transactions.filter(t => t.id !== id) }));
-            else setData(d => ({ ...d, incomes: d.incomes.filter(i => i.id !== id) }));
-            showToast("O'chirildi");
-          }
-
+          // Doira shaklida joylashtirish matematikasi
+          const currentCats = type === "expense" ? EXPENSE_CATS : INCOME_CATS;
+          const radius = 120; // O'rtadagi doiradan uzoqligi
+          
           return (
-            <div style={{ fontFamily: "-apple-system, sans-serif", color: "#f8fafc", padding: "15px", maxWidth: "430px", margin: "0 auto" }}>
+            <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
               {toast && (
-                <div style={{ position:"fixed", top:10, left:"50%", transform:"translateX(-50%)", background: toast.type==="error" ? "#EF4444" : "#10B981", padding:"10px 20px", borderRadius:20, zIndex:1000 }}>
+                <div style={{ position:"absolute", top:15, left:"50%", transform:"translateX(-50%)", background: toast.color, padding:"10px 20px", borderRadius:20, zIndex:1000, fontWeight:"bold" }}>
                   {toast.msg}
                 </div>
               )}
 
-              {/* TABS */}
-              <div style={{ display:"flex", gap:10, marginBottom:15 }}>
-                <button onClick={() => setTab("home")} style={{ flex:1, padding:10, borderRadius:12, border:"none", background: tab==="home" ? "#3b82f6" : "#1e293b", color:"#fff", fontWeight:"bold" }}>Asosiy</button>
-                <button onClick={() => setTab("add")} style={{ flex:1, padding:10, borderRadius:12, border:"none", background: tab==="add" ? "#3b82f6" : "#1e293b", color:"#fff", fontWeight:"bold" }}>Kiritish</button>
+              {/* TEPADAGI QISM: Hisoblar va Balans */}
+              <div style={{ padding: "15px", background: "#1e1e1e", borderBottom: "1px solid #333", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div onClick={() => setAccount("card")} style={{ opacity: account==="card"?1:0.4, transition:"0.2s", textAlign:"center", flex:1, borderRight:"1px solid #333" }}>
+                    <div style={{fontSize:12, color:"#888"}}>💳 Plastik</div>
+                    <div style={{fontWeight:"bold", fontSize:14}}>{formatMoney(cardBalance)}</div>
+                </div>
+                <div style={{ flex: 1.5, textAlign: "center" }}>
+                    <div style={{fontSize:10, color:"#888", textTransform:"uppercase"}}>Umumiy Balans</div>
+                    <div style={{fontSize:22, fontWeight:"bold", color: totalBalance<0?"#F44336":"#fff"}}>{formatMoney(totalBalance)}</div>
+                </div>
+                <div onClick={() => setAccount("cash")} style={{ opacity: account==="cash"?1:0.4, transition:"0.2s", textAlign:"center", flex:1, borderLeft:"1px solid #333" }}>
+                    <div style={{fontSize:12, color:"#888"}}>💵 Naqd</div>
+                    <div style={{fontWeight:"bold", fontSize:14}}>{formatMoney(cashBalance)}</div>
+                </div>
               </div>
 
-              {/* HOME */}
-              {tab === "home" && (
-                <div>
-                  {isBudgetWarning && (
-                    <div style={{ background:"rgba(239,68,68,0.2)", border:"1px solid #ef4444", borderRadius:12, padding:10, marginBottom:15 }}>
-                      ⚠️ <b>DIQQAT:</b> Oylik byudjetingizning {budgetPercent}% qismi sarflandi!
-                    </div>
-                  )}
-
-                  <div style={{ background:"linear-gradient(135deg, #1e293b, #0f172a)", borderRadius:20, padding:20, marginBottom:20, border:"1px solid #334155", boxShadow:"0 10px 20px rgba(0,0,0,0.3)" }}>
-                    <div style={{ color:"#94a3b8", fontSize:12 }}>Joriy umumiy qoldiq</div>
-                    <div style={{ fontSize:30, fontWeight:"bold", margin:"5px 0", color: totalBalance < 0 ? "#ef4444" : "#fff" }}>{formatMoney(totalBalance)}</div>
-                    
-                    {/* NAQD VA PLASTIK BO'LINMASI */}
-                    <div style={{ display:"flex", gap:10, marginTop:15 }}>
-                      <div style={{ flex:1, background:"rgba(255,255,255,0.05)", padding:12, borderRadius:12 }}>
-                        <div style={{ fontSize:11, color:"#94a3b8", marginBottom:3 }}>💳 Plastik</div>
-                        <div style={{ fontSize:15, fontWeight:"bold", color:"#fff" }}>{formatMoney(cardBalance)}</div>
+              {/* O'RTADAGI QISM: 1Money Doira Interfeysi */}
+              <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", background:"#121212" }}>
+                  
+                  {/* Markazdagi asosiy summa */}
+                  <div className="center-circle" style={{ borderColor: type==="expense" ? "#ff5252" : "#4caf50" }}>
+                      <div style={{ fontSize: amountStr.length > 7 ? 18 : 24, fontWeight: "bold", color: type==="expense" ? "#ff5252" : "#4caf50" }}>
+                          {amountStr ? formatMoney(parseInt(amountStr)) : "0"}
                       </div>
-                      <div style={{ flex:1, background:"rgba(255,255,255,0.05)", padding:12, borderRadius:12 }}>
-                        <div style={{ fontSize:11, color:"#94a3b8", marginBottom:3 }}>💵 Naqd</div>
-                        <div style={{ fontSize:15, fontWeight:"bold", color:"#fff" }}>{formatMoney(cashBalance)}</div>
-                      </div>
-                    </div>
-
-                    <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginTop:15, borderTop:"1px solid rgba(255,255,255,0.1)", paddingTop:12 }}>
-                      <span style={{color:"#10b981"}}>Bu oy kirim: {formatMoney(monthTotalIncome)}</span>
-                      <span style={{color:"#f472b6"}}>Bu oy chiqim: {formatMoney(monthTotalExp)}</span>
-                    </div>
+                      <div style={{ fontSize: 12, color: "#888", marginTop: 5 }}>UZS</div>
                   </div>
 
-                  <div style={{ fontSize:14, color:"#94a3b8", marginBottom:10 }}>So'nggi amallar:</div>
-                  {allTx.slice(0, 5).map(t => {
-                    const icon = t.account === 'cash' ? '💵' : '💳';
-                    return (
-                        <div key={t.id} style={{ display:"flex", alignItems:"center", background:"#1e293b", padding:12, borderRadius:12, marginBottom:8 }}>
-                          <div style={{ flex:1 }}>
-                            <span style={{fontWeight:"bold"}}>{t.desc}</span> 
-                            <span style={{fontSize:10, color:"#64748b", marginLeft:5}}>({icon})</span>
-                            <div style={{fontSize:10, color:"#64748b"}}>{t.date} | {CATEGORIES.find(c=>c.id===t.cat)?.label}</div>
-                          </div>
-                          <div style={{ color:"#f472b6", fontWeight:"bold" }}>-{formatMoney(t.amount)}</div>
-                          <button onClick={()=>deleteItem('tx', t.id)} style={{ background:"none", border:"none", color:"#ef4444", marginLeft:10, fontSize:16 }}>✕</button>
-                        </div>
-                    );
+                  {/* Atrofdagi kategoriyalar */}
+                  {currentCats.map((cat, i) => {
+                      // Trigonometriya yordamida doira bo'ylab taxlash
+                      const angle = (i / currentCats.length) * 2 * Math.PI - Math.PI / 2;
+                      const x = Math.cos(angle) * radius;
+                      const y = Math.sin(angle) * radius;
+                      
+                      return (
+                          <button key={cat.id} className="circle-btn" onClick={() => handleCategoryClick(cat)} 
+                                  style={{ background: cat.color, transform: `translate(${x}px, ${y}px)` }}>
+                              <span style={{ fontSize: 24 }}>{cat.icon}</span>
+                              <span style={{ fontSize: 9, color: "#fff", fontWeight: "bold", position: "absolute", bottom: -18, whiteSpace: "nowrap", background:"rgba(0,0,0,0.5)", padding:"2px 5px", borderRadius:5 }}>
+                                  {cat.label}
+                              </span>
+                          </button>
+                      );
                   })}
+              </div>
 
-                  <button onClick={sendToTelegram} style={{ width:"100%", padding:15, background:"#10b981", color:"white", border:"none", borderRadius:12, fontWeight:"bold", marginTop:20 }}>
-                    ✅ Telegramga saqlash va chiqish
+              {/* PASTKI QISM: Numpad va Toggles */}
+              <div style={{ background: "#1e1e1e", padding: "15px", paddingBottom: "30px", borderTop: "1px solid #333", borderTopLeftRadius:20, borderTopRightRadius:20 }}>
+                  
+                  {/* Daromad/Xarajat o'zgartirgich */}
+                  <div style={{ display: "flex", gap: 10, marginBottom: 15 }}>
+                      <button onClick={() => setType("expense")} style={{ flex:1, padding:10, borderRadius:10, border:"none", background: type==="expense"?"#ff5252":"#2a2a2a", color:"#fff", fontWeight:"bold", transition:"0.2s" }}>Chiqim</button>
+                      <button onClick={() => setType("income")} style={{ flex:1, padding:10, borderRadius:10, border:"none", background: type==="income"?"#4caf50":"#2a2a2a", color:"#fff", fontWeight:"bold", transition:"0.2s" }}>Kirim</button>
+                  </div>
+
+                  {/* Numpad */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                      {["1","2","3","4","5","6","7","8","9","C","0","⌫"].map(btn => (
+                          <button key={btn} className="numpad-btn" onClick={() => handleNumpad(btn)}>{btn}</button>
+                      ))}
+                  </div>
+
+                  {/* Telegramga jo'natish tugmasi */}
+                  <button onClick={sendToTelegram} style={{ width: "100%", marginTop: 15, padding: 15, background: "#2196F3", color: "#fff", border: "none", borderRadius: 12, fontSize: 16, fontWeight: "bold" }}>
+                      Yopish va Botga yuborish ({sessionData.length})
                   </button>
-                </div>
-              )}
+              </div>
 
-              {/* ADD */}
-              {tab === "add" && (
-                <div>
-                  <div style={{ display:"flex", gap:10, marginBottom:15 }}>
-                    <button onClick={()=>setAddMode("expense")} style={{ flex:1, padding:12, borderRadius:10, border:"none", background:addMode==="expense"?"#ef4444":"#1e293b", color:"#fff", fontWeight:"bold" }}>▼ Chiqim</button>
-                    <button onClick={()=>setAddMode("income")} style={{ flex:1, padding:12, borderRadius:10, border:"none", background:addMode==="income"?"#10b981":"#1e293b", color:"#fff", fontWeight:"bold" }}>▲ Kirim</button>
-                  </div>
-
-                  {/* Hisob tanlash (Plastik/Naqd) */}
-                  <div style={{ display:"flex", gap:10, marginBottom:15 }}>
-                    <button onClick={()=>setAccountType("card")} style={{ flex:1, padding:10, borderRadius:10, border:accountType==="card"?"2px solid #3b82f6":"2px solid transparent", background:"#1e293b", color:accountType==="card"?"#3b82f6":"#fff" }}>💳 Plastik</button>
-                    <button onClick={()=>setAccountType("cash")} style={{ flex:1, padding:10, borderRadius:10, border:accountType==="cash"?"2px solid #10b981":"2px solid transparent", background:"#1e293b", color:accountType==="cash"?"#10b981":"#fff" }}>💵 Naqd</button>
-                  </div>
-
-                  <div style={{ fontSize:34, fontWeight:"bold", textAlign:"center", marginBottom:15, height:45, letterSpacing:"-1px" }}>
-                    {amountStr ? formatMoney(parseInt(amountStr)).replace(" so'm", "") : "0"}
-                  </div>
-
-                  <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:10, marginBottom:15 }}>
-                    {(addMode === "expense" ? CATEGORIES : INCOME_SOURCES).map(c => (
-                      <button key={c.id} onClick={()=>setSelectedCat(c.id)} style={{ minWidth:75, padding:"12px 5px", borderRadius:12, border:"none", background: selectedCat===c.id ? c.color : "#1e293b", color:"#fff", display:"flex", flexDirection:"column", alignItems:"center" }}>
-                        <span style={{fontSize:22}}>{c.icon}</span><span style={{fontSize:11, marginTop:5, whiteSpace:"nowrap"}}>{c.label}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Izoh qismi yanada yorqinroq */}
-                  <div style={{marginBottom: 15}}>
-                    <div style={{fontSize: 12, color: "#94a3b8", marginBottom: 5, fontWeight:"bold"}}>Izoh (Majburiy emas, masalan: Bog'cha to'lovi)</div>
-                    <input type="text" placeholder="Shu yerga yozing..." value={desc} onChange={e=>setDesc(e.target.value)} style={{ width:"100%", padding:14, borderRadius:12, border:"1px solid #334155", background:"#1e293b", color:"#fff", fontSize:16, boxSizing:"border-box", outline:"none" }} />
-                  </div>
-
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:10, marginBottom:10 }}>
-                    {["1","2","3","4","5","6","7","8","9","C","0","000"].map(btn => (
-                      <button key={btn} onClick={()=>handleNumpad(btn)} style={{ padding:15, borderRadius:12, border:"none", background:"rgba(255,255,255,0.05)", color:"#fff", fontSize:22, fontWeight:"bold" }}>{btn}</button>
-                    ))}
-                  </div>
-
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr", gap:10 }}>
-                    <button onClick={()=>handleNumpad("⌫")} style={{ padding:15, borderRadius:12, border:"none", background:"#334155", color:"#fff", fontSize:24 }}>⌫</button>
-                    <button onClick={handleSave} style={{ padding:15, borderRadius:12, border:"none", background:"#3b82f6", color:"#fff", fontSize:18, fontWeight:"bold" }}>Kiritish (Saqlash)</button>
-                  </div>
-                </div>
-              )}
             </div>
           );
         }
