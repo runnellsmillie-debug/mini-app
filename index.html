@@ -3,25 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1Money Family ERP v11</title>
+    <title>1Money Family ERP v12</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-user-select: none; user-select: none; padding: 12px; max-width: 430px; margin: 0 auto; box-sizing: border-box; }
         
-        .profile-bar { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid #1e293b; scrollbar-width: none; }
-        .profile-bar::-webkit-scrollbar { display: none; }
-        .profile-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; opacity: 0.5; transition: 0.2s; min-width: 55px; }
-        .profile-item.active { opacity: 1; transform: scale(1.05); }
-        .profile-avatar { width: 50px; height: 50px; border-radius: 50%; background: #1e293b; border: 2px solid #334155; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .profile-item.active .profile-avatar { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); }
-        .profile-name { font-size: 11px; font-weight: bold; color: #cbd5e1; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
-        .profile-item.active .profile-name { color: #3b82f6; }
+        /* TOP HEADER & SIDEBAR MENU */
+        .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .menu-btn { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 10px 15px; border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .menu-btn:active { transform: scale(0.95); }
+        
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; backdrop-filter: blur(2px); }
+        .sidebar-menu { position: fixed; top: 0; left: -280px; width: 260px; height: 100%; background: #0f172a; z-index: 2001; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 20px; box-sizing: border-box; border-right: 1px solid #1e293b; overflow-y: auto; box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
+        .sidebar-menu.open { left: 0; }
+        
+        .sidebar-item { display: flex; align-items: center; gap: 14px; padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; color: #cbd5e1; font-weight: bold; font-size: 14px; transition: 0.2s; border: 1px solid transparent; }
+        .sidebar-item:active { background: #1e293b; }
+        .sidebar-item.active { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border-color: rgba(59, 130, 246, 0.3); }
+        .sidebar-avatar { width: 36px; height: 36px; border-radius: 50%; background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 1px solid #334155; }
+        .sidebar-item.active .sidebar-avatar { border-color: #3b82f6; background: #fff; }
 
         .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
         .tab-btn { flex: 1; padding: 10px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; background: #1e293b; color: #64748b; font-size: 12px; transition: 0.2s; }
-        .tab-btn.active { background: #3b82f6; color: #fff; }
+        .tab-btn.active { background: #3b82f6; color: #fff; box-shadow: 0 4px 6px rgba(59,130,246,0.3); }
         
-        .balance-main { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #334155; border-radius: 20px; padding: 15px; text-align: center; margin-bottom: 12px; }
+        .balance-main { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #334155; border-radius: 20px; padding: 15px; text-align: center; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .balance-grid { display: flex; gap: 8px; margin-bottom: 12px; }
         .balance-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 12px; flex: 1; box-sizing: border-box; }
         .widget-box { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
@@ -33,7 +39,7 @@
         .grid-container { background: rgba(255,255,255,0.02); padding: 10px; border-radius: 14px; margin-bottom: 10px; border: 1px dashed #334155; }
         .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
         .sub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .cat-grid-btn { padding: 12px 2px; border: none; border-radius: 14px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content:center; gap: 4px; font-weight: bold; font-size: 10px; transition: 0.1s; text-align:center; min-height:65px;}
+        .cat-grid-btn { padding: 12px 2px; border: none; border-radius: 14px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content:center; gap: 4px; font-weight: bold; font-size: 10px; transition: 0.1s; text-align:center; min-height:65px; background: #1e293b;}
         .cat-grid-btn:active { transform: scale(0.95); }
         
         .num-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
@@ -45,8 +51,8 @@
         .delete-btn { background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer; font-size: 16px; margin-left: auto; padding: 5px; }
         #toast-msg { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 20px; z-index: 9999; font-weight: bold; font-size: 14px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 
-        #modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-box { background: #0f172a; padding: 20px; border-radius: 20px; border: 1px solid #334155; width: 85%; max-width: 320px; }
+        #modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 3000; justify-content: center; align-items: center; }
+        .modal-box { background: #0f172a; padding: 20px; border-radius: 20px; border: 1px solid #334155; width: 85%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         
         /* Plan UI */
         .plan-item { background: #1e293b; border: 1px solid #3b82f6; padding: 10px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; display:flex; gap:10px; align-items:center; transition: 0.3s; }
@@ -55,7 +61,7 @@
         .custom-checkbox.checked::after { content: '✓'; color: #3b82f6; font-size: 16px; font-weight: bold; }
         .filter-select { background: #334155; border: 1px solid #475569; color: #fff; padding: 8px; border-radius: 8px; font-size: 12px; outline: none; }
         
-        /* Smart Tags (Avto toifalar) */
+        /* Smart Tags */
         .tags-wrapper { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
         .smart-tag { background: #1e293b; color: #fff; border: 1px solid #3b82f6; padding: 6px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: 0.1s; display:flex; align-items:center; gap:4px; }
         .smart-tag:active { transform: scale(0.95); background: #3b82f6; }
@@ -66,6 +72,22 @@
 <body>
 
     <div id="toast-msg"></div>
+
+    <div class="top-header">
+        <button class="menu-btn" onclick="toggleSidebar()">
+            <span style="font-size:18px; margin-bottom:2px;">☰</span> 
+            <span id="current-profile-name" style="letter-spacing: 0.5px;">Umumiy</span>
+        </button>
+    </div>
+
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <div id="sidebar-menu" class="sidebar-menu">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px dashed #334155; padding-bottom:15px;">
+            <h3 style="margin:0; color:#3b82f6;">Profillar</h3>
+            <button onclick="toggleSidebar()" style="background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        <div id="sidebar-profiles-list"></div>
+    </div>
 
     <div id="modal-overlay" class="modal-layer" style="display:none;">
         <div class="modal-box">
@@ -88,7 +110,7 @@
         </div>
     </div>
 
-    <div id="buy-modal" class="modal-layer" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1001; justify-content:center; align-items:center;">
+    <div id="buy-modal" class="modal-layer" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:4000; justify-content:center; align-items:center;">
         <div class="modal-box">
             <h3 style="margin-top:0; color:#10b981;">Xaridni tasdiqlash</h3>
             <div id="buy-modal-item-name" style="color:#94a3b8; font-size:13px; margin-bottom:10px;">Mahsulot...</div>
@@ -103,8 +125,6 @@
             </div>
         </div>
     </div>
-
-    <div class="profile-bar" id="profiles-container"></div>
 
     <div class="tabs">
         <button id="btn-home" class="tab-btn active" onclick="switchTab('home')">Asosiy</button>
@@ -132,7 +152,7 @@
         <div class="widget-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <div style="font-size: 12px; color: #94a3b8; font-weight: bold;">📅 Rejali to'lovlar (<span id="sched-prof-name">Umumiy</span>):</div>
-                <button onclick="toggleScheduledSetup()" style="background:#3b82f6; border:none; color:#fff; font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer; font-weight:bold;">⚙️</button>
+                <button onclick="toggleScheduledSetup()" style="background:#3b82f6; border:none; color:#fff; font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer; font-weight:bold;">⚙️ Boshqarish</button>
             </div>
             <div id="scheduled-setup-panel" style="display:none; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid #334155;">
                 <input type="text" id="sched-new-name" placeholder="Nomi (Mas: Bog'cha)" class="input-text" style="padding:8px; font-size:13px; margin-bottom:6px;" />
@@ -151,7 +171,7 @@
 
         <div id="planned-expenses-section" style="display:block;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 13px; font-weight: bold; color: #3b82f6;">🛒 Reja / Bozorlik:</div>
+                <div style="font-size: 13px; font-weight: bold; color: #3b82f6;">🛒 Bozorlik / Xarid Rejasi:</div>
                 <button onclick="togglePlanSetup()" style="background:#3b82f6; border:none; color:#fff; font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer; font-weight:bold;">➕ Reja Tuzish</button>
             </div>
             
@@ -161,7 +181,7 @@
                     <select id="smart-plan-subcat" class="filter-select" onchange="renderSmartTags()" style="flex:1;"></select>
                 </div>
                 
-                <div style="font-size:10px; color:#94a3b8; margin-bottom:6px;">Shu yerdan tanlang (Avtomatik tushadi):</div>
+                <div style="font-size:10px; color:#94a3b8; margin-bottom:6px;">1-Klikda tanlang (Avto Hajmga o'tadi):</div>
                 <div id="smart-tags-container" class="tags-wrapper"></div>
                 
                 <hr style="border:none; border-top:1px dashed #475569; margin:10px 0;">
@@ -192,10 +212,6 @@
             <div id="planned-list-container"></div>
         </div>
 
-        <div id="today-expenses-section">
-            <div style="font-size: 13px; font-weight: bold; color: #94a3b8; margin-bottom: 8px;"><span id="home-history-title">Bugungi amallar:</span></div>
-            <div id="home-today-list"></div>
-        </div>
         <button onclick="sendToTelegram()" style="width:100%; padding:14px; background:#10b981; color:white; border:none; font-weight:bold; margin-top:20px; font-size:14px; border-radius:12px; cursor:pointer;">
             ✅ Telegramga saqlash (<span id="session-count">0</span>)
         </button>
@@ -267,7 +283,7 @@
         function showToast(msg, isError=false) { const t = document.getElementById("toast-msg"); if(t){ t.innerText=msg; t.style.background=isError?"#EF4444":"#10B981"; t.style.display="block"; setTimeout(()=>t.style.display="none", 2500); } }
 
         // ==========================================
-        // SMART WISHLIST TAGS (BOZORLIK SHABLONLARI)
+        // SMART WISHLIST TAGS
         // ==========================================
         const PLAN_TAGS = {
             "Oziq-ovqat": {
@@ -296,6 +312,16 @@
             }
         };
 
+        const CATS_GENERAL = [
+          { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B", subs: [ { id: "bozor", label: "Bozor", icon: "⚖️", items: [ {id:"gosht_b", label:"Go'sht/Tovuq", icon:"🥩"}, {id:"meva_b", label:"Sabzavot/Meva", icon:"🍅"}, {id:"quruq", label:"Yong'oq/Quruq", icon:"🥜"}, {id:"bosh", label:"Yog'/Guruch/Shakar", icon:"🍚"} ]}, { id: "supermarket", label: "Supermarket", icon: "🏪", items: [ {id:"sut", label:"Sut/Pishloq/Tuxum", icon:"🥛"}, {id:"non", label:"Non/Pishiriq", icon:"🍞"}, {id:"shirin", label:"Shirinlik/Sharbat", icon:"🍫"}, {id:"mayda", label:"Mayda-chuyda", icon:"🍬"} ]}, { id: "dokon", label: "Do'kon", icon: "🏪", items: [ {id:"non2", label:"Non/Sut", icon:"🍞"}, {id:"ich", label:"Suv/Ichimlik", icon:"🧃"} ]}, { id: "kafe", label: "Kafe/Choyxona", icon: "🍔", items: [ {id:"ovqat", label:"Tushlik/Kechki", icon:"🍲"}, {id:"dost", label:"Do'stlar/Choyxona", icon:"🍻"} ]} ]},
+          { id: "uy", label: "Uy / Kommunal", icon: "🏠", color: "#FBBF24", subs: [ { id: "kommunal", label: "Kommunal to'lov", icon: "🧾", items: [ {id:"svet", label:"Svet", icon:"⚡"}, {id:"gaz", label:"Gaz", icon:"🔥"}, {id:"suv", label:"Suv", icon:"💧"}, {id:"musor", label:"Musor", icon:"🧹"}, {id:"dom", label:"Domkom", icon:"🏢"} ]}, { id: "aloqa", label: "Aloqa/Internet", icon: "📡", items: [ {id:"tel", label:"Mobil aloqa", icon:"📱"}, {id:"wifi", label:"Uy interneti", icon:"🌐"} ]}, { id: "xoja", label: "Xo'jalik mollari", icon: "🧽", items: [ {id:"kukun", label:"Kukun/Suyuqlik", icon:"🧼"}, {id:"gig", label:"Salfetka/Qog'oz", icon:"🧻"}, {id:"idish", label:"Idish-tovoq", icon:"🍽️"} ]}, { id: "jihoz", label: "Ta'mir/Mebel", icon: "🛠️", items: [ {id:"remont", label:"Qurilish materiali", icon:"🧱"}, {id:"mebel", label:"Mebel/Texnika", icon:"🛋️"}, {id:"usta", label:"Usta", icon:"👨‍🔧"} ]} ]},
+          { id: "avto", label: "Avto (Jetour)", icon: "🚗", color: "#2196F3", subs: [ { id: "zapravka", label: "Yoqilg'i", icon: "⛽", items: [ {id:"b80", label:"Benzin Ai-80", icon:"⛽"}, {id:"b92", label:"Benzin Ai-92+", icon:"⛽"}, {id:"metan", label:"Metan/Propan", icon:"💨"} ]}, { id: "servis", label: "Servis/Zapchast", icon: "🔧", items: [ {id:"moy", label:"Moy/Filtr", icon:"🛢️"}, {id:"xodovoy", label:"Xodovoy/Motor", icon:"⚙️"}, {id:"balon", label:"Akkumulyator/Shina", icon:"🛞"} ]}, { id: "moyka", label: "Moyka", icon: "🧼", items: [ {id:"kuzov", label:"Kuzov/Salon", icon:"🚿"}, {id:"xim", label:"Ximchistka", icon:"✨"} ]}, { id: "tyun", label: "Qo'shimcha", icon: "🛡️", items: [ {id:"sugurta", label:"Sug'urta/Texnik ko'rik", icon:"📜"}, {id:"jarima", label:"Jarima", icon:"📸"}, {id:"salon", label:"Chexol/Aksessuar", icon:"💺"} ]} ]},
+          { id: "oila", label: "Oila / Bolalar", icon: "🧸", color: "#8B5CF6", subs: [ { id: "kiyim", label: "Kiyim/Poyabzal", icon: "👕", items: [ {id:"erkak", label:"Ota-onaga", icon:"👔"}, {id:"bola", label:"Bolalarga", icon:"👶"}, {id:"oyoq", label:"Oyoq kiyim", icon:"👟"} ]}, { id: "talim", label: "Ta'lim/Maktab", icon: "📚", items: [ {id:"bogcha", label:"Bog'cha to'lovi", icon:"🏫"}, {id:"maktab", label:"Maktab/Repetitor", icon:"📖"}, {id:"kitob", label:"Kanselyariya", icon:"✏️"} ]}, { id: "dam", label: "Ko'ngilochar", icon: "🎡", items: [ {id:"park", label:"Park/Attraksion", icon:"🎢"}, {id:"oyin", label:"O'yinchoq", icon:"🤖"}, {id:"kino", label:"Kino/Sayohat", icon:"🍿"} ]} ]},
+          { id: "soglik", label: "Sog'liq/Go'zallik", icon: "💊", color: "#34D399", subs: [ { id: "apteka", label: "Apteka", icon: "🏥", items: [ {id:"dori", label:"Dori-darmon", icon:"💊"}, {id:"vit", label:"Vitamin/Kosmetika", icon:"🧴"} ]}, { id: "shifo", label: "Shifokor", icon: "🩺", items: [ {id:"korik", label:"Ko'rik/Analiz", icon:"🔬"}, {id:"tish", label:"Stomatolog", icon:"🦷"} ]}, { id: "salon", label: "Salon/Sport", icon: "✂️", items: [ {id:"sart", label:"Sartarosh/Salon", icon:"✂️"}, {id:"sport", label:"Sport/Fitnes", icon:"🏋️"} ]} ]},
+          { id: "biznes", label: "IMSOA Biznes", icon: "🏢", color: "#607D8B", subs: [ { id: "xom", label: "Xomashyo", icon: "🧱", items: []}, { id: "ishchi", label: "Ishchilar", icon: "👨‍🏭", items: []}, { id: "obyekt", label: "Obyekt xarajati", icon: "🏭", items: []} ]},
+          { id: "boshqa", label: "Boshqa", icon: "📦", color: "#94A3B8", subs: [ { id: "majbur", label: "Kredit/Qarz", icon: "🏦", items: []}, { id: "ehson", label: "Ehson/Xayriya", icon: "🤲", items: []}, { id: "kutilmagan", label: "Kutilmagan", icon: "❓", items: []} ]}
+        ];
+
         const INCOME_SOURCES = [ { id: "maosh", label: "Oylik maosh", icon: "💼" }, { id: "imsoa_k", label: "IMSOA foyda", icon: "💰" }, { id: "boshqa_k", label: "Qo'shimcha", icon: "🎁" } ];
         const OY_NOMLARI = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
 
@@ -307,42 +333,63 @@
         try { if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) { telegramUserName = window.Telegram.WebApp.initDataUnsafe.user.first_name; } } catch(e) {}
 
         function init() {
-            const raw = localStorage.getItem("xarajat_erp_v11");
+            const raw = localStorage.getItem("xarajat_erp_v12");
             if (raw) { try { state = JSON.parse(raw); } catch(e) {} }
-            
-            // INITIAL DEFAULT PROFILES
             if (!state.profiles || state.profiles.length === 0) { 
-                state.profiles = [
-                    { id: "general", name: "Umumiy", icon: "🏠", age: null, role: "parent_m" },
-                    { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", age: null, role: "home" }
-                ]; 
-            } else if (!state.profiles.find(p => p.id === "home_profile")) {
-                state.profiles.splice(1, 0, { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", age: null, role: "home" });
+                state.profiles = [ { id: "general", name: "Umumiy", icon: "🏠", age: null, role: "parent_m" }, { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", age: null, role: "home" } ]; 
             }
-
             if (!state.transactions) state.transactions = []; if (!state.incomes) state.incomes = []; if (!state.debts) state.debts = []; if (!state.scheduled) state.scheduled = []; if (!state.planned) state.planned = [];
-            renderProfilesBar(); render(); updatePlanCatOptions();
+            renderProfilesSidebar(); render(); updatePlanCatOptions();
         }
-        function saveState() { localStorage.setItem("xarajat_erp_v11", JSON.stringify(state)); render(); }
+        function saveState() { localStorage.setItem("xarajat_erp_v12", JSON.stringify(state)); render(); }
 
-        function renderProfilesBar() {
-            let html = ""; state.profiles.forEach(p => { const isActive = p.id === currentProfileId ? "active" : ""; html += `<div class="profile-item ${isActive}" onclick="selectProfile('${p.id}')"><div class="profile-avatar">${p.icon}</div><div class="profile-name">${p.name}</div></div>`; });
-            html += `<div class="profile-item" onclick="openProfileModal()"><div class="profile-avatar" style="border-style:dashed;">➕</div><div class="profile-name">Qo'shish</div></div>`;
-            setHtml("profiles-container", html);
+        // ==========================================
+        // SIDEBAR MENU LOGIC (YANGI YASHIRIN MENYU)
+        // ==========================================
+        window.toggleSidebar = function() {
+            const menu = document.getElementById("sidebar-menu");
+            const overlay = document.getElementById("sidebar-overlay");
+            if (menu.classList.contains("open")) {
+                menu.classList.remove("open");
+                overlay.style.display = "none";
+            } else {
+                menu.classList.add("open");
+                overlay.style.display = "block";
+            }
+        }
+
+        function renderProfilesSidebar() {
+            let html = "";
+            state.profiles.forEach(p => {
+                const isActive = p.id === currentProfileId ? "active" : "";
+                html += `<div class="sidebar-item ${isActive}" onclick="selectProfile('${p.id}')">
+                    <div class="sidebar-avatar">${p.icon}</div>
+                    <div>${p.name}</div>
+                </div>`;
+            });
+            html += `<div class="sidebar-item" onclick="openProfileModal()" style="border: 1px dashed #475569; justify-content:center; opacity:0.8;">
+                <div style="font-size:16px;">➕ Yangi qo'shish</div>
+            </div>`;
+            setHtml("sidebar-profiles-list", html);
+            
+            const prof = state.profiles.find(p => p.id === currentProfileId);
+            setTxt("current-profile-name", prof ? prof.name : "Umumiy");
         }
 
         window.selectProfile = function(id) { 
             currentProfileId = id; activeMainCat = null; activeSubCat = null; 
-            renderProfilesBar(); applyAccessRules(); updatePlanCatOptions(); render(); 
+            toggleSidebar(); // Menyuni yopish
+            renderProfilesSidebar(); applyAccessRules(); updatePlanCatOptions(); render(); 
         }
-        window.openProfileModal = function() { showModal("modal-overlay"); }
+
+        window.openProfileModal = function() { toggleSidebar(); showModal("modal-overlay"); }
         window.closeProfileModal = function() { closeModal("modal-overlay"); }
         window.saveNewProfile = function() {
             const name = getVal("prof-name").trim(); const age = parseInt(getVal("prof-age")); const role = getVal("prof-role");
             let emoji = getVal("prof-emoji").trim(); if(!emoji) emoji = role.endsWith('_f') ? "👧" : "👦";
             if(!name) { showToast("Profil ismini kiriting!", true); return; }
             state.profiles.push({ id: "p_" + Date.now(), name: name, age: isNaN(age) ? null : age, role: role, icon: emoji });
-            closeProfileModal(); setVal("prof-name", ""); setVal("prof-age", ""); setVal("prof-emoji", ""); saveState(); renderProfilesBar(); showToast("Profil qo'shildi!");
+            closeProfileModal(); setVal("prof-name", ""); setVal("prof-age", ""); setVal("prof-emoji", ""); saveState(); renderProfilesSidebar(); showToast("Profil qo'shildi!");
         }
 
         function applyAccessRules() {
@@ -355,7 +402,6 @@
             
             document.getElementById("user-stats-wrapper").style.display = (currentProfileId === "general") ? "block" : "none";
             document.getElementById("report-inc-card").style.display = isChild ? "none" : "block";
-            document.getElementById("today-expenses-section").style.display = isChild ? "none" : "block";
         }
 
         window.switchTab = function(tabId) {
@@ -376,7 +422,7 @@
             let cats = [];
             if (isChild) { cats = ["Kiyim", "Ta'lim", "O'yinchoq"]; } 
             else if (prof.id === "home_profile") { cats = ["Oziq-ovqat", "Xo'jalik/Uy", "Avto"]; } 
-            else { cats = Object.keys(PLAN_TAGS); } // All cats
+            else { cats = Object.keys(PLAN_TAGS); } 
             
             catEl.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join("");
             updateSmartPlanDropdowns();
@@ -406,16 +452,10 @@
         window.quickAddPlan = function(tag, cat) {
             const nameInput = document.getElementById("plan-name");
             const qtyInput = document.getElementById("plan-qty");
-            nameInput.value = tag;
-            qtyInput.value = ""; 
-            
-            // Visual Green Flash Effect
-            nameInput.style.backgroundColor = "rgba(16, 185, 129, 0.3)";
-            nameInput.style.borderColor = "#10b981";
+            nameInput.value = tag; qtyInput.value = ""; 
+            nameInput.style.backgroundColor = "rgba(16, 185, 129, 0.3)"; nameInput.style.borderColor = "#10b981";
             setTimeout(() => { nameInput.style.backgroundColor = "#1e293b"; nameInput.style.borderColor = "#334155"; }, 600);
-            
-            qtyInput.focus();
-            showToast("Nom tanlandi! Endi hajmini (Mas: 2 kg) yozing");
+            qtyInput.focus(); showToast("Hajmini (Mas: 2 kg) yozing");
         }
 
         window.addPlannedItemManual = function() {
@@ -448,7 +488,7 @@
                         <div style="font-weight:bold; color:#3b82f6; font-size:14px; text-decoration:${isSkipped ? 'line-through' : 'none'};">${p.text}</div>
                         <div style="font-size:11px; color:#64748b; margin-top:2px;">📍 ${p.market} | 🏷️ ${p.cat}</div>
                     </div>
-                    <button onclick="openBuyModal('${p.id}')" style="background:#10b981; border:none; color:#fff; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer;" ${isSkipped ? 'disabled' : ''}>Sotib oldim</button>
+                    <button onclick="openBuyModal('${p.id}')" style="background:#10b981; border:none; color:#fff; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer;" ${isSkipped ? 'disabled' : ''}>Olish</button>
                 </div>`;
             });
             setHtml("planned-list-container", planHtml || "<div style='color:#64748b; font-size:11px; text-align:center;'>Ro'yxat bo'sh. Qilmoqchi bo'lgan xaridlaringizni qo'shing.</div>");
@@ -482,32 +522,14 @@
             });
             setHtml("scheduled-list-container", schedCode || "<div style='text-align:center; color:#64748b; font-size:12px; padding:4px;'>Hozircha majburiy to'lovlar yo'q.</div>");
 
-            if (currentTab === "home") { renderPlanned(); renderHome(); }
+            if (currentTab === "home") { renderPlanned(); }
             if (currentTab === "add") renderCats(); if (currentTab === "debts") renderDebts(); if (currentTab === "report") renderReport();
-        }
-
-        function renderHome() {
-            const prof = state.profiles.find(p => p.id === currentProfileId); const isChild = prof && prof.age !== null && prof.age < 16 && prof.id !== "general" && prof.id !== "home_profile";
-            if (isChild) { document.getElementById("today-expenses-section").style.display = "none"; } else {
-                document.getElementById("today-expenses-section").style.display = "block"; const todayStr = new Date().toISOString().slice(0, 10);
-                const myTxs = state.transactions.filter(t => t.date === todayStr && (t.profileId === currentProfileId || currentProfileId === 'general')); const myIncs = state.incomes.filter(i => i.date === todayStr && (i.profileId === currentProfileId || currentProfileId === 'general'));
-                const combined = [...myIncs.map(i => ({...i, mode: 'plus'})), ...myTxs.map(t => ({...t, mode: 'minus'}))].sort((a,b) => b.id - a.id).slice(0, 5);
-                let homeListCode = "";
-                if(combined.length === 0) { homeListCode = `<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Bugun amal yo'q.</div>`; } 
-                else { combined.forEach(item => { const color = item.mode === 'plus' ? '#10b981' : (item.cat === "O'tkazma" ? '#3b82f6' : '#f472b6'); const sign = item.mode === 'plus' ? '+' : '-'; homeListCode += `<div class="history-item"><div><div style="font-weight:bold; color:${item.mode==='plus'?'#10b981':'#fff'}">${item.desc}</div><div style="font-size:10px; color:#64748b;">👤 ${item.user || 'Siz'} | ${item.subCat ? '['+item.subCat+']' : item.cat}</div></div><div style="color:${color}; font-weight:bold; margin-left:auto;">${sign}${formatMoney(item.amount).replace(" so'm", "")}</div><button class="delete-btn" onclick="deleteItem('${item.mode==='minus'?'tx':'inc'}', ${item.id})">✕</button></div>`; }); }
-                setHtml("home-today-list", homeListCode);
-            }
         }
 
         // KATEGORIYALAR RENDER
         window.pressNum = function(val) { if (val === "C") amountStr = ""; else if (val === "⌫") amountStr = amountStr.slice(0, -1); else if (amountStr.length < 10) amountStr += val; setTxt("num-display", amountStr ? new Intl.NumberFormat("uz-UZ").format(parseInt(amountStr)) : "0"); }
         window.setAddMode = function(mode) { addMode = mode; activeMainCat = null; activeSubCat = null; document.getElementById("mode-exp").style.background = mode === "expense" ? "#ef4444" : "#1e293b"; document.getElementById("mode-inc").style.background = mode === "income" ? "#10b981" : "#1e293b"; document.getElementById("mode-trn").style.background = mode === "transfer" ? "#3b82f6" : "#1e293b"; document.getElementById("normal-acc-selector").style.display = mode === "transfer" ? "none" : "flex"; document.getElementById("transfer-acc-selector").style.display = mode === "transfer" ? "flex" : "none"; document.getElementById("cats-container").style.display = mode === "transfer" ? "none" : "block"; document.getElementById("btn-do-transfer").style.display = mode === "transfer" ? "block" : "none"; setHtml("stay-hint", ""); renderCats(); }
-        window.setAccountType = function(acc) { accountType = acc; document.getElementById("acc-card").style.border = acc === "card" ? "1px solid #3b82f6" : "none"; document.getElementById("acc-cash").style.border = acc === "cash" ? "1px solid #10b981" : "none"; }
-        window.setBuyAcc = function(acc) { accountType = acc; document.getElementById("buy-acc-card").style.border = acc === "card" ? "1px solid #3b82f6" : "none"; document.getElementById("buy-acc-cash").style.border = acc === "cash" ? "1px solid #10b981" : "none"; }
-        window.setTransferDir = function(dir) { transferDir = dir; document.getElementById("trn-dir-card-cash").style.background = dir === "card-to-cash" ? "#3b82f6" : "#1e293b"; document.getElementById("trn-dir-card-cash").style.border = dir === "card-to-cash" ? "1px solid #3b82f6" : "none"; document.getElementById("trn-dir-cash-card").style.background = dir === "cash-to-card" ? "#3b82f6" : "#1e293b"; document.getElementById("trn-dir-cash-card").style.border = dir === "cash-to-card" ? "1px solid #3b82f6" : "none"; }
-        window.setDebtAccount = function(acc) { debtAccount = acc; document.getElementById("debt-acc-card").style.border = acc === "card" ? "1px solid #3b82f6" : "none"; document.getElementById("debt-acc-cash").style.border = acc === "cash" ? "1px solid #10b981" : "none"; }
-        window.setDebtType = function(type) { debtType = type; document.getElementById("debt-type-take").style.background = type === "take" ? "#84cc16" : "#334155"; document.getElementById("debt-type-give").style.background = type === "give" ? "#ef4444" : "#334155"; }
-
+        
         function renderCats() {
             if(addMode === "transfer") return; const container = document.getElementById("cats-container"); if(!container) return;
             const prof = state.profiles.find(p=>p.id===currentProfileId); const isFemale = prof && prof.role && prof.role.endsWith('_f');
@@ -568,7 +590,6 @@
         }
 
         window.downloadExcel = function() { let csv="\uFEFFSana,Profil,Turi,Odam,Rukun,Kategoriya_2,Izoh,Summa,Hisob\n"; const rows=[...state.incomes.map(i=>({...i,tStr:"Kirim"})), ...state.transactions.map(t=>({...t,tStr:"Chiqim"}))].sort((a,b)=>b.id-a.id); rows.forEach(r => { const pName=state.profiles.find(p=>p.id===r.profileId)?.name||'Umumiy'; csv+=`${r.date},${pName},${r.tStr},${r.user||'Siz'},${r.cat||''},${r.subCat||''},${r.desc},${r.amount},${r.account==='cash'?'Naqd':'Plastik'}\n`; }); const b=new Blob([csv], {type:'text/csv;charset=utf-8;'}); const l=document.createElement("a"); l.setAttribute("href", URL.createObjectURL(b)); l.setAttribute("download", "Oila_Hisobot.csv"); document.body.appendChild(l); l.click(); document.body.removeChild(l); }
-        window.sendToTelegram = function() { if(sessionData.length>0) tg.sendData(JSON.stringify(sessionData)); else tg.close(); }
         if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded", init);}else{init();}
     </script>
 </body>
