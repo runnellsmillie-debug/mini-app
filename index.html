@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1Money Family ERP v12</title>
+    <title>1Money Family ERP v14</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { margin: 0; background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-user-select: none; user-select: none; padding: 12px; max-width: 430px; margin: 0 auto; box-sizing: border-box; }
         
-        /* TOP HEADER & SIDEBAR MENU */
-        .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        .menu-btn { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 10px 15px; border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .menu-btn:active { transform: scale(0.95); }
+        /* HEADER (Nejniy) */
+        .top-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .menu-btn { background: transparent; border: none; color: #94a3b8; padding: 5px 0; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .menu-btn:active { opacity: 0.7; }
+        .menu-btn span.icon { font-size: 20px; color: #3b82f6; }
         
         .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; backdrop-filter: blur(2px); }
         .sidebar-menu { position: fixed; top: 0; left: -280px; width: 260px; height: 100%; background: #0f172a; z-index: 2001; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 20px; box-sizing: border-box; border-right: 1px solid #1e293b; overflow-y: auto; box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
@@ -23,50 +24,51 @@
         .sidebar-avatar { width: 36px; height: 36px; border-radius: 50%; background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 1px solid #334155; }
         .sidebar-item.active .sidebar-avatar { border-color: #3b82f6; background: #fff; }
 
-        .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
-        .tab-btn { flex: 1; padding: 10px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; background: #1e293b; color: #64748b; font-size: 12px; transition: 0.2s; }
+        /* TAB KANOPKALAR (4 ta) */
+        .tabs { display: flex; gap: 6px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 12px 0; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; background: #1e293b; color: #64748b; font-size: 13px; transition: 0.2s; }
         .tab-btn.active { background: #3b82f6; color: #fff; box-shadow: 0 4px 6px rgba(59,130,246,0.3); }
         
-        .balance-main { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #334155; border-radius: 20px; padding: 15px; text-align: center; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .balance-grid { display: flex; gap: 8px; margin-bottom: 12px; }
-        .balance-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 12px; flex: 1; box-sizing: border-box; }
+        /* UMUMIY BALANS (BITTA) */
+        .balance-main { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #334155; border-radius: 20px; padding: 20px 15px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .widget-box { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
         
-        .mode-selector, .acc-selector { display: flex; gap: 6px; margin-bottom: 10px; }
-        .mode-btn, .acc-btn { flex: 1; padding: 10px; border-radius: 10px; border: none; font-weight: bold; color: #fff; background: #1e293b; cursor: pointer; font-size: 13px; }
-        .num-display { font-size: 32px; font-weight: bold; text-align: center; margin-bottom: 10px; height: 40px; color: #fff; }
+        .mode-selector { display: flex; gap: 6px; margin-bottom: 10px; }
+        .mode-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; color: #fff; background: #1e293b; cursor: pointer; font-size: 14px; }
+        .num-display { font-size: 36px; font-weight: bold; text-align: center; margin-bottom: 10px; height: 45px; color: #fff; }
         
         .grid-container { background: rgba(255,255,255,0.02); padding: 10px; border-radius: 14px; margin-bottom: 10px; border: 1px dashed #334155; }
         .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
         .sub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
         .cat-grid-btn { padding: 12px 2px; border: none; border-radius: 14px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content:center; gap: 4px; font-weight: bold; font-size: 10px; transition: 0.1s; text-align:center; min-height:65px; background: #1e293b;}
-        .cat-grid-btn:active { transform: scale(0.95); }
+        .cat-grid-btn:active { transform: scale(0.95); background: #334155; }
         
         .num-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
         .num-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; font-size: 22px; border-radius: 14px; padding: 14px 0; cursor: pointer; outline: none; }
         .num-btn:active { background: rgba(255, 255, 255, 0.15); }
-        .input-text { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 15px; box-sizing: border-box; outline: none; margin-bottom: 10px; transition: 0.3s; }
+        .input-text { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 15px; box-sizing: border-box; outline: none; margin-bottom: 10px; transition: 0.3s; }
+        .input-text:focus { border-color: #3b82f6; }
         
-        .history-item { display: flex; align-items: center; background: #1e293b; padding: 10px; border-radius: 12px; margin-bottom: 6px; font-size: 13px; }
+        .history-item { display: flex; align-items: center; background: #1e293b; padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; border: 1px solid transparent; }
         .delete-btn { background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer; font-size: 16px; margin-left: auto; padding: 5px; }
         #toast-msg { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 20px; z-index: 9999; font-weight: bold; font-size: 14px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 
-        #modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 3000; justify-content: center; align-items: center; }
+        #modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
         .modal-box { background: #0f172a; padding: 20px; border-radius: 20px; border: 1px solid #334155; width: 85%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         
-        /* Plan UI */
-        .plan-item { background: #1e293b; border: 1px solid #3b82f6; padding: 10px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; display:flex; gap:10px; align-items:center; transition: 0.3s; }
+        .plan-item { background: #1e293b; border: 1px solid #3b82f6; padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; display:flex; gap:10px; align-items:center; transition: 0.3s; }
         .plan-item.skipped { opacity: 0.4; filter: grayscale(100%); border-color:#475569; }
         .custom-checkbox { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #3b82f6; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; background:rgba(59,130,246,0.1); }
         .custom-checkbox.checked::after { content: '✓'; color: #3b82f6; font-size: 16px; font-weight: bold; }
-        .filter-select { background: #334155; border: 1px solid #475569; color: #fff; padding: 8px; border-radius: 8px; font-size: 12px; outline: none; }
+        .filter-select { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 10px; border-radius: 10px; font-size: 13px; outline: none; }
         
-        /* Smart Tags */
-        .tags-wrapper { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-        .smart-tag { background: #1e293b; color: #fff; border: 1px solid #3b82f6; padding: 6px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: 0.1s; display:flex; align-items:center; gap:4px; }
+        .tags-wrapper { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .smart-tag { background: #1e293b; color: #fff; border: 1px solid #3b82f6; padding: 8px 12px; border-radius: 10px; font-size: 13px; cursor: pointer; transition: 0.1s; display:flex; align-items:center; gap:4px; }
         .smart-tag:active { transform: scale(0.95); background: #3b82f6; }
         .scheduled-item { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); padding: 12px; border-radius: 12px; margin-bottom: 8px; }
-        .user-stat-card { background: #334155; padding: 8px 12px; border-radius: 10px; flex: 1; text-align: center; }
+        .user-stat-card { background: #1e293b; border: 1px solid #334155; padding: 10px 12px; border-radius: 12px; flex: 1; text-align: center; }
+        .balance-grid { display: flex; gap: 8px; margin-bottom: 12px; }
+        .balance-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 12px; flex: 1; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -75,7 +77,7 @@
 
     <div class="top-header">
         <button class="menu-btn" onclick="toggleSidebar()">
-            <span style="font-size:18px; margin-bottom:2px;">☰</span> 
+            <span class="icon">☰</span> 
             <span id="current-profile-name" style="letter-spacing: 0.5px;">Umumiy</span>
         </button>
     </div>
@@ -115,10 +117,6 @@
             <h3 style="margin-top:0; color:#10b981;">Xaridni tasdiqlash</h3>
             <div id="buy-modal-item-name" style="color:#94a3b8; font-size:13px; margin-bottom:10px;">Mahsulot...</div>
             <input type="number" id="buy-modal-price" class="input-text" placeholder="Haqiqiy narxi (so'mda)" />
-            <div class="acc-selector">
-                <button id="buy-acc-card" class="acc-btn" style="border: 1px solid #3b82f6;" onclick="setBuyAcc('card')">💳 Plastik</button>
-                <button id="buy-acc-cash" class="acc-btn" onclick="setBuyAcc('cash')">💵 Naqd</button>
-            </div>
             <div style="display:flex; gap:10px; margin-top:10px;">
                 <button onclick="closeModal('buy-modal')" style="flex:1; padding:12px; border-radius:10px; border:none; background:#334155; color:#fff; font-weight:bold;">Bekor</button>
                 <button onclick="confirmBuyItem()" style="flex:1; padding:12px; border-radius:10px; border:none; background:#10b981; color:#fff; font-weight:bold;">Tasdiqlash</button>
@@ -126,79 +124,81 @@
         </div>
     </div>
 
+    <div id="interest-modal" class="modal-layer" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:4000; justify-content:center; align-items:center;">
+        <div class="modal-box">
+            <h3 style="margin-top:0; color:#10b981;">Foiz qo'shish</h3>
+            <div style="color:#94a3b8; font-size:12px; margin-bottom:10px;">Bankdan tushgan foydani yozing:</div>
+            <input type="number" id="interest-amount" class="input-text" placeholder="Foiz summasi..." />
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="closeModal('interest-modal')" style="flex:1; padding:12px; border-radius:10px; border:none; background:#334155; color:#fff; font-weight:bold;">Bekor</button>
+                <button onclick="confirmInterest()" style="flex:1; padding:12px; border-radius:10px; border:none; background:#10b981; color:#fff; font-weight:bold;">Daromadga qo'shish</button>
+            </div>
+        </div>
+    </div>
+
     <div class="tabs">
         <button id="btn-home" class="tab-btn active" onclick="switchTab('home')">Asosiy</button>
         <button id="btn-add" class="tab-btn" onclick="switchTab('add')">Kiritish</button>
-        <button id="btn-debts" class="tab-btn" onclick="switchTab('debts')">Qarz 🤝</button>
-        <button id="btn-report" class="tab-btn" onclick="switchTab('report')">Hisobot 📊</button>
+        <button id="btn-other" class="tab-btn" onclick="switchTab('other')">Boshqa</button>
+        <button id="btn-report" class="tab-btn" onclick="switchTab('report')">Hisobot</button>
     </div>
 
     <div id="tab-home">
         <div class="balance-main">
-            <div style="color: #94a3b8; font-size: 11px; text-transform: uppercase;">Umumiy Qoldiq</div>
-            <div id="main-total-balance" style="font-size: 26px; font-weight: bold; margin: 5px 0;">0 so'm</div>
-        </div>
-        <div class="balance-grid">
-            <div class="balance-card">
-                <div style="font-size: 11px; color: #94a3b8;">💳 Plastik</div>
-                <div id="main-card-balance" style="font-size: 14px; font-weight: bold;">0 so'm</div>
-            </div>
-            <div class="balance-card">
-                <div style="font-size: 11px; color: #94a3b8;">💵 Naqd</div>
-                <div id="main-cash-balance" style="font-size: 14px; font-weight: bold;">0 so'm</div>
-            </div>
+            <div style="color: #94a3b8; font-size: 12px; font-weight:bold; letter-spacing:1px; margin-bottom:8px;">JAMI MAVJUD MABLAG'</div>
+            <div id="main-total-balance" style="font-size: 32px; font-weight: bold; color: #fff;">0 so'm</div>
         </div>
 
-        <div class="widget-box">
+        <div class="widget-box" id="scheduled-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 12px; color: #94a3b8; font-weight: bold;">📅 Rejali to'lovlar (<span id="sched-prof-name">Umumiy</span>):</div>
-                <button onclick="toggleScheduledSetup()" style="background:#3b82f6; border:none; color:#fff; font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer; font-weight:bold;">⚙️ Boshqarish</button>
+                <div style="font-size: 13px; color: #3b82f6; font-weight: bold;">📅 Rejali to'lovlar:</div>
+                <button onclick="toggleScheduledSetup()" style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); color:#3b82f6; font-size:12px; padding:6px 10px; border-radius:8px; cursor:pointer; font-weight:bold;">⚙️ Boshqarish</button>
             </div>
             <div id="scheduled-setup-panel" style="display:none; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid #334155;">
-                <input type="text" id="sched-new-name" placeholder="Nomi (Mas: Bog'cha)" class="input-text" style="padding:8px; font-size:13px; margin-bottom:6px;" />
-                <div style="display:flex; gap:6px; margin-bottom:6px;">
-                    <select id="sched-new-cat" class="input-text" style="padding:8px; font-size:12px; width:50%; margin:0;">
+                <input type="text" id="sched-new-name" placeholder="Nomi (Mas: Bog'cha)" class="input-text" style="padding:10px; font-size:14px; margin-bottom:8px;" />
+                <div style="display:flex; gap:6px; margin-bottom:8px;">
+                    <select id="sched-new-cat" class="input-text" style="padding:10px; font-size:13px; width:50%; margin:0;">
                         <option value="Oila/Bolalar">Oila/Bolalar</option><option value="Uy/Kommunal">Uy/Kommunal</option><option value="Majburiyatlar">Kredit</option><option value="Boshqa">Boshqa</option>
                     </select>
-                    <input type="number" id="sched-new-day" placeholder="Sana (1-31)" class="input-text" style="padding:8px; font-size:13px; width:50%; margin:0;" />
+                    <input type="number" id="sched-new-day" placeholder="Sana (1-31)" class="input-text" style="padding:10px; font-size:13px; width:50%; margin:0;" />
                 </div>
-                <input type="number" id="sched-new-amount" placeholder="Summa (To'liq)" class="input-text" style="padding:8px; font-size:13px; margin-bottom:8px;" />
-                <button onclick="addScheduled()" style="width:100%; padding:8px; background:#10b981; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px;">➕ Qo'shish</button>
+                <input type="number" id="sched-new-amount" placeholder="Summa (To'liq)" class="input-text" style="padding:10px; font-size:13px; margin-bottom:10px;" />
+                <button onclick="addScheduled()" style="width:100%; padding:10px; background:#10b981; color:#fff; border:none; border-radius:10px; font-weight:bold; cursor:pointer; margin-bottom:10px;">➕ Qo'shish</button>
                 <div id="scheduled-edit-list"></div>
             </div>
             <div id="scheduled-list-container"></div>
         </div>
 
         <div id="planned-expenses-section" style="display:block;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <div style="font-size: 13px; font-weight: bold; color: #3b82f6;">🛒 Bozorlik / Xarid Rejasi:</div>
-                <button onclick="togglePlanSetup()" style="background:#3b82f6; border:none; color:#fff; font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer; font-weight:bold;">➕ Reja Tuzish</button>
+                <button onclick="togglePlanSetup()" style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); color:#3b82f6; font-size:12px; padding:6px 10px; border-radius:8px; cursor:pointer; font-weight:bold;">➕ Reja Tuzish</button>
             </div>
             
-            <div id="plan-setup-panel" style="display:none; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid #3b82f6;">
-                <div style="display:flex; gap:6px; margin-bottom:10px;">
+            <div id="plan-setup-panel" style="display:none; background:rgba(0,0,0,0.2); padding:12px; border-radius:12px; margin-bottom:12px; border:1px solid #3b82f6;">
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
                     <select id="smart-plan-cat" class="filter-select" onchange="updateSmartPlanDropdowns()" style="flex:1;"></select>
                     <select id="smart-plan-subcat" class="filter-select" onchange="renderSmartTags()" style="flex:1;"></select>
                 </div>
                 
-                <div style="font-size:10px; color:#94a3b8; margin-bottom:6px;">1-Klikda tanlang (Avto Hajmga o'tadi):</div>
+                <div style="font-size:11px; color:#94a3b8; margin-bottom:8px;">1-Klikda tanlang (Avto Hajmga o'tadi):</div>
                 <div id="smart-tags-container" class="tags-wrapper"></div>
                 
-                <hr style="border:none; border-top:1px dashed #475569; margin:10px 0;">
-                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                <hr style="border:none; border-top:1px dashed #475569; margin:15px 0;">
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
                     <input type="text" id="plan-name" class="input-text" placeholder="Nima? (Mas: 🍅 Pomidor)" style="flex:2; margin:0;" />
-                    <input type="text" id="plan-qty" class="input-text" placeholder="Hajmi/Soni (2 kg)" style="flex:1; margin:0; background:#334155; border:1px solid #10b981;" />
+                    <input type="text" id="plan-qty" class="input-text" placeholder="Hajmi/Soni" style="flex:1; margin:0; border:1px solid #10b981;" />
                 </div>
-                <div style="display:flex; gap:6px; margin-bottom:10px;">
-                    <select id="plan-market" class="filter-select" style="flex:1; margin:0; height:42px;">
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
+                    <select id="plan-market" class="filter-select" style="flex:1; margin:0; height:45px;">
                         <option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Makro">Makro</option><option value="Uzum">Uzum Market</option><option value="Do'kon">Do'kon</option><option value="Boshqa">Boshqa</option>
                     </select>
-                    <input type="number" id="plan-price" class="input-text" placeholder="Taxminiy narx" style="flex:1; margin:0; height:42px;" />
+                    <input type="number" id="plan-price" class="input-text" placeholder="Taxminiy narx" style="flex:1; margin:0; height:45px;" />
                 </div>
-                <button onclick="addPlannedItemManual()" style="width:100%; background:#10b981; color:#fff; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">➕ Ro'yxatga Saqlash</button>
+                <button onclick="addPlannedItemManual()" style="width:100%; background:#10b981; color:#fff; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; font-size:14px;">➕ Ro'yxatga Saqlash</button>
             </div>
 
-            <div style="display:flex; gap:6px; margin-bottom:10px;">
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
                 <select id="filter-market" class="filter-select" onchange="renderPlanned()" style="flex:1;">
                     <option value="all">Manzil: Barcha</option>
                     <option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Makro">Makro</option><option value="Uzum">Uzum Market</option><option value="Do'kon">Do'kon</option>
@@ -212,27 +212,19 @@
             <div id="planned-list-container"></div>
         </div>
 
-        <button onclick="sendToTelegram()" style="width:100%; padding:14px; background:#10b981; color:white; border:none; font-weight:bold; margin-top:20px; font-size:14px; border-radius:12px; cursor:pointer;">
-            ✅ Telegramga saqlash (<span id="session-count">0</span>)
+        <button onclick="sendToTelegram()" style="width:100%; padding:15px; background:#10b981; color:white; border:none; font-weight:bold; margin-top:20px; font-size:15px; border-radius:12px; cursor:pointer; box-shadow: 0 4px 10px rgba(16,185,129,0.3);">
+            ✅ Saqlash va Chiqish (<span id="session-count">0</span>)
         </button>
     </div>
 
     <div id="tab-add" style="display: none;">
         <div class="mode-selector" id="mode-selector-tabs">
-            <button id="mode-exp" class="mode-btn" style="background:#ef4444;" onclick="setAddMode('expense')">▼ Chiqim</button>
-            <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">▲ Kirim</button>
-            <button id="mode-trn" class="mode-btn" onclick="setAddMode('transfer')">🔄 O'tkazma</button>
+            <button id="mode-exp" class="mode-btn" style="background:#ef4444;" onclick="setAddMode('expense')">▼ Chiqim (Xarajat)</button>
+            <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">▲ Kirim (Daromad)</button>
         </div>
-        <div id="normal-acc-selector" class="acc-selector">
-            <button id="acc-card" class="acc-btn" style="border: 1px solid #3b82f6;" onclick="setAccountType('card')">💳 Plastik</button>
-            <button id="acc-cash" class="acc-btn" onclick="setAccountType('cash')">💵 Naqd</button>
-        </div>
-        <div id="transfer-acc-selector" class="acc-selector" style="display:none;">
-            <button id="trn-dir-card-cash" class="acc-btn" style="border: 1px solid #3b82f6; background:#3b82f6;" onclick="setTransferDir('card-to-cash')">💳 Plastik ➔ 💵 Naqd</button>
-            <button id="trn-dir-cash-card" class="acc-btn" onclick="setTransferDir('cash-to-card')">💵 Naqd ➔ 💳 Plastik</button>
-        </div>
+        
         <div id="num-display" class="num-display">0</div>
-        <div style="text-align: center; color: #64748b; font-size: 11px; margin-bottom: 6px;" id="stay-hint"></div>
+        <div style="text-align: center; color: #64748b; font-size: 11px; margin-bottom: 10px;" id="stay-hint"></div>
         <div class="grid-container" id="cats-container"></div>
         <input type="text" id="add-desc" class="input-text" placeholder="Izoh yozing (ixtiyoriy)..." />
         <div class="num-grid">
@@ -241,34 +233,55 @@
             <button class="num-btn" onclick="pressNum('7')">7</button><button class="num-btn" onclick="pressNum('8')">8</button><button class="num-btn" onclick="pressNum('9')">9</button>
             <button class="num-btn" style="color:#ef4444;" onclick="pressNum('C')">C</button><button class="num-btn" onclick="pressNum('0')">0</button><button class="num-btn" onclick="pressNum('⌫')">⌫</button>
         </div>
-        <button id="btn-do-transfer" onclick="executeTransfer()" style="display:none; width:100%; padding:14px; background:#3b82f6; color:white; border:none; font-weight:bold; font-size:14px; border-radius:12px; cursor:pointer;">🔄 Tasdiqlash</button>
     </div>
 
-    <div id="tab-debts" style="display: none;">
+    <div id="tab-other" style="display: none;">
         <div class="widget-box">
-            <div style="font-size: 13px; font-weight: bold; margin-bottom: 8px;">🤝 Yangi qarz amali:</div>
+            <div style="font-size: 13px; font-weight: bold; margin-bottom: 12px; color:#3b82f6;">🤝 Qarz oldi-berdi:</div>
             <input type="text" id="debt-name" placeholder="Ism yozing..." class="input-text" />
             <input type="number" id="debt-amount" placeholder="Summa (so'mda)..." class="input-text" />
-            <div class="acc-selector"><button id="debt-acc-card" class="acc-btn" style="border:1px solid #3b82f6;" onclick="setDebtAccount('card')">💳 Plastikka</button><button id="debt-acc-cash" class="acc-btn" onclick="setDebtAccount('cash')">💵 Naqdga</button></div>
-            <div class="mode-selector"><button id="debt-type-take" class="mode-btn" style="background:#84cc16;" onclick="setDebtType('take')">Menga qaytaradi</button><button id="debt-type-give" class="mode-btn" onclick="setDebtType('give')">Men qaytaraman</button></div>
-            <button onclick="saveDebt()" style="width:100%; padding:12px; background:#3b82f6; border:none; color:white; font-weight:bold; border-radius:10px;">Saqlash</button>
+            <div class="mode-selector">
+                <button id="debt-type-take" class="mode-btn" style="background:#84cc16; font-size:12px;" onclick="setDebtType('take')">Menga qaytaradi</button>
+                <button id="debt-type-give" class="mode-btn" style="font-size:12px;" onclick="setDebtType('give')">Men qaytaraman</button>
+            </div>
+            <button onclick="saveDebt()" style="width:100%; padding:12px; background:#3b82f6; border:none; color:white; font-weight:bold; border-radius:10px; font-size:14px;">Qarzni Saqlash</button>
         </div>
-        <div id="debts-list"></div>
+        <div id="debts-list" style="margin-bottom:20px;"></div>
+
+        <div class="widget-box">
+            <div style="font-size: 13px; font-weight: bold; margin-bottom: 12px; color:#10b981;">🏦 Bank / Omonat (Depozit):</div>
+            <input type="text" id="dep-name" placeholder="Bank yoki omonat nomi (Mas: Anorbank)" class="input-text" />
+            <input type="number" id="dep-amount" placeholder="Qo'yilgan summa..." class="input-text" />
+            <button onclick="saveDeposit()" style="width:100%; padding:12px; background:#10b981; border:none; color:white; font-weight:bold; border-radius:10px; font-size:14px;">Omonatga O'tkazish</button>
+        </div>
+        <div id="deposits-list"></div>
     </div>
 
     <div id="tab-report" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #1e293b; padding-bottom: 5px;">
-            <span id="report-title-text" style="font-size: 15px; font-weight: bold; color: #3b82f6;">📊 Hisobot</span>
-            <button onclick="downloadExcel()" style="background: #10b981; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold;">📥 Excel</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed #334155; padding-bottom: 10px;">
+            <span id="report-title-text" style="font-size: 16px; font-weight: bold; color: #fff;">📊 Hisobot</span>
+            <button onclick="downloadExcel()" style="background: #10b981; color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor:pointer;">📥 Excel</button>
         </div>
         <div class="date-input-group"><input type="date" id="report-from-date" class="date-picker" onchange="renderReport()" /><input type="date" id="report-to-date" class="date-picker" onchange="renderReport()" /></div>
-        <div id="user-stats-wrapper"><div id="user-stats-container" style="display:flex; gap:8px; margin-bottom:12px; overflow-x:auto;"></div></div>
+        
+        <div id="user-stats-wrapper"><div id="user-stats-container" style="display:flex; gap:8px; margin-bottom:15px; overflow-x:auto;"></div></div>
+        
         <div class="balance-grid">
-            <div class="balance-card" style="border-color: #10b981;" id="report-inc-card"><div style="font-size: 10px; color: #94a3b8;">Kirim</div><div id="report-month-inc" style="font-size: 13px; font-weight: bold; color: #10b981;">0</div></div>
-            <div class="balance-card" style="border-color: #ef4444;"><div style="font-size: 10px; color: #94a3b8;">Chiqim</div><div id="report-month-exp" style="font-size: 13px; font-weight: bold; color: #ef4444;">0</div></div>
+            <div class="balance-card" style="border-color: #10b981; border-width: 1px;" id="report-inc-card">
+                <div style="font-size: 11px; color: #94a3b8; margin-bottom:4px;">Kirim (Tushum)</div>
+                <div id="report-month-inc" style="font-size: 15px; font-weight: bold; color: #10b981;">0</div>
+            </div>
+            <div class="balance-card" style="border-color: #ef4444; border-width: 1px;">
+                <div style="font-size: 11px; color: #94a3b8; margin-bottom:4px;">Chiqim (Xarajat)</div>
+                <div id="report-month-exp" style="font-size: 15px; font-weight: bold; color: #ef4444;">0</div>
+            </div>
         </div>
+        
+        <div style="font-size: 13px; font-weight: bold; color: #3b82f6; margin-bottom: 10px;">📉 Toifalar tahlili:</div>
         <div id="report-cats-analysis"></div>
-        <div id="report-chronology" style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 16px; margin-top:10px;"></div>
+        
+        <div style="font-size: 13px; font-weight: bold; color: #3b82f6; margin-top: 20px; margin-bottom: 10px;">📅 Xronologiya (Barcha amallar):</div>
+        <div id="report-chronology" style="background: #1e293b; padding: 12px; border-radius: 16px; border: 1px solid #334155;"></div>
     </div>
 
     <script>
@@ -325,37 +338,32 @@
         const INCOME_SOURCES = [ { id: "maosh", label: "Oylik maosh", icon: "💼" }, { id: "imsoa_k", label: "IMSOA foyda", icon: "💰" }, { id: "boshqa_k", label: "Qo'shimcha", icon: "🎁" } ];
         const OY_NOMLARI = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
 
-        let state = { profiles: [], transactions: [], incomes: [], debts: [], scheduled: [], planned: [] };
-        let currentProfileId = "general"; let currentTab = "home"; let addMode = "expense"; let accountType = "card";
-        let amountStr = ""; let debtType = "take"; let debtAccount = "card"; let sessionData = []; let telegramUserName = "Siz";
-        let activeMainCat = null; let activeSubCat = null; let buyPlanId = null;
+        let state = { profiles: [], transactions: [], incomes: [], debts: [], scheduled: [], planned: [], deposits: [] };
+        let currentProfileId = "general"; let currentTab = "home"; let addMode = "expense"; 
+        let amountStr = ""; let debtType = "take"; let sessionData = []; let telegramUserName = "Siz";
+        let activeMainCat = null; let activeSubCat = null; let buyPlanId = null; let currentDepositId = null;
 
         try { if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) { telegramUserName = window.Telegram.WebApp.initDataUnsafe.user.first_name; } } catch(e) {}
 
         function init() {
-            const raw = localStorage.getItem("xarajat_erp_v12");
+            const raw = localStorage.getItem("xarajat_erp_v14");
             if (raw) { try { state = JSON.parse(raw); } catch(e) {} }
+            
             if (!state.profiles || state.profiles.length === 0) { 
                 state.profiles = [ { id: "general", name: "Umumiy", icon: "🏠", age: null, role: "parent_m" }, { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", age: null, role: "home" } ]; 
             }
-            if (!state.transactions) state.transactions = []; if (!state.incomes) state.incomes = []; if (!state.debts) state.debts = []; if (!state.scheduled) state.scheduled = []; if (!state.planned) state.planned = [];
+            if (!state.transactions) state.transactions = []; if (!state.incomes) state.incomes = []; if (!state.debts) state.debts = []; if (!state.scheduled) state.scheduled = []; if (!state.planned) state.planned = []; if (!state.deposits) state.deposits = [];
             renderProfilesSidebar(); render(); updatePlanCatOptions();
         }
-        function saveState() { localStorage.setItem("xarajat_erp_v12", JSON.stringify(state)); render(); }
+        function saveState() { localStorage.setItem("xarajat_erp_v14", JSON.stringify(state)); render(); }
 
         // ==========================================
-        // SIDEBAR MENU LOGIC (YANGI YASHIRIN MENYU)
+        // YASHIRIN SIDEBAR MENYU LOGIC
         // ==========================================
         window.toggleSidebar = function() {
-            const menu = document.getElementById("sidebar-menu");
-            const overlay = document.getElementById("sidebar-overlay");
-            if (menu.classList.contains("open")) {
-                menu.classList.remove("open");
-                overlay.style.display = "none";
-            } else {
-                menu.classList.add("open");
-                overlay.style.display = "block";
-            }
+            const menu = document.getElementById("sidebar-menu"); const overlay = document.getElementById("sidebar-overlay");
+            if (menu.classList.contains("open")) { menu.classList.remove("open"); overlay.style.display = "none"; } 
+            else { menu.classList.add("open"); overlay.style.display = "block"; }
         }
 
         function renderProfilesSidebar() {
@@ -363,23 +371,20 @@
             state.profiles.forEach(p => {
                 const isActive = p.id === currentProfileId ? "active" : "";
                 html += `<div class="sidebar-item ${isActive}" onclick="selectProfile('${p.id}')">
-                    <div class="sidebar-avatar">${p.icon}</div>
-                    <div>${p.name}</div>
+                    <div class="sidebar-avatar">${p.icon}</div><div>${p.name}</div>
                 </div>`;
             });
-            html += `<div class="sidebar-item" onclick="openProfileModal()" style="border: 1px dashed #475569; justify-content:center; opacity:0.8;">
-                <div style="font-size:16px;">➕ Yangi qo'shish</div>
+            html += `<div class="sidebar-item" onclick="openProfileModal()" style="border: 1px dashed #475569; justify-content:center; opacity:0.8; margin-top:20px;">
+                <div style="font-size:14px;">➕ Yangi profil qo'shish</div>
             </div>`;
             setHtml("sidebar-profiles-list", html);
-            
             const prof = state.profiles.find(p => p.id === currentProfileId);
             setTxt("current-profile-name", prof ? prof.name : "Umumiy");
         }
 
         window.selectProfile = function(id) { 
             currentProfileId = id; activeMainCat = null; activeSubCat = null; 
-            toggleSidebar(); // Menyuni yopish
-            renderProfilesSidebar(); applyAccessRules(); updatePlanCatOptions(); render(); 
+            toggleSidebar(); renderProfilesSidebar(); applyAccessRules(); updatePlanCatOptions(); render(); 
         }
 
         window.openProfileModal = function() { toggleSidebar(); showModal("modal-overlay"); }
@@ -396,8 +401,10 @@
             const prof = state.profiles.find(p => p.id === currentProfileId);
             const isChild = prof && prof.age !== null && prof.age < 16 && prof.id !== "general" && prof.id !== "home_profile";
             
-            document.getElementById("btn-debts").style.display = isChild ? "none" : "block"; if(isChild && currentTab === "debts") switchTab("home");
-            document.getElementById("mode-inc").style.display = isChild ? "none" : "block"; document.getElementById("mode-trn").style.display = isChild ? "none" : "block";
+            document.getElementById("btn-other").style.display = isChild ? "none" : "block"; // Bolalarda Boshqa menyusi yo'q
+            if(isChild && currentTab === "debts") switchTab("home");
+            
+            document.getElementById("mode-inc").style.display = isChild ? "none" : "block";
             if(isChild && addMode !== "expense") setAddMode("expense");
             
             document.getElementById("user-stats-wrapper").style.display = (currentProfileId === "general") ? "block" : "none";
@@ -406,8 +413,12 @@
 
         window.switchTab = function(tabId) {
             currentTab = tabId; document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            const activeBtn = document.getElementById("btn-" + tabId); if(activeBtn) activeBtn.classList.add("active");
-            ["home", "add", "debts", "report"].forEach(t => { const el = document.getElementById("tab-"+t); if(el) el.style.display = t === tabId ? "block" : "none"; });
+            const activeBtn = document.getElementById("btn-" + (tabId==='other'?'debts':tabId)); if(activeBtn) activeBtn.classList.add("active");
+            
+            ["home", "add", "other", "report"].forEach(t => { 
+                const elId = t === 'other' ? 'tab-debts' : 'tab-'+t;
+                const el = document.getElementById(elId); if(el) el.style.display = t === tabId ? "block" : "none"; 
+            });
             if(tabId === 'add') applyAccessRules(); if(tabId === 'home') updatePlanCatOptions(); render();
         }
 
@@ -429,7 +440,6 @@
         }
 
         window.togglePlanSetup = function() { const p = document.getElementById("plan-setup-panel"); if(p) { p.style.display = p.style.display === "none" ? "block" : "none"; updatePlanCatOptions(); } }
-        
         window.updateSmartPlanDropdowns = function() {
             const catEl = document.getElementById("smart-plan-cat"); const subcatEl = document.getElementById("smart-plan-subcat");
             if(!catEl || !subcatEl) return;
@@ -450,11 +460,10 @@
         }
 
         window.quickAddPlan = function(tag, cat) {
-            const nameInput = document.getElementById("plan-name");
-            const qtyInput = document.getElementById("plan-qty");
+            const nameInput = document.getElementById("plan-name"); const qtyInput = document.getElementById("plan-qty");
             nameInput.value = tag; qtyInput.value = ""; 
             nameInput.style.backgroundColor = "rgba(16, 185, 129, 0.3)"; nameInput.style.borderColor = "#10b981";
-            setTimeout(() => { nameInput.style.backgroundColor = "#1e293b"; nameInput.style.borderColor = "#334155"; }, 600);
+            setTimeout(() => { nameInput.style.backgroundColor = "#0f172a"; nameInput.style.borderColor = "#334155"; }, 600);
             qtyInput.focus(); showToast("Hajmini (Mas: 2 kg) yozing");
         }
 
@@ -468,10 +477,11 @@
 
         window.toggleSkipPlan = function(id) { const today = new Date().toISOString().slice(0, 10); const item = state.planned.find(p => p.id === id); if(item) { item.skipDate = (item.skipDate === today) ? null : today; saveState(); } }
         window.openBuyModal = function(id) { const item = state.planned.find(p => p.id === id); if(!item) return; buyPlanId = id; setTxt("buy-modal-item-name", `✅ Olinyapti: ${item.text}`); setVal("buy-modal-price", item.estPrice || ""); showModal("buy-modal"); }
+        
         window.confirmBuyItem = function() {
             const actPrice = parseFloat(getVal("buy-modal-price")); if(!actPrice || actPrice <= 0) { showToast("Haqiqiy narxni kiriting!", true); return; }
             const item = state.planned.find(p => p.id === buyPlanId); if(!item) return;
-            const d = new Date(); state.transactions.unshift({ id: Date.now(), amount: actPrice, desc: `${item.text}`, cat: item.cat, subCat: item.market, account: accountType, date: d.toISOString().slice(0, 10), time: d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }), user: telegramUserName, profileId: item.profileId });
+            const d = new Date(); state.transactions.unshift({ id: Date.now(), amount: actPrice, desc: `${item.text}`, cat: item.cat, subCat: item.market, date: d.toISOString().slice(0, 10), time: d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }), user: telegramUserName, profileId: item.profileId });
             state.planned = state.planned.filter(x => x.id !== buyPlanId); closeModal("buy-modal"); saveState(); showToast("Sotib olindi va xarajatga yozildi! ✅");
         }
 
@@ -488,7 +498,7 @@
                         <div style="font-weight:bold; color:#3b82f6; font-size:14px; text-decoration:${isSkipped ? 'line-through' : 'none'};">${p.text}</div>
                         <div style="font-size:11px; color:#64748b; margin-top:2px;">📍 ${p.market} | 🏷️ ${p.cat}</div>
                     </div>
-                    <button onclick="openBuyModal('${p.id}')" style="background:#10b981; border:none; color:#fff; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer;" ${isSkipped ? 'disabled' : ''}>Olish</button>
+                    <button onclick="openBuyModal('${p.id}')" style="background:#10b981; border:none; color:#fff; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer;" ${isSkipped ? 'disabled' : ''}>Sotib oldim</button>
                 </div>`;
             });
             setHtml("planned-list-container", planHtml || "<div style='color:#64748b; font-size:11px; text-align:center;'>Ro'yxat bo'sh. Qilmoqchi bo'lgan xaridlaringizni qo'shing.</div>");
@@ -500,14 +510,15 @@
         window.addScheduled = function() { const name = getVal("sched-new-name").trim(); const day = parseInt(getVal("sched-new-day")); const amt = parseFloat(getVal("sched-new-amount")); const cat = getVal("sched-new-cat"); if(!name || !day || day < 1 || day > 31 || !amt) { showToast("To'g'ri kiriting!", true); return; } const d = new Date(); const tMonth = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2, '0'); state.scheduled.push({ id: Date.now().toString(), label: name, day: day, baseAmount: amt, category: cat, targetMonth: tMonth, missedDays: 0, profileId: currentProfileId }); setVal("sched-new-name", ""); setVal("sched-new-day", ""); setVal("sched-new-amount", ""); saveState(); renderScheduledSettings(); showToast("To'lov qo'shildi!"); }
         window.deleteScheduled = function(id) { state.scheduled = state.scheduled.filter(s => s.id !== id); saveState(); renderScheduledSettings(); showToast("O'chirildi!"); }
         window.updateMissedDays = function(id, daysStr) { const s = state.scheduled.find(x => x.id === id); if(s) { s.missedDays = parseInt(daysStr) || 0; saveState(); } }
-        window.payScheduled = function(id, accType) { const s = state.scheduled.find(x => x.id === id); if(!s) return; const adjAmt = calcAdjustedAmount(s); const d = new Date(); state.transactions.unshift({ id: Date.now(), amount: adjAmt, desc: `${s.label} (${s.targetMonth})`, cat: s.category, subCat: "", account: accType, date: d.toISOString().slice(0, 10), time: d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }), user: telegramUserName, profileId: s.profileId }); let [y, m] = s.targetMonth.split('-'); m = parseInt(m) + 1; if(m > 12) { m = 1; y = parseInt(y) + 1; } s.targetMonth = `${y}-${m.toString().padStart(2, '0')}`; s.missedDays = 0; saveState(); showToast(`To'landi! Keyingi oy kutamiz ✅`); }
+        window.payScheduled = function(id) { const s = state.scheduled.find(x => x.id === id); if(!s) return; const adjAmt = calcAdjustedAmount(s); const d = new Date(); state.transactions.unshift({ id: Date.now(), amount: adjAmt, desc: `${s.label} (${s.targetMonth})`, cat: s.category, subCat: "", date: d.toISOString().slice(0, 10), time: d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }), user: telegramUserName, profileId: s.profileId }); let [y, m] = s.targetMonth.split('-'); m = parseInt(m) + 1; if(m > 12) { m = 1; y = parseInt(y) + 1; } s.targetMonth = `${y}-${m.toString().padStart(2, '0')}`; s.missedDays = 0; saveState(); showToast(`To'landi! Keyingi oy kutamiz ✅`); }
         function calcAdjustedAmount(s) { if(!s.missedDays || s.missedDays <= 0) return s.baseAmount; const [y, m] = s.targetMonth.split('-'); const wd = getWorkingDays(parseInt(y), parseInt(m)); if(wd === 0) return s.baseAmount; const daily = s.baseAmount / wd; return Math.max(0, Math.round(s.baseAmount - (daily * s.missedDays))); }
         function renderScheduledSettings() { let html = ""; const mySched = state.scheduled.filter(s => s.profileId === currentProfileId || currentProfileId==='general'); mySched.forEach(s => { html += `<div style="display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:6px; border-radius:6px; margin-bottom:4px; font-size:12px;"><span><b>${s.label}</b> (${s.day}-sana)</span><button onclick="deleteScheduled('${s.id}')" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer;">✕</button></div>`; }); setHtml("scheduled-edit-list", html || "<div style='color:#64748b; font-size:11px;'>Bo'sh.</div>"); }
 
         function render() {
-            const cashInc = state.incomes.filter(i => i.account === 'cash').reduce((s,i) => s + i.amount, 0); const cardInc = state.incomes.filter(i => i.account !== 'cash').reduce((s,i) => s + i.amount, 0);
-            const cashExp = state.transactions.filter(t => t.account === 'cash').reduce((s,t) => s + t.amount, 0); const cardExp = state.transactions.filter(t => t.account !== 'cash').reduce((s,t) => s + t.amount, 0);
-            setTxt("main-total-balance", formatMoney(cashInc - cashExp + cardInc - cardExp)); setTxt("main-card-balance", formatMoney(cardInc - cardExp)); setTxt("main-cash-balance", formatMoney(cashInc - cashExp));
+            // GLOBAL BALANS
+            const totalInc = state.incomes.reduce((s,i) => s + i.amount, 0);
+            const totalExp = state.transactions.reduce((s,t) => s + t.amount, 0);
+            setTxt("main-total-balance", formatMoney(totalInc - totalExp));
 
             const prof = state.profiles.find(p => p.id === currentProfileId); setTxt("sched-prof-name", prof ? prof.name : "Umumiy");
             
@@ -518,20 +529,21 @@
                 let isDue = false; let statusText = "";
                 if(sMonthNum < currMonthNum) { isDue = true; statusText = "O'tib ketgan!"; }
                 else if (sMonthNum === currMonthNum) { if (d.getDate() >= s.day) { isDue = true; statusText = "Vaqti keldi!"; } else if (s.day - d.getDate() <= 3) { isDue = true; statusText = `${s.day - d.getDate()} kun qoldi`; } }
-                if (isDue) { schedCode += `<div class="scheduled-item"><div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>⚠️ <b>${s.label}</b> <span style="font-size:10px; color:#ef4444;">(${statusText})</span></span></div><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;"><span style="font-size:11px;">Dam/Qoldirilgan kun:</span><input type="number" placeholder="Kun" onchange="updateMissedDays('${s.id}', this.value)" value="${s.missedDays||''}" style="width:60px; padding:4px; border-radius:6px; border:none; text-align:center;"></div><div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-weight:bold; font-size:15px; color:#fff;">${formatMoney(adjAmt)}</span><div style="display:flex; gap:6px;"><button onclick="payScheduled('${s.id}', 'card')" style="background:#3b82f6; color:#fff; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:11px; cursor:pointer;">💳 To'lash</button><button onclick="payScheduled('${s.id}', 'cash')" style="background:#10b981; color:#fff; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; font-size:11px; cursor:pointer;">💵 To'lash</button></div></div></div>`; }
+                if (isDue) { schedCode += `<div class="scheduled-item"><div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>⚠️ <b>${s.label}</b> <span style="font-size:10px; color:#ef4444;">(${statusText})</span></span></div><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;"><span style="font-size:11px;">Dam/Qoldirilgan kun:</span><input type="number" placeholder="Kun" onchange="updateMissedDays('${s.id}', this.value)" value="${s.missedDays||''}" style="width:60px; padding:4px; border-radius:6px; border:none; text-align:center;"></div><div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-weight:bold; font-size:15px; color:#fff;">${formatMoney(adjAmt)}</span><button onclick="payScheduled('${s.id}')" style="background:#10b981; color:#fff; border:none; padding:8px 15px; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;">✅ To'lash</button></div></div>`; }
             });
             setHtml("scheduled-list-container", schedCode || "<div style='text-align:center; color:#64748b; font-size:12px; padding:4px;'>Hozircha majburiy to'lovlar yo'q.</div>");
 
-            if (currentTab === "home") { renderPlanned(); }
-            if (currentTab === "add") renderCats(); if (currentTab === "debts") renderDebts(); if (currentTab === "report") renderReport();
+            if (currentTab === "home") { renderPlanned(); } 
+            if (currentTab === "add") renderCats(); if (currentTab === "other") { renderDebts(); renderDeposits(); } if (currentTab === "report") renderReport();
         }
 
-        // KATEGORIYALAR RENDER
+        // ADD TAB (Faqat Kirim va Chiqim)
         window.pressNum = function(val) { if (val === "C") amountStr = ""; else if (val === "⌫") amountStr = amountStr.slice(0, -1); else if (amountStr.length < 10) amountStr += val; setTxt("num-display", amountStr ? new Intl.NumberFormat("uz-UZ").format(parseInt(amountStr)) : "0"); }
-        window.setAddMode = function(mode) { addMode = mode; activeMainCat = null; activeSubCat = null; document.getElementById("mode-exp").style.background = mode === "expense" ? "#ef4444" : "#1e293b"; document.getElementById("mode-inc").style.background = mode === "income" ? "#10b981" : "#1e293b"; document.getElementById("mode-trn").style.background = mode === "transfer" ? "#3b82f6" : "#1e293b"; document.getElementById("normal-acc-selector").style.display = mode === "transfer" ? "none" : "flex"; document.getElementById("transfer-acc-selector").style.display = mode === "transfer" ? "flex" : "none"; document.getElementById("cats-container").style.display = mode === "transfer" ? "none" : "block"; document.getElementById("btn-do-transfer").style.display = mode === "transfer" ? "block" : "none"; setHtml("stay-hint", ""); renderCats(); }
-        
+        window.setAddMode = function(mode) { addMode = mode; activeMainCat = null; activeSubCat = null; document.getElementById("mode-exp").style.background = mode === "expense" ? "#ef4444" : "#1e293b"; document.getElementById("mode-inc").style.background = mode === "income" ? "#10b981" : "#1e293b"; setHtml("stay-hint", ""); renderCats(); }
+        window.setDebtType = function(type) { debtType = type; document.getElementById("debt-type-take").style.background = type === "take" ? "#84cc16" : "#334155"; document.getElementById("debt-type-give").style.background = type === "give" ? "#ef4444" : "#334155"; }
+
         function renderCats() {
-            if(addMode === "transfer") return; const container = document.getElementById("cats-container"); if(!container) return;
+            const container = document.getElementById("cats-container"); if(!container) return;
             const prof = state.profiles.find(p=>p.id===currentProfileId); const isFemale = prof && prof.role && prof.role.endsWith('_f');
             const isChild = prof && prof.age !== null && prof.age < 16 && prof.id !== "general" && prof.id !== "home_profile";
             const isHome = prof && prof.id === "home_profile";
@@ -556,20 +568,44 @@
             const d = new Date(); const descEl = document.getElementById("add-desc"); let finalDesc = descEl && descEl.value.trim() ? descEl.value.trim() : label;
             if(!finalDesc) { if(label === "Oylik maosh") finalDesc = OY_NOMLARI[d.getMonth()] + " oyligi"; else finalDesc = label; }
             let path = ""; if (activeSubCat) path = activeSubCat.label + " ➔ " + label; else if (activeMainCat) path = label;
-            const item = { id: Date.now(), amount: amt, desc: finalDesc, cat: activeMainCat ? activeMainCat.label : label, subCat: path, account: accountType, date: d.toISOString().slice(0, 10), time: d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }), user: telegramUserName, profileId: currentProfileId };
+            const item = { id: Date.now(), amount: amt, desc: finalDesc, cat: activeMainCat ? activeMainCat.label : label, subCat: path, date: d.toISOString().slice(0, 10), time: d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }), user: telegramUserName, profileId: currentProfileId };
             if (addMode === "expense") state.transactions.unshift(item); else state.incomes.unshift(item);
             amountStr = ""; if(descEl) descEl.value = ""; setTxt("num-display", "0"); saveState(); 
             if (activeSubCat || activeMainCat) { setHtml("stay-hint", `✅ Oxirgi: <b>${formatMoney(amt)}</b> (${label}). Yana kiriting yoki Orqaga!`); renderCats(); } else { setHtml("stay-hint", ""); }
             showToast("Saqlandi ✓");
         }
 
-        window.executeTransfer = function() { const amt = parseFloat(amountStr); if (!amt || amt <= 0) { showToast("Summa?", true); return; } const d = new Date(); const tStr = d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }); const dStr = d.toISOString().slice(0, 10); let f = "card"; let t = "cash"; let dir = "Plastik ➔ Naqd"; if (transferDir === "cash-to-card") { f = "cash"; t = "card"; dir = "Naqd ➔ Plastik"; } state.transactions.unshift({ id: Date.now(), amount: amt, desc: `O'tkazma: ${dir}`, cat: "O'tkazma", account: f, date: dStr, time: tStr, user: telegramUserName, profileId: "general" }); state.incomes.unshift({ id: Date.now()+1, amount: amt, desc: `Qabul: ${dir}`, cat: "O'tkazma", account: t, date: dStr, time: tStr, user: telegramUserName, profileId: "general" }); amountStr = ""; setTxt("num-display", "0"); saveState(); showToast("O'tkazildi 🔄"); }
-        window.saveDebt = function() { const n = getVal("debt-name").trim(); const a = parseFloat(getVal("debt-amount")); if(!n||!a) return; const d = new Date().toISOString().slice(0,10); const i = { id: Date.now(), name: n, amount: a, type: debtType, account: debtAccount, date: d }; state.debts.unshift(i); if(debtType==="take") state.transactions.unshift({ id: Date.now()+1, amount: a, desc: `Qarz berildi: ${n}`, cat: "Qarz", account: debtAccount, date: d, time: "00:00", user: telegramUserName, profileId: "general" }); else state.incomes.unshift({ id: Date.now()+1, amount: a, desc: `Qarz olindi: ${n}`, cat: "Qarz", account: debtAccount, date: d, time: "00:00", user: telegramUserName, profileId: "general" }); setVal("debt-name",""); setVal("debt-amount",""); saveState(); showToast("Qarz qo'shildi!"); }
-        window.closeDebt = function(id) { const d = state.debts.find(x=>x.id===id); if(!d) return; const t = new Date().toISOString().slice(0,10); if(d.type==="take") state.incomes.unshift({ id: Date.now(), amount: d.amount, desc: `Qarz qaytdi: ${d.name}`, cat: "Qarz", account: d.account, date: t, time: "00:00", user: telegramUserName, profileId: "general" }); else state.transactions.unshift({ id: Date.now(), amount: d.amount, desc: `Qarz to'landi: ${d.name}`, cat: "Qarz", account: d.account, date: t, time: "00:00", user: telegramUserName, profileId: "general" }); state.debts = state.debts.filter(x=>x.id!==id); saveState(); showToast("Uzildi!"); }
+        // BOSHQA (QARZ VA BANK)
+        window.saveDebt = function() { const n = getVal("debt-name").trim(); const a = parseFloat(getVal("debt-amount")); if(!n||!a) return; const d = new Date().toISOString().slice(0,10); const i = { id: Date.now(), name: n, amount: a, type: debtType, date: d }; state.debts.unshift(i); if(debtType==="take") state.transactions.unshift({ id: Date.now()+1, amount: a, desc: `Qarz berildi: ${n}`, cat: "Qarz", date: d, time: "00:00", user: telegramUserName, profileId: "general" }); else state.incomes.unshift({ id: Date.now()+1, amount: a, desc: `Qarz olindi: ${n}`, cat: "Qarz", date: d, time: "00:00", user: telegramUserName, profileId: "general" }); setVal("debt-name",""); setVal("debt-amount",""); saveState(); showToast("Qarz qo'shildi!"); }
+        window.closeDebt = function(id) { const d = state.debts.find(x=>x.id===id); if(!d) return; const t = new Date().toISOString().slice(0,10); if(d.type==="take") state.incomes.unshift({ id: Date.now(), amount: d.amount, desc: `Qarz qaytdi: ${d.name}`, cat: "Qarz", date: t, time: "00:00", user: telegramUserName, profileId: "general" }); else state.transactions.unshift({ id: Date.now(), amount: d.amount, desc: `Qarz to'landi: ${d.name}`, cat: "Qarz", date: t, time: "00:00", user: telegramUserName, profileId: "general" }); state.debts = state.debts.filter(x=>x.id!==id); saveState(); showToast("Uzildi!"); }
         window.deleteItem = function(type, id) { if(type === 'tx') state.transactions = state.transactions.filter(t => t.id !== id); else state.incomes = state.incomes.filter(i => i.id !== id); saveState(); showToast("O'chirildi"); }
 
         function renderDebts() { let h = ""; state.debts.forEach(d => { const c = d.type==="take"?"#84cc16":"#ef4444"; h += `<div class="history-item" style="border-left: 4px solid ${c};"><div style="flex:1;"><div style="font-weight:bold;">${d.name}</div><div style="font-size:10px; color:#64748b;">${d.type==='take'?'Olaman':'Beraman'}</div></div><div style="font-weight:bold; color:${c}; margin-right:10px;">${formatMoney(d.amount)}</div><button onclick="closeDebt(${d.id})" style="background:#10b981; border:none; color:#fff; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:bold;">Uzildi ✅</button></div>`; }); setHtml("debts-list", h || "<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Qarzlar yo'q.</div>"); }
 
+        window.saveDeposit = function() {
+            const n = getVal("dep-name").trim(); const a = parseFloat(getVal("dep-amount")); if(!n||!a) return; const d = new Date().toISOString().slice(0,10);
+            state.deposits.push({ id: Date.now(), name: n, amount: a, date: d, profileId: "general" });
+            state.transactions.unshift({ id: Date.now()+1, amount: a, desc: `Omonatga qo'yildi: ${n}`, cat: "Omonat/Bank", date: d, time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }), user: telegramUserName, profileId: "general" });
+            setVal("dep-name", ""); setVal("dep-amount", ""); saveState(); showToast("Omonat ochildi!");
+        }
+        window.openInterestModal = function(id) { currentDepositId = id; showModal('interest-modal'); }
+        window.confirmInterest = function() {
+            const amt = parseFloat(getVal("interest-amount")); if(!amt || amt <= 0) { showToast("Summani kiriting", true); return; }
+            const dep = state.deposits.find(d => d.id === currentDepositId); if(!dep) return; const dStr = new Date().toISOString().slice(0, 10);
+            state.incomes.unshift({ id: Date.now(), amount: amt, desc: `Bank foizi: ${dep.name}`, cat: "Foiz/Daromad", date: dStr, time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }), user: telegramUserName, profileId: "general" });
+            setVal("interest-amount", ""); closeModal("interest-modal"); saveState(); showToast("Foiz daromadga qo'shildi! ✅");
+        }
+        window.closeDeposit = function(id) {
+            const dep = state.deposits.find(d => d.id === id); if(!dep) return; const dStr = new Date().toISOString().slice(0, 10);
+            state.incomes.unshift({ id: Date.now(), amount: dep.amount, desc: `Omonat qaytdi: ${dep.name}`, cat: "Omonat/Bank", date: dStr, time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }), user: telegramUserName, profileId: "general" });
+            state.deposits = state.deposits.filter(d => d.id !== id); saveState(); showToast("Omonat yopildi va pul qaytdi!");
+        }
+        function renderDeposits() {
+            let h = ""; state.deposits.forEach(dep => { h += `<div class="history-item" style="border-left: 4px solid #10b981; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:8px;"><div><div style="font-weight:bold;">${dep.name}</div><div style="font-size:10px; color:#64748b;">Ochilgan: ${dep.date}</div></div><div style="font-weight:bold; color:#10b981;">${formatMoney(dep.amount)}</div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="openInterestModal(${dep.id})" style="flex:1; background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#10b981; padding:6px; border-radius:6px; font-size:11px; font-weight:bold;">+ Foiz yozish</button><button onclick="closeDeposit(${dep.id})" style="flex:1; background:#ef4444; border:none; color:#fff; padding:6px; border-radius:6px; font-size:11px; font-weight:bold;">Yopish (Qaytarish)</button></div></div>`; }); 
+            setHtml("deposits-list", h || "<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Omonatlar yo'q.</div>"); 
+        }
+
+        // HISOBOT
         function renderReport() {
             let fromD = getVal("report-from-date"); let toD = getVal("report-to-date"); if (!fromD || !toD) { const t = new Date().toISOString().slice(0,10); fromD = t; toD = t; }
             const fTxs = state.transactions.filter(t => t.date >= fromD && t.date <= toD && (t.profileId === currentProfileId || currentProfileId === 'general')); const fIncs = state.incomes.filter(i => i.date >= fromD && i.date <= toD && (i.profileId === currentProfileId || currentProfileId === 'general'));
@@ -585,11 +621,11 @@
             setHtml("report-cats-analysis", cHtml || "<div style='text-align:center; padding:15px; color:#475569; font-size:12px;'>Xarajat yo'q.</div>");
 
             let chHtml = ""; const comb = [...fIncs.map(i=>({...i,m:'plus'})), ...fTxs.map(t=>({...t,m:'minus'}))].sort((a,b)=>b.id-a.id);
-            comb.forEach(i => { const clr = i.m==='plus'?'#10b981':(i.cat==="O'tkazma"?'#3b82f6':'#f472b6'); chHtml+=`<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1e293b; font-size:13px;"><div><div style="font-weight:bold; color:${i.m==='plus'?'#10b981':'#fff'}">${i.desc}</div><div style="font-size:10px; color:#64748b;">👤 ${i.user||'Siz'} | ${i.date}</div></div><div style="display:flex; align-items:center; gap:8px; margin-left:auto;"><span style="font-weight:bold; color:${clr};">${i.m==='plus'?'+':'-'}${formatMoney(i.amount).replace(" so'm","")}</span> <button class="delete-btn" onclick="deleteItem('${i.m==='minus'?'tx':'inc'}', ${i.id})">✕</button></div></div>`; });
+            comb.forEach(i => { const clr = i.m==='plus'?'#10b981':'#f472b6'; chHtml+=`<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1e293b; font-size:13px;"><div><div style="font-weight:bold; color:${i.m==='plus'?'#10b981':'#fff'}">${i.desc}</div><div style="font-size:10px; color:#64748b;">👤 ${i.user||'Siz'} | ${i.date}</div></div><div style="display:flex; align-items:center; gap:8px; margin-left:auto;"><span style="font-weight:bold; color:${clr};">${i.m==='plus'?'+':'-'}${formatMoney(i.amount).replace(" so'm","")}</span> <button class="delete-btn" onclick="deleteItem('${i.m==='minus'?'tx':'inc'}', ${i.id})">✕</button></div></div>`; });
             setHtml("report-chronology", chHtml || "<div style='text-align:center; color:#475569; font-size:12px; padding:10px;'>Tarix bo'sh.</div>");
         }
 
-        window.downloadExcel = function() { let csv="\uFEFFSana,Profil,Turi,Odam,Rukun,Kategoriya_2,Izoh,Summa,Hisob\n"; const rows=[...state.incomes.map(i=>({...i,tStr:"Kirim"})), ...state.transactions.map(t=>({...t,tStr:"Chiqim"}))].sort((a,b)=>b.id-a.id); rows.forEach(r => { const pName=state.profiles.find(p=>p.id===r.profileId)?.name||'Umumiy'; csv+=`${r.date},${pName},${r.tStr},${r.user||'Siz'},${r.cat||''},${r.subCat||''},${r.desc},${r.amount},${r.account==='cash'?'Naqd':'Plastik'}\n`; }); const b=new Blob([csv], {type:'text/csv;charset=utf-8;'}); const l=document.createElement("a"); l.setAttribute("href", URL.createObjectURL(b)); l.setAttribute("download", "Oila_Hisobot.csv"); document.body.appendChild(l); l.click(); document.body.removeChild(l); }
+        window.downloadExcel = function() { let csv="\uFEFFSana,Profil,Turi,Odam,Rukun,Kategoriya_2,Izoh,Summa\n"; const rows=[...state.incomes.map(i=>({...i,tStr:"Kirim"})), ...state.transactions.map(t=>({...t,tStr:"Chiqim"}))].sort((a,b)=>b.id-a.id); rows.forEach(r => { const pName=state.profiles.find(p=>p.id===r.profileId)?.name||'Umumiy'; csv+=`${r.date},${pName},${r.tStr},${r.user||'Siz'},${r.cat||''},${r.subCat||''},${r.desc},${r.amount}\n`; }); const b=new Blob([csv], {type:'text/csv;charset=utf-8;'}); const l=document.createElement("a"); l.setAttribute("href", URL.createObjectURL(b)); l.setAttribute("download", "Oila_Hisobot.csv"); document.body.appendChild(l); l.click(); document.body.removeChild(l); }
         if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded", init);}else{init();}
     </script>
 </body>
