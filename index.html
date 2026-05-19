@@ -77,12 +77,17 @@
         
         .balance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .balance-card { background: var(--bg-card); padding: 15px; border-radius: 16px; text-align: center; }
+        
+        /* Arxiv toggle tugmasi uchun stil */
+        .arch-toggle-btn { margin-top:15px; text-align:center; color:var(--text-muted); font-size:13px; cursor:pointer; padding:10px; border:1px dashed var(--border-color); border-radius:10px; background: rgba(0,0,0,0.1); transition: 0.2s; }
+        .arch-toggle-btn:active { background: rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
 
     <div id="toast-msg"></div>
 
+    <!-- Profilllar modali -->
     <div id="modal-profile" class="modal-layer" onclick="closeModalOutside(event, 'modal-profile')">
         <div class="modal-box">
             <h3 style="margin-top:0; margin-bottom:15px; color:var(--primary);">Yangi profil</h3>
@@ -104,6 +109,7 @@
         </div>
     </div>
 
+    <!-- Xarid modali -->
     <div id="modal-buy" class="modal-layer" onclick="closeModalOutside(event, 'modal-buy')">
         <div class="modal-box">
             <h3 style="margin-top:0; margin-bottom:10px; color:var(--success);">Tasdiqlash</h3>
@@ -116,6 +122,7 @@
         </div>
     </div>
 
+    <!-- Omonat Topup Modali -->
     <div id="modal-dep-topup" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-topup')">
         <div class="modal-box">
             <h3 style="margin-top:0; color:var(--primary);">Omonatga pul qo'shish</h3>
@@ -128,6 +135,7 @@
         </div>
     </div>
 
+    <!-- Omonat Foiz Modali -->
     <div id="modal-dep-interest" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-interest')">
         <div class="modal-box">
             <h3 style="margin-top:0; color:var(--success);">Foiz hisoblash</h3>
@@ -140,7 +148,7 @@
         </div>
     </div>
 
-    <!-- Grafik uchun yangi modal -->
+    <!-- Omonat Grafik modali -->
     <div id="modal-dep-schedule" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-schedule')">
         <div class="modal-box" style="max-height: 80vh; display: flex; flex-direction: column;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -152,6 +160,7 @@
         </div>
     </div>
 
+    <!-- HEADER -->
     <div class="top-header">
         <button class="menu-btn" onclick="toggleSidebar()">
             <span class="icon">☰</span> <span id="current-profile-name" style="font-size:16px;">Umumiy</span>
@@ -167,6 +176,7 @@
         <div id="sidebar-profiles-list"></div>
     </div>
 
+    <!-- 1. TAB HOME (Asosiy) -->
     <div id="tab-home" class="tab-content">
         <div class="balance-card-main">
             <div style="color: var(--text-muted); font-size: 12px; font-weight:bold; letter-spacing:1px; margin-bottom:8px;">JAMI MAVJUD MABLAG'</div>
@@ -237,6 +247,7 @@
         </button>
     </div>
 
+    <!-- 2. TAB ADD (Kiritish) -->
     <div id="tab-add" class="tab-content hidden">
         <div class="mode-selector">
             <button id="mode-exp" class="mode-btn" style="background:var(--danger); border-color:var(--danger);" onclick="setAddMode('expense')">▼ Chiqim</button>
@@ -259,21 +270,18 @@
         </div>
     </div>
 
+    <!-- 3. TAB OTHER (Boshqa) -->
     <div id="tab-other" class="tab-content hidden">
-        
-        <!-- Boshqa bo'limi uchun yuqori menyu (Tablar) -->
         <div class="mode-selector" style="margin-bottom: 15px;">
             <button id="other-mode-dep" class="mode-btn" style="background:var(--primary); border-color:var(--primary);" onclick="switchOther('dep')">🏦 Omonatlar</button>
             <button id="other-mode-debt" class="mode-btn" onclick="switchOther('debt')">🤝 Qarz Daftari</button>
         </div>
 
-        <!-- OMONAT QISMI -->
         <div id="other-sec-dep">
             <div class="widget-box">
                 <div class="toggle-header" id="dep-header" onclick="toggleWidget('dep-form', 'dep-header')">
                     <span>➕ Yangi Omonat Ochish</span> <span class="chevron">▼</span>
                 </div>
-                
                 <div id="dep-form" class="hidden" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
                     <input type="text" id="dep-name" class="input-text" placeholder="Omonat nomi (Mas: Ipoteka Bank)" />
                     <input type="number" id="dep-amount" class="input-text" placeholder="Boshlang'ich summa..." />
@@ -310,13 +318,11 @@
             <div id="deposits-list"></div>
         </div>
 
-        <!-- QARZ QISMI -->
         <div id="other-sec-debt" class="hidden">
             <div class="widget-box">
                 <div class="toggle-header" id="debt-header" onclick="toggleWidget('debt-form', 'debt-header')">
                     <span>➕ Yangi Qarz Qo'shish</span> <span class="chevron">▼</span>
                 </div>
-                
                 <div id="debt-form" class="hidden" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
                     <input type="text" id="debt-name" class="input-text" placeholder="Kimga / Kimdan (Ism yozing)" />
                     <input type="number" id="debt-amount" class="input-text" placeholder="Summa..." />
@@ -341,6 +347,7 @@
         </div>
     </div>
 
+    <!-- 4. TAB REPORT (Hisobot) -->
     <div id="tab-report" class="tab-content hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <span id="report-title-text" style="font-size: 18px; font-weight: bold;">📊 Hisobot</span>
@@ -372,6 +379,7 @@
         <div id="rep-history-list" style="background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color);"></div>
     </div>
 
+    <!-- BOTTOM NAV -->
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><i>🏠</i> Asosiy</div>
         <div class="nav-item" id="nav-add" onclick="switchTab('add')"><i>➕</i> Kiritish</div>
@@ -381,7 +389,7 @@
 
     <script>
         // ==========================================
-        // 1. DATA & CONSTANTS (MAX WISHLIST)
+        // 1. DATA & CONSTANTS
         // ==========================================
         const PLAN_TAGS = {
             "Oziq-ovqat": {
@@ -436,9 +444,11 @@
         const OY_NOMLARI = ["Yanvar","Fevral","Mart","Aprel","May","Iyun","Iyul","Avgust","Sentabr","Oktabr","Noyabr","Dekabr"];
 
         // ==========================================
-        // 2. STATE MANAGEMENT
+        // 2. STATE MANAGEMENT & ARCHIVE
         // ==========================================
         let state = { profiles: [], txs: [], incs: [], debts: [], sched: [], plan: [], deps: [] };
+        let showArch = { plan: false, sched: false, debt: false, dep: false }; // Arxivni ko'rsatish/yashirish holati
+
         let curProf = "general", curTab = "home", addMode = "expense";
         let amtStr = "", actMainCat = null, actSubCat = null;
         let debtType = "take"; let buyPlanId = null; let curDepId = null;
@@ -457,6 +467,13 @@
         window.toggleWidget = (panelId, headerId) => {
             const p = el(panelId), h = el(headerId);
             if(p && h) { p.classList.toggle('hidden'); h.classList.toggle('open'); }
+        };
+        
+        window.toggleArch = (type) => { 
+            showArch[type] = !showArch[type]; 
+            if(type === 'plan') renderPlanned(); 
+            else if(type === 'sched') renderSchedSet(); 
+            else render(); 
         };
 
         const formatM = n => new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
@@ -498,7 +515,6 @@
         }
 
         window.selectProfile = id => { curProf = id; actMainCat = null; actSubCat = null; toggleSidebar(); renderSidebar(); checkAccess(); updatePlanCats(); render(); };
-        
         window.openModal = id => { el(id).style.display = "flex"; };
         window.closeModal = id => { el(id).style.display = "none"; };
         window.closeModalOutside = (e, id) => { if(e.target.id === id) closeModal(id); };
@@ -537,7 +553,7 @@
         };
 
         // ==========================================
-        // 4. PLAN (WISHLIST)
+        // 4. PLAN (WISHLIST / BOZORLIK)
         // ==========================================
         window.updatePlanCats = () => {
             const cEl = el("smart-plan-cat"); if(!cEl) return;
@@ -547,58 +563,59 @@
             cEl.innerHTML = c.map(x => `<option value="${x}">${x}</option>`).join("");
             updateSmartTags();
         };
-
         window.updateSmartTags = () => {
             const cat = val("smart-plan-cat"), subEl = el("smart-plan-subcat");
             if(!cat || !subEl) return;
             subEl.innerHTML = "";
-            if (PLAN_TAGS[cat]) {
-                show("smart-plan-subcat");
-                Object.keys(PLAN_TAGS[cat]).forEach(s => { subEl.innerHTML += `<option value="${s}">${s}</option>`; });
-            } else hide("smart-plan-subcat");
+            if (PLAN_TAGS[cat]) { show("smart-plan-subcat"); Object.keys(PLAN_TAGS[cat]).forEach(s => { subEl.innerHTML += `<option value="${s}">${s}</option>`; }); } 
+            else hide("smart-plan-subcat");
             renderSmartTags();
         };
-
         window.renderSmartTags = () => {
             const c = val("smart-plan-cat"), s = val("smart-plan-subcat"), cont = el("smart-tags-container");
             cont.innerHTML = "";
-            if(PLAN_TAGS[c] && PLAN_TAGS[c][s]) {
-                PLAN_TAGS[c][s].forEach(t => { cont.innerHTML += `<div class="smart-tag" onclick="quickAddPlan('${t}')">${t}</div>`; });
-            } else cont.innerHTML = "<span style='color:var(--text-muted); font-size:12px;'>Shablon yo'q.</span>";
+            if(PLAN_TAGS[c] && PLAN_TAGS[c][s]) PLAN_TAGS[c][s].forEach(t => { cont.innerHTML += `<div class="smart-tag" onclick="quickAddPlan('${t}')">${t}</div>`; });
+            else cont.innerHTML = "<span style='color:var(--text-muted); font-size:12px;'>Shablon yo'q.</span>";
         };
-
         window.quickAddPlan = t => {
             const ni = el("plan-name"), qi = el("plan-qty");
             ni.value = t; qi.value = ""; 
             ni.style.borderColor = "var(--success)"; setTimeout(() => ni.style.borderColor = "var(--border-color)", 600);
             qi.focus(); toast("Endi hajmi yoki sonini yozing");
         };
-
         window.addPlannedItemManual = () => {
             const n = val("plan-name").trim(), q = val("plan-qty").trim(), c = val("smart-plan-cat"), m = val("plan-market"), p = parseFloat(val("plan-price"))||0;
             if(!n) return toast("Nomini yozing!", true);
-            state.plan.push({ id: Date.now(), text: q ? `${n} (${q})` : n, cat: c, market: m, price: p, prof: curProf, skip: null });
-            setVal("plan-name",""); setVal("plan-qty",""); save(); toast("Qo'shildi!");
+            state.plan.push({ id: Date.now(), text: q ? `${n} (${q})` : n, cat: c, market: m, price: p, prof: curProf, skip: null, archived: false });
+            setVal("plan-name",""); setVal("plan-qty",""); save(); toast("Qo'shildi!"); renderPlanned();
         };
-
-        window.toggleSkipPlan = id => { const t = new Date().toISOString().slice(0,10); const i = state.plan.find(x=>x.id==id); if(i) { i.skip = i.skip===t ? null : t; save(); } };
+        window.toggleSkipPlan = id => { const t = new Date().toISOString().slice(0,10); const i = state.plan.find(x=>x.id==id); if(i) { i.skip = i.skip===t ? null : t; save(); renderPlanned(); } };
         window.openBuyModal = id => { const i = state.plan.find(x=>x.id==id); if(!i) return; buyPlanId = id; setTxt("buy-item-name", `✅ Olinyapti: ${i.text}`); setVal("buy-price", i.price||""); openModal("modal-buy"); };
+        
         window.confirmBuyItem = () => {
             const p = parseFloat(val("buy-price")); if(!p || p<=0) return toast("Narx xato!", true);
             const i = state.plan.find(x=>x.id==buyPlanId); if(!i) return;
             const d = new Date();
             state.txs.unshift({ id: Date.now(), amount: p, desc: i.text, cat: i.cat, subCat: i.market, date: d.toISOString().slice(0,10), time: d.toLocaleTimeString("uz-UZ", {hour:'2-digit', minute:'2-digit'}), user: tgUser, prof: i.prof });
-            state.plan = state.plan.filter(x=>x.id!=buyPlanId); closeModal("modal-buy"); save(); toast("Xarajatga o'tdi ✅");
+            
+            // O'chirish o'rniga ARXIVGA o'tkazish
+            i.archived = true; i.buyPrice = p; i.buyDate = d.toISOString().slice(0,10);
+            
+            closeModal("modal-buy"); save(); toast("Xarajatga o'tdi ✅"); renderPlanned();
         };
+        window.permDelPlan = id => { state.plan = state.plan.filter(x=>x.id!=id); save(); renderPlanned(); toast("O'chirildi!"); };
 
         function renderPlanned() {
             const fc = val("filter-cat"), fm = val("filter-market"), t = new Date().toISOString().slice(0,10);
             let p = state.plan.filter(x => x.prof === curProf || curProf === "general" || (curProf === "home_profile" && x.prof === "home_profile"));
             if(fc && fc!=="all") p = p.filter(x=>x.cat===fc); if(fm && fm!=="all") p = p.filter(x=>x.market===fm);
-            let h = "";
-            p.forEach(x => {
+            
+            let active = p.filter(x => !x.archived);
+            let arch = p.filter(x => x.archived);
+
+            let h = active.map(x => {
                 const sk = x.skip === t;
-                h += `<div class="plan-item ${sk?'skipped':''}">
+                return `<div class="plan-item ${sk?'skipped':''}">
                     <div class="custom-checkbox ${!sk?'checked':''}" onclick="toggleSkipPlan(${x.id})"></div>
                     <div style="flex:1;">
                         <div style="font-weight:bold; color:var(--primary); font-size:15px; text-decoration:${sk?'line-through':'none'};">${x.text}</div>
@@ -606,35 +623,55 @@
                     </div>
                     <button onclick="openBuyModal(${x.id})" class="btn-primary btn-success" style="width:auto; padding:10px 14px; font-size:13px;" ${sk?'disabled':''}>Olish</button>
                 </div>`;
-            });
-            setHtml("planned-list-container", h || "<div style='color:var(--text-muted); font-size:13px; text-align:center;'>Ro'yxat bo'sh.</div>");
+            }).join("");
+
+            let archBtn = `<div class="arch-toggle-btn" onclick="toggleArch('plan')">📂 Olinganlar arxivi ${showArch.plan?'(Yashirish)':'(Ko\'rish)'} (${arch.length})</div>`;
+            let archHtml = "";
+            if(showArch.plan && arch.length > 0) {
+                archHtml = `<div style="margin-top:10px; opacity:0.8;">` + arch.map(x => `<div class="plan-item" style="border-color:var(--border-color); filter: grayscale(100%);"><div style="flex:1;"><div style="font-weight:bold; color:var(--text-muted); font-size:15px; text-decoration:line-through;">${x.text}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;">✅ Olingan: ${x.buyDate||''} | ${formatM(x.buyPrice||0)}</div></div><button onclick="permDelPlan(${x.id})" style="background:transparent; border:none; color:var(--danger); font-size:18px; cursor:pointer;">🗑️</button></div>`).join("") + `</div>`;
+            }
+
+            setHtml("planned-list-container", (h || "<div style='color:var(--text-muted); font-size:13px; text-align:center;'>Ro'yxat bo'sh.</div>") + archBtn + archHtml);
         }
 
         // ==========================================
-        // 5. SCHEDULED (REJALI TO'LOV)
+        // 5. SCHEDULED (REJALI TO'LOVLAR)
         // ==========================================
         const getWD = (y,m) => { let d=new Date(y,m,0).getDate(), w=0; for(let i=1;i<=d;i++) { let day=new Date(y,m-1,i).getDay(); if(day!==0&&day!==6) w++; } return w; };
         window.addScheduled = () => {
             const n = val("sched-name").trim(), d = parseInt(val("sched-day")), a = parseFloat(val("sched-amount")), c = val("sched-cat");
             if(!n||!d||d<1||d>31||!a) return toast("Xato!", true);
             const tm = new Date().getFullYear() + "-" + String(new Date().getMonth()+1).padStart(2,'0');
-            state.sched.push({ id: Date.now(), label: n, day: d, amt: a, cat: c, tMonth: tm, miss: 0, prof: curProf });
+            state.sched.push({ id: Date.now(), label: n, day: d, amt: a, cat: c, tMonth: tm, miss: 0, prof: curProf, archived: false });
             setVal("sched-name",""); setVal("sched-day",""); setVal("sched-amount",""); toggleWidget("sched-setup-panel", "sched-header"); save(); toast("Qo'shildi!");
         };
-        window.delSched = id => { state.sched = state.sched.filter(s=>s.id!=id); save(); toast("O'chirildi!"); };
-        window.updMiss = (id, v) => { const s = state.sched.find(x=>x.id==id); if(s) { s.miss = parseInt(v)||0; save(); } };
+        
+        window.delSched = id => { const s=state.sched.find(x=>x.id==id); if(s) { s.archived=true; save(); renderSchedSet(); render(); toast("Arxivlandi!"); } };
+        window.permDelSched = id => { state.sched=state.sched.filter(x=>x.id!=id); save(); renderSchedSet(); render(); toast("O'chirildi!"); };
+        window.updMiss = (id, v) => { const s = state.sched.find(x=>x.id==id); if(s) { s.miss = parseInt(v)||0; save(); render(); } };
+        
         window.paySched = id => {
             const s = state.sched.find(x=>x.id==id); if(!s) return;
             const actAmt = s.miss > 0 ? Math.max(0, Math.round(s.amt - ((s.amt / getWD(parseInt(s.tMonth.split('-')[0]), parseInt(s.tMonth.split('-')[1]))) * s.miss))) : s.amt;
             const d = new Date();
             state.txs.unshift({ id: Date.now(), amount: actAmt, desc: `${s.label} (${s.tMonth})`, cat: s.cat, subCat: "", date: d.toISOString().slice(0,10), time: d.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'}), user: tgUser, prof: s.prof });
             let [y, m] = s.tMonth.split('-'); m = parseInt(m)+1; if(m>12){m=1;y=parseInt(y)+1;}
-            s.tMonth = `${y}-${m.toString().padStart(2,'0')}`; s.miss = 0; save(); toast("To'landi ✅");
+            s.tMonth = `${y}-${m.toString().padStart(2,'0')}`; s.miss = 0; save(); toast("To'landi ✅"); render();
         };
 
         function renderSchedSet() {
-            let h = ""; state.sched.filter(s=>s.prof===curProf || curProf==="general").forEach(s => { h += `<div class="list-item"><span><b>${s.label}</b> (${s.day}-sana)</span><button onclick="delSched(${s.id})" class="delete-btn">✕</button></div>`; });
-            setHtml("sched-edit-list", h);
+            let p = state.sched.filter(s=>s.prof===curProf || curProf==="general");
+            let active = p.filter(s=>!s.archived);
+            let arch = p.filter(s=>s.archived);
+
+            let h = active.map(s => `<div class="list-item"><span><b>${s.label}</b> (${s.day}-sana)</span><button onclick="delSched(${s.id})" class="delete-btn">✕</button></div>`).join("");
+            
+            let archBtn = `<div class="arch-toggle-btn" onclick="toggleArch('sched')">📂 Arxiv ${showArch.sched?'(Yashirish)':'(Ko\'rish)'} (${arch.length})</div>`;
+            let archHtml = "";
+            if(showArch.sched && arch.length>0) {
+                archHtml = `<div style="margin-top:10px; opacity:0.8;">` + arch.map(s => `<div class="list-item" style="border-color:var(--border-color);"><span style="text-decoration:line-through; color:var(--text-muted);"><b>${s.label}</b> (${s.day}-sana)</span><button onclick="permDelSched(${s.id})" class="delete-btn">🗑️</button></div>`).join("") + `</div>`;
+            }
+            setHtml("sched-edit-list", h + archBtn + archHtml);
         }
 
         // ==========================================
@@ -658,22 +695,18 @@
                 cont.innerHTML = `<div class="cat-grid">${INC_SOURCES.map(s => `<button class="cat-btn" onclick="saveTx('${s.label}')"><span style="font-size:24px;">${s.icon}</span><span>${s.label}</span></button>`).join("")}</div>`; 
                 return; 
             }
-            
             const cats = getCats();
-            
             if (actSubCat) {
                 head.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border-color);"><span style="font-size:12px; color:var(--text-muted);">${actMainCat.label} <b style="color:var(--primary); margin:0 4px;">›</b> <b style="color:#fff">${actSubCat.label}</b></span><button onclick="backCat()" style="background:transparent; color:var(--primary); border:none; font-weight:bold; font-size:13px; cursor:pointer;">⬅ Orqaga</button></div>`;
                 let h = `<div class="cat-grid">`;
                 actSubCat.items.forEach(i => { h += `<button class="cat-btn" style="background:rgba(59, 130, 246, 0.2); border-color:var(--primary);" onclick="saveTx('${i.label}')"><span style="font-size:26px;">${i.icon}</span><span>${i.label}</span></button>`; });
                 cont.innerHTML = h + `</div>`;
-            } 
-            else if (actMainCat && actMainCat.subs && actMainCat.subs.length > 0) {
+            } else if (actMainCat && actMainCat.subs && actMainCat.subs.length > 0) {
                 head.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border-color);"><span style="font-size:13px; color:var(--text-muted);">Rukun: <b style="color:#fff">${actMainCat.label}</b></span><button onclick="backCat()" style="background:transparent; color:var(--primary); border:none; font-weight:bold; font-size:13px; cursor:pointer;">⬅ Orqaga</button></div>`;
                 let h = `<div class="cat-grid">`;
                 actMainCat.subs.forEach(s => { const f = s.items?.length>0; h += `<button class="cat-btn" style="background:var(--bg-card);" onclick="${f ? `clickSubCat('${s.id}')` : `saveTx('${s.label}')`}"><span style="font-size:26px;">${s.icon}</span><span>${s.label} ${f?'📂':''}</span></button>`; });
                 cont.innerHTML = h + `<button class="cat-btn" style="background:var(--bg-card); border:1px dashed var(--text-muted);" onclick="saveTx('${actMainCat.label}')"><span style="font-size:26px;">⚙️</span><span>Umumiy</span></button></div>`;
-            } 
-            else {
+            } else {
                 head.innerHTML = "";
                 cont.innerHTML = `<div class="cat-grid">${cats.map(c => `<button class="cat-btn" style="background:${c.color||'var(--bg-card)'}; border-color:${c.color||'var(--border-color)'};" onclick="clickMainCat('${c.id}')"><span style="font-size:26px;">${c.icon}</span><span>${c.label}</span></button>`).join("")}</div>`;
             }
@@ -693,7 +726,7 @@
             if(actSubCat||actMainCat) { setHtml("stay-hint", `✅ Oxirgi: <b>${formatM(a)}</b>. Yana kiriting!`); renderAddCats(); } else setHtml("stay-hint", "");
             toast("Saqlandi!");
         };
-        window.delItem = (type, id) => { if(type==='tx') state.txs = state.txs.filter(x=>x.id!=id); else state.incs = state.incs.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
+        window.delItem = (type, id) => { if(type==='tx') state.txs = state.txs.filter(x=>x.id!=id); else state.incs = state.incs.filter(x=>x.id!=id); save(); render(); toast("O'chirildi!"); };
 
         // ==========================================
         // 7. OTHER TAB (BOSHQA: QARZ, OMONAT)
@@ -703,59 +736,46 @@
             el("other-mode-dep").style.borderColor = sec==="dep" ? "var(--primary)" : "var(--border-color)";
             el("other-mode-debt").style.background = sec==="debt" ? "var(--primary)" : "var(--bg-card)";
             el("other-mode-debt").style.borderColor = sec==="debt" ? "var(--primary)" : "var(--border-color)";
-            
-            if(sec === "dep") { show("other-sec-dep"); hide("other-sec-debt"); }
-            else { hide("other-sec-dep"); show("other-sec-debt"); }
+            if(sec === "dep") { show("other-sec-dep"); hide("other-sec-debt"); } else { hide("other-sec-dep"); show("other-sec-debt"); }
         };
 
         window.openScheduleModal = id => {
             const d = state.deps.find(x=>x.id==id); if(!d) return;
             setTxt("schedule-info", `🏦 ${d.name}\nBoshlang'ich: ${formatM(d.amount)}\nShart: ${d.rate}% ${d.rateType==='annual'?'Yillik':'Oylik'} (${d.cap?'Kapitalizatsiya':'Oddiy'})`);
-            
-            let html = "";
-            let currentBal = d.amount;
-            let mRate = d.rateType === 'annual' ? (d.rate/100)/12 : (d.rate/100);
-            let startDate = new Date(d.start);
-            let totalProfit = 0;
-
+            let html = "", currentBal = d.amount, mRate = d.rateType === 'annual' ? (d.rate/100)/12 : (d.rate/100), startDate = new Date(d.start), totalProfit = 0;
             for(let i=1; i<=d.duration; i++) {
-                startDate.setMonth(startDate.getMonth() + 1);
-                let monthStr = startDate.toISOString().slice(0,10);
+                startDate.setMonth(startDate.getMonth() + 1); let monthStr = startDate.toISOString().slice(0,10);
                 let interest = d.cap ? (currentBal * mRate) : (d.amount * mRate);
-                totalProfit += interest;
-                if(d.cap) currentBal += interest;
-
-                html += `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-color); font-size:13px;">
-                    <div><b style="color:var(--primary);">${i}-oy</b><div style="color:var(--text-muted); font-size:11px;">${monthStr}</div></div>
-                    <div style="text-align:right;"><b style="color:var(--success);">+${formatM(interest)}</b><div style="color:var(--text-muted); font-size:11px;">Jami qoldiq: ${formatM(currentBal)}</div></div>
-                </div>`;
+                totalProfit += interest; if(d.cap) currentBal += interest;
+                html += `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-color); font-size:13px;"><div><b style="color:var(--primary);">${i}-oy</b><div style="color:var(--text-muted); font-size:11px;">${monthStr}</div></div><div style="text-align:right;"><b style="color:var(--success);">+${formatM(interest)}</b><div style="color:var(--text-muted); font-size:11px;">Jami qoldiq: ${formatM(currentBal)}</div></div></div>`;
             }
-            
             html += `<div style="text-align:right; font-weight:bold; color:var(--warning); margin-top:15px; font-size:15px;">Jami sof foyda: ${formatM(totalProfit)}</div>`;
-            setHtml("schedule-list", html);
-            openModal("modal-dep-schedule");
+            setHtml("schedule-list", html); openModal("modal-dep-schedule");
         };
 
         window.setDebtType = t => { debtType = t; el("debt-type-take").style.background = t==="take"?"var(--success)":"var(--bg-card)"; el("debt-type-give").style.background = t==="give"?"var(--danger)":"var(--bg-card)"; el("debt-type-take").style.borderColor = t==="take"?"var(--success)":"var(--border-color)"; el("debt-type-give").style.borderColor = t==="give"?"var(--danger)":"var(--border-color)"; };
+        
         window.saveDebt = () => { 
             const n=val("debt-name").trim(), a=parseFloat(val("debt-amount")), s=val("debt-start"), e=val("debt-due"); 
             if(!n||!a) return toast("Ma'lumot kam!", true); 
-            state.debts.unshift({id:Date.now(), name:n, amount:a, type:debtType, start:s, due:e}); 
+            state.debts.unshift({id:Date.now(), name:n, amount:a, type:debtType, start:s, due:e, archived:false}); 
             if(debtType==="take") state.txs.unshift({id:Date.now()+1, amount:a, desc:`Qarz berildi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:tgUser, prof:"general"}); 
             else state.incs.unshift({id:Date.now()+1, amount:a, desc:`Qarz olindi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:tgUser, prof:"general"}); 
             setVal("debt-name",""); setVal("debt-amount",""); toggleWidget('debt-form', 'debt-header'); save(); toast("Saqlandi!"); 
         };
+        
         window.closeDebt = id => { 
             const d=state.debts.find(x=>x.id==id); if(!d) return; const t=new Date().toISOString().slice(0,10); 
             if(d.type==="take") state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz qaytdi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:tgUser, prof:"general"}); 
             else state.txs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz to'landi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:tgUser, prof:"general"}); 
-            state.debts=state.debts.filter(x=>x.id!=id); save(); toast("Uzildi!"); 
+            d.archived = true; d.closeDate = t; save(); toast("Uzildi va Arxivlandi!"); 
         };
+        window.permDelDebt = id => { state.debts=state.debts.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
         
         window.saveDeposit = () => { 
             const n=val("dep-name").trim(), a=parseFloat(val("dep-amount")), s=val("dep-date"), d=parseInt(val("dep-duration")), r=parseFloat(val("dep-rate")), rt=val("dep-ratetype"), cap=el("dep-cap").checked;
             if(!n||!a||!s||!d||!r) return toast("Barcha maydonlarni to'ldiring!", true); 
-            state.deps.push({id:Date.now(), name:n, amount:a, start:s, duration:d, rate:r, rateType:rt, cap:cap}); 
+            state.deps.push({id:Date.now(), name:n, amount:a, start:s, duration:d, rate:r, rateType:rt, cap:cap, archived:false}); 
             state.txs.unshift({id:Date.now()+1, amount:a, desc:`Omonat: ${n}`, cat:"Bank", date:s, time:new Date().toLocaleTimeString("uz-UZ",{hour:'2-digit',minute:'2-digit'}), user:tgUser, prof:"general"}); 
             setVal("dep-name",""); setVal("dep-amount",""); setVal("dep-duration",""); setVal("dep-rate",""); toggleWidget('dep-form', 'dep-header'); save(); toast("Ochildi!"); 
         };
@@ -764,8 +784,7 @@
         window.confirmTopup = () => {
             const a = parseFloat(val("topup-amount")); if(!a||a<=0) return toast("Xato", true);
             const dep = state.deps.find(x=>x.id==curDepId); if(!dep) return;
-            dep.amount += a;
-            state.txs.unshift({id:Date.now(), amount:a, desc:`Omonat ustiga qo'shildi: ${dep.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"});
+            dep.amount += a; state.txs.unshift({id:Date.now(), amount:a, desc:`Omonat ustiga qo'shildi: ${dep.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"});
             closeModal('modal-dep-topup'); save(); toast("Pul qo'shildi!");
         };
 
@@ -773,38 +792,33 @@
             curDepId = id; const d=state.deps.find(x=>x.id==id); 
             let est = d.rateType === 'annual' ? (d.amount * (d.rate/100) / 12) : (d.amount * (d.rate/100));
             setTxt("interest-info", `${d.name} (${d.rate}% ${d.rateType==='annual'?'yillik':'oylik'}).\nKapitalizatsiya: ${d.cap?'HA (Ustiga qo\'shiladi)':'YO\'Q (Daromadga o\'tadi)'}`);
-            setVal("interest-amount", Math.round(est)); 
-            openModal('modal-dep-interest'); 
+            setVal("interest-amount", Math.round(est)); openModal('modal-dep-interest'); 
         };
         window.confirmInterest = () => { 
             const a=parseFloat(val("interest-amount")); if(!a||a<=0) return toast("Xato!", true); 
             const d=state.deps.find(x=>x.id==curDepId); if(!d) return; 
-            if(d.cap) {
-                d.amount += a; // Ustiga qo'shiladi
-            } else {
-                state.incs.unshift({id:Date.now(), amount:a, desc:`Foiz: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); 
-            }
+            if(d.cap) { d.amount += a; } else { state.incs.unshift({id:Date.now(), amount:a, desc:`Foiz: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); }
             closeModal('modal-dep-interest'); save(); toast("Foiz hisoblandi!"); 
         };
         window.closeDep = id => { 
             const d=state.deps.find(x=>x.id==id); if(!d) return; 
             state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Omonat qaytdi: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); 
-            state.deps=state.deps.filter(x=>x.id!=id); save(); toast("Yopildi!"); 
+            d.archived = true; d.closeDate = new Date().toISOString().slice(0,10); save(); toast("Yopildi va Arxivlandi!"); 
         };
+        window.permDelDep = id => { state.deps=state.deps.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
 
         // ==========================================
         // 8. RENDER ALL
         // ==========================================
         function render() {
-            // GLOBALS
             const tInc = state.incs.reduce((s,i)=>s+i.amount, 0), tExp = state.txs.reduce((s,t)=>s+t.amount, 0);
             setTxt("main-total-balance", formatM(tInc - tExp));
             setTxt("sched-prof-label", state.profiles.find(x=>x.id===curProf)?.name || "Umumiy");
 
-            // SCHED
+            // ACTIVE SCHEDULER
             const d = new Date(), tM = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0');
             let sHtml = "";
-            state.sched.filter(s => s.prof === curProf || curProf === "general").forEach(s => {
+            state.sched.filter(s => !s.archived && (s.prof === curProf || curProf === "general")).forEach(s => {
                 const actAmt = s.miss > 0 ? Math.max(0, Math.round(s.amt - ((s.amt / getWD(parseInt(s.tMonth.split('-')[0]), parseInt(s.tMonth.split('-')[1]))) * s.miss))) : s.amt;
                 const sm = parseInt(s.tMonth.replace("-","")), cm = parseInt(tM.replace("-",""));
                 let isDue = false, st = "";
@@ -815,35 +829,42 @@
             setHtml("sched-list-container", sHtml || "<div style='text-align:center; color:var(--text-muted); font-size:13px; padding:10px;'>Majburiy to'lovlar yo'q.</div>");
             renderSchedSet();
 
-            // TABS
             if(curTab === "home") renderPlanned();
             if(curTab === "add") renderAddCats();
             if(curTab === "other") {
+                // DEBTS RENDER
                 const today = new Date();
-                setHtml("debts-list", state.debts.map(x => {
+                let activeDebts = state.debts.filter(x=>!x.archived);
+                let archDebts = state.debts.filter(x=>x.archived);
+                
+                let hDebts = activeDebts.map(x => {
                     let dueStr = "";
-                    if(x.due) {
-                        const days = Math.ceil((new Date(x.due) - today) / 86400000);
-                        dueStr = days < 0 ? `<span style="color:var(--danger);">(${Math.abs(days)} kun o'tib ketdi)</span>` : `<span>(${days} kun qoldi)</span>`;
-                    }
+                    if(x.due) { const days = Math.ceil((new Date(x.due) - today) / 86400000); dueStr = days < 0 ? `<span style="color:var(--danger);">(${Math.abs(days)} kun o'tib ketdi)</span>` : `<span>(${days} kun qoldi)</span>`; }
                     return `<div class="list-item" style="border-left: 5px solid ${x.type==='take'?'var(--success)':'var(--danger)'}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:6px;"><div><div style="font-size:15px; font-weight:bold;">${x.name}</div><div style="font-size:11px; color:var(--text-muted);">${x.type==='take'?'Olaman':'Beraman'} | Sana: ${x.start||''}</div><div style="font-size:11px; color:var(--warning); font-weight:bold; margin-top:2px;">Muddat: ${x.due||'Yo\'q'} ${dueStr}</div></div><div style="font-weight:bold; font-size:15px;">${formatM(x.amount)}</div></div><button onclick="closeDebt(${x.id})" class="btn-primary btn-success" style="padding:10px; font-size:13px;">✅ Qarz uzildi</button></div>`;
-                }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Qarzlar yo'q.</div>");
+                }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Qarzlar yo'q.</div>";
+                
+                let archBtnDebts = `<div class="arch-toggle-btn" onclick="toggleArch('debt')">📂 Uzilgan qarzlar arxivi ${showArch.debt?'(Yashirish)':'(Ko\'rish)'} (${archDebts.length})</div>`;
+                let archHtmlDebts = "";
+                if(showArch.debt && archDebts.length>0) {
+                    archHtmlDebts = `<div style="margin-top:10px; opacity:0.8;">` + archDebts.map(x => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; text-decoration:line-through; color:var(--text-muted);">${x.name}</div><div style="font-size:11px; color:var(--text-muted);">Sana: ${x.start||''} | Yopildi: ${x.closeDate||''}</div></div><div style="font-weight:bold; font-size:15px; color:var(--text-muted);">${formatM(x.amount)}</div></div><button onclick="permDelDebt(${x.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%;">🗑️ Butunlay o'chirish</button></div>`).join("") + `</div>`;
+                }
+                setHtml("debts-list", hDebts + archBtnDebts + archHtmlDebts);
 
-                setHtml("deposits-list", state.deps.map(dep => {
+                // DEPOSITS RENDER
+                let activeDeps = state.deps.filter(x=>!x.archived);
+                let archDeps = state.deps.filter(x=>x.archived);
+                
+                let hDeps = activeDeps.map(dep => {
                     let endD = new Date(dep.start); endD.setMonth(endD.getMonth() + dep.duration);
-                    return `<div class="list-item" style="border-left: 5px solid var(--success); flex-direction:column; align-items:flex-start;">
-                        <div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;">
-                            <div><div style="font-size:15px; font-weight:bold; color:var(--success);">${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Stavka: ${dep.rate}% (${dep.rateType==='annual'?'Yillik':'Oylik'})</div><div style="font-size:11px; color:var(--text-muted);">Tugaydi: ${endD.toISOString().slice(0,10)}</div></div>
-                            <div style="text-align:right;"><div style="font-weight:bold; font-size:16px;">${formatM(dep.amount)}</div><div style="font-size:10px; color:var(--warning); margin-top:4px;">Kapitalizatsiya: ${dep.cap?'HA':'YO\'Q'}</div></div>
-                        </div>
-                        <div style="display:flex; gap:6px; width:100%;">
-                            <button onclick="openTopupModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 2px; font-size:11px;">+ Qo'shish</button>
-                            <button onclick="openIntModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 2px; font-size:11px;">💸 Foiz</button>
-                            <button onclick="openScheduleModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 2px; font-size:11px;">📊 Grafik</button>
-                        </div>
-                        <button onclick="closeDep(${dep.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px;">Omonatni Yopish</button>
-                    </div>`;
-                }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Omonatlar yo'q.</div>");
+                    return `<div class="list-item" style="border-left: 5px solid var(--success); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:var(--success);">${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Stavka: ${dep.rate}% (${dep.rateType==='annual'?'Yillik':'Oylik'})</div><div style="font-size:11px; color:var(--text-muted);">Tugaydi: ${endD.toISOString().slice(0,10)}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px;">${formatM(dep.amount)}</div><div style="font-size:10px; color:var(--warning); margin-top:4px;">Kapitalizatsiya: ${dep.cap?'HA':'YO\'Q'}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="openTopupModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 2px; font-size:11px;">+ Qo'shish</button><button onclick="openIntModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 2px; font-size:11px;">💸 Foiz</button><button onclick="openScheduleModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 2px; font-size:11px;">📊 Grafik</button></div><button onclick="closeDep(${dep.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px;">Omonatni Yopish</button></div>`;
+                }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Omonatlar yo'q.</div>";
+
+                let archBtnDeps = `<div class="arch-toggle-btn" onclick="toggleArch('dep')">📂 Yopilgan omonatlar arxivi ${showArch.dep?'(Yashirish)':'(Ko\'rish)'} (${archDeps.length})</div>`;
+                let archHtmlDeps = "";
+                if(showArch.dep && archDeps.length>0) {
+                    archHtmlDeps = `<div style="margin-top:10px; opacity:0.8;">` + archDeps.map(dep => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Ochildi: ${dep.start} | Yopildi: ${dep.closeDate||''}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${formatM(dep.amount)}</div></div></div><button onclick="permDelDep(${dep.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%;">🗑️ Butunlay o'chirish</button></div>`).join("") + `</div>`;
+                }
+                setHtml("deposits-list", hDeps + archBtnDeps + archHtmlDeps);
             }
             if(curTab === "report") renderReport();
         }
