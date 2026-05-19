@@ -12,7 +12,6 @@
             --border-color: #334155; --border-focus: #3b82f6;
         }
 
-        /* Qulay o'lchamlar (Comfortable Mobile Size) */
         body { margin: 0; background-color: var(--bg-dark); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-user-select: none; user-select: none; padding: 15px; padding-bottom: 85px; max-width: 480px; margin: 0 auto; box-sizing: border-box; overflow-x: hidden; }
         
         .top-header { display: flex; align-items: center; margin-bottom: 18px; }
@@ -34,7 +33,6 @@
         .balance-card-main { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid var(--border-color); border-radius: 20px; padding: 22px 15px; text-align: center; margin-bottom: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .widget-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 15px; margin-bottom: 15px; }
         
-        /* OCHILIB-YOPILUVCHI SARLAVHA (Accordion Header) */
         .toggle-header { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: bold; color: var(--primary); cursor: pointer; padding-bottom: 5px; }
         .toggle-header span.chevron { font-size: 12px; transition: transform 0.3s; }
         .toggle-header.open span.chevron { transform: rotate(180deg); }
@@ -44,8 +42,8 @@
         .btn-primary { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; font-weight: bold; border-radius: 12px; font-size: 15px; cursor: pointer; }
         .btn-success { background: var(--success); }
         
-        .mode-selector { display: flex; gap: 8px; margin-bottom: 12px; }
-        .mode-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: bold; color: #fff; background: var(--bg-card); cursor: pointer; font-size: 14px; border: 1px solid var(--border-color); }
+        .mode-selector { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 5px; }
+        .mode-btn { flex: 1; min-width: max-content; padding: 12px 15px; border-radius: 12px; border: none; font-weight: bold; color: #fff; background: var(--bg-card); cursor: pointer; font-size: 13px; border: 1px solid var(--border-color); }
         .num-display { font-size: 32px; font-weight: bold; text-align: center; margin-bottom: 12px; height: 40px; color: #fff; }
         
         .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
@@ -69,7 +67,6 @@
         #toast-msg { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 20px; z-index: 9999; font-weight: bold; font-size: 14px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
         .hidden { display: none !important; }
 
-        /* Custom Checkbox */
         .plan-item { background: var(--bg-card); border: 1px solid var(--primary); padding: 14px; border-radius: 14px; margin-bottom: 10px; font-size: 14px; display:flex; gap:12px; align-items:center; transition: 0.3s; }
         .plan-item.skipped { opacity: 0.4; filter: grayscale(100%); border-color:var(--border-color); }
         .custom-checkbox { width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--primary); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; background:rgba(59,130,246,0.1); }
@@ -78,14 +75,30 @@
         .balance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .balance-card { background: var(--bg-card); padding: 15px; border-radius: 16px; text-align: center; }
         
-        /* Arxiv toggle tugmasi uchun stil */
         .arch-toggle-btn { margin-top:15px; text-align:center; color:var(--text-muted); font-size:13px; cursor:pointer; padding:10px; border:1px dashed var(--border-color); border-radius:10px; background: rgba(0,0,0,0.1); transition: 0.2s; }
         .arch-toggle-btn:active { background: rgba(0,0,0,0.3); }
+
+        .archive-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; margin-top: 10px; width: 100%; font-size: 11px; }
+        .archive-info-grid div span { color: var(--text-muted); display: block; margin-bottom: 3px; }
+        .archive-info-grid div b { font-size: 13px; color: #fff; }
     </style>
 </head>
 <body>
 
     <div id="toast-msg"></div>
+
+    <!-- Tasdiqlash Modali (YOPISH) -->
+    <div id="modal-confirm" class="modal-layer" onclick="closeModalOutside(event, 'modal-confirm')">
+        <div class="modal-box">
+            <h3 style="margin-top:0; color:var(--danger);">Xavfsizlik Tasdig'i</h3>
+            <div id="confirm-msg" style="color:var(--text-muted); font-size:13px; margin-bottom:15px; line-height:1.4;">Haqiqatan ham yopmoqchimisiz? Tasdiqlash uchun quyiga barcha harflarni katta qilib <b>YOPISH</b> deb yozing.</div>
+            <input type="text" id="confirm-code" class="input-text" placeholder="YOPISH" />
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="closeModal('modal-confirm')" class="btn-primary" style="background:var(--border-color);">Bekor</button>
+                <button onclick="executeConfirm()" class="btn-primary" style="background:var(--danger);">Tasdiqlash</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Profilllar modali -->
     <div id="modal-profile" class="modal-layer" onclick="closeModalOutside(event, 'modal-profile')">
@@ -148,12 +161,25 @@
         </div>
     </div>
 
-    <!-- Omonat Grafik modali -->
-    <div id="modal-dep-schedule" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-schedule')">
+    <!-- Kredit To'lash Modali -->
+    <div id="modal-credit-pay" class="modal-layer" onclick="closeModalOutside(event, 'modal-credit-pay')">
+        <div class="modal-box">
+            <h3 style="margin-top:0; color:var(--success);">Kredit To'lash</h3>
+            <div id="credit-pay-info" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">...</div>
+            <input type="number" id="credit-pay-amount" class="input-text" placeholder="To'lov summasi..." />
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="closeModal('modal-credit-pay')" class="btn-primary" style="background:var(--border-color);">Bekor</button>
+                <button onclick="confirmCreditPay()" class="btn-primary btn-success">To'lash</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grafik modali -->
+    <div id="modal-schedule" class="modal-layer" onclick="closeModalOutside(event, 'modal-schedule')">
         <div class="modal-box" style="max-height: 80vh; display: flex; flex-direction: column;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 style="margin:0; color:var(--primary);">Oylik Grafik</h3>
-                <button onclick="closeModal('modal-dep-schedule')" style="background:none; border:none; color:var(--text-muted); font-size:22px; cursor:pointer;">✕</button>
+                <h3 style="margin:0; color:var(--primary);" id="schedule-title">Grafik</h3>
+                <button onclick="closeModal('modal-schedule')" style="background:none; border:none; color:var(--text-muted); font-size:22px; cursor:pointer;">✕</button>
             </div>
             <div id="schedule-info" style="color:var(--text-muted); font-size:13px; margin-bottom:10px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;">...</div>
             <div id="schedule-list" style="overflow-y: auto; flex:1; padding-right:5px; margin-bottom:10px;"></div>
@@ -187,7 +213,6 @@
             <div class="toggle-header" id="sched-header" onclick="toggleWidget('sched-setup-panel', 'sched-header')">
                 <span>📅 Rejali to'lovlar (<span id="sched-prof-label"></span>)</span> <span class="chevron">▼</span>
             </div>
-            
             <div id="sched-setup-panel" class="hidden" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
                 <input type="text" id="sched-name" class="input-text" placeholder="Nomi (Mas: Bog'cha)" />
                 <div style="display:flex; gap:10px; margin-bottom:10px;">
@@ -207,14 +232,12 @@
             <div class="toggle-header open" id="plan-header" onclick="toggleWidget('plan-setup-panel', 'plan-header')">
                 <span>🛒 Bozorlik / Xarid Rejasi</span> <span class="chevron">▼</span>
             </div>
-            
             <div id="plan-setup-panel" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
                     <select id="smart-plan-cat" class="input-text" onchange="updateSmartTags()" style="flex:1; margin:0;"></select>
                     <select id="smart-plan-subcat" class="input-text" onchange="renderSmartTags()" style="flex:1; margin:0;"></select>
                 </div>
                 <div id="smart-tags-container" class="tags-wrapper"></div>
-                
                 <hr style="border:none; border-top:1px dashed var(--border-color); margin:15px 0;">
                 <div style="display:flex; gap:10px; margin-bottom:10px;">
                     <input type="text" id="plan-name" class="input-text" placeholder="Nima? (Mas: 🍅 Pomidor)" style="flex:2; margin:0;" />
@@ -228,7 +251,6 @@
                 </div>
                 <button onclick="addPlannedItemManual()" class="btn-primary btn-success">➕ Ro'yxatga Saqlash</button>
             </div>
-
             <div style="display:flex; gap:10px; margin: 15px 0;">
                 <select id="filter-market" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;">
                     <option value="all">Manzil: Barcha</option>
@@ -273,10 +295,12 @@
     <!-- 3. TAB OTHER (Boshqa) -->
     <div id="tab-other" class="tab-content hidden">
         <div class="mode-selector" style="margin-bottom: 15px;">
-            <button id="other-mode-dep" class="mode-btn" style="background:var(--primary); border-color:var(--primary);" onclick="switchOther('dep')">🏦 Omonatlar</button>
-            <button id="other-mode-debt" class="mode-btn" onclick="switchOther('debt')">🤝 Qarz Daftari</button>
+            <button id="other-mode-dep" class="mode-btn" style="background:var(--primary); border-color:var(--primary);" onclick="switchOther('dep')">🏦 Omonat</button>
+            <button id="other-mode-credit" class="mode-btn" onclick="switchOther('credit')">💳 Kredit</button>
+            <button id="other-mode-debt" class="mode-btn" onclick="switchOther('debt')">🤝 Qarz</button>
         </div>
 
+        <!-- OMONAT -->
         <div id="other-sec-dep">
             <div class="widget-box">
                 <div class="toggle-header" id="dep-header" onclick="toggleWidget('dep-form', 'dep-header')">
@@ -286,27 +310,12 @@
                     <input type="text" id="dep-name" class="input-text" placeholder="Omonat nomi (Mas: Ipoteka Bank)" />
                     <input type="number" id="dep-amount" class="input-text" placeholder="Boshlang'ich summa..." />
                     <div style="display:flex; gap:10px; margin-bottom:10px;">
-                        <div style="flex:1;">
-                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Ochilgan sana:</div>
-                            <input type="date" id="dep-date" class="input-text" style="margin:0;" />
-                        </div>
-                        <div style="flex:1;">
-                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat (oy):</div>
-                            <input type="number" id="dep-duration" class="input-text" placeholder="Mas: 12" style="margin:0;" />
-                        </div>
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Ochilgan sana:</div><input type="date" id="dep-date" class="input-text" style="margin:0;" /></div>
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat (oy):</div><input type="number" id="dep-duration" class="input-text" placeholder="Mas: 12" style="margin:0;" /></div>
                     </div>
                     <div style="display:flex; gap:10px; margin-bottom:10px;">
-                        <div style="flex:1;">
-                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Foiz stavka (%):</div>
-                            <input type="number" id="dep-rate" class="input-text" placeholder="Mas: 22" style="margin:0;" />
-                        </div>
-                        <div style="flex:1;">
-                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Stavka turi:</div>
-                            <select id="dep-ratetype" class="input-text" style="margin:0;">
-                                <option value="annual">Yillik</option>
-                                <option value="monthly">Oylik</option>
-                            </select>
-                        </div>
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Foiz stavka (%):</div><input type="number" id="dep-rate" class="input-text" placeholder="Mas: 22" style="margin:0;" /></div>
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Stavka turi:</div><select id="dep-ratetype" class="input-text" style="margin:0;"><option value="annual">Yillik</option><option value="monthly">Oylik</option></select></div>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; background:var(--bg-dark); padding:10px; border-radius:10px; border:1px solid var(--border-color);">
                         <input type="checkbox" id="dep-cap" style="width:20px; height:20px;" />
@@ -318,6 +327,30 @@
             <div id="deposits-list"></div>
         </div>
 
+        <!-- KREDIT -->
+        <div id="other-sec-credit" class="hidden">
+            <div class="widget-box">
+                <div class="toggle-header" id="credit-header" onclick="toggleWidget('credit-form', 'credit-header')">
+                    <span>➕ Yangi Kredit Olish</span> <span class="chevron">▼</span>
+                </div>
+                <div id="credit-form" class="hidden" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
+                    <input type="text" id="credit-name" class="input-text" placeholder="Kredit nomi (Mas: Avtokredit)" />
+                    <input type="number" id="credit-amount" class="input-text" placeholder="Olingan summa..." />
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Olingan sana:</div><input type="date" id="credit-date" class="input-text" style="margin:0;" /></div>
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat (oy):</div><input type="number" id="credit-duration" class="input-text" placeholder="Mas: 36" style="margin:0;" /></div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Yillik foiz (%):</div><input type="number" id="credit-rate" class="input-text" placeholder="Mas: 24" style="margin:0;" /></div>
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">To'lov turi:</div><select id="credit-type" class="input-text" style="margin:0;"><option value="annuity">Annuitet (Bir xil)</option><option value="differentiated">Differensial (Kamayuvchi)</option></select></div>
+                    </div>
+                    <button onclick="saveCredit()" class="btn-primary btn-success">Kreditni Saqlash</button>
+                </div>
+            </div>
+            <div id="credits-list"></div>
+        </div>
+
+        <!-- QARZ -->
         <div id="other-sec-debt" class="hidden">
             <div class="widget-box">
                 <div class="toggle-header" id="debt-header" onclick="toggleWidget('debt-form', 'debt-header')">
@@ -327,14 +360,8 @@
                     <input type="text" id="debt-name" class="input-text" placeholder="Kimga / Kimdan (Ism yozing)" />
                     <input type="number" id="debt-amount" class="input-text" placeholder="Summa..." />
                     <div style="display:flex; gap:10px; margin-bottom:10px;">
-                        <div style="flex:1;">
-                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Sana:</div>
-                            <input type="date" id="debt-start" class="input-text" style="margin:0;" />
-                        </div>
-                        <div style="flex:1;">
-                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat:</div>
-                            <input type="date" id="debt-due" class="input-text" style="margin:0;" />
-                        </div>
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Sana:</div><input type="date" id="debt-start" class="input-text" style="margin:0;" /></div>
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat:</div><input type="date" id="debt-due" class="input-text" style="margin:0;" /></div>
                     </div>
                     <div class="mode-selector" style="margin-top:5px;">
                         <button id="debt-type-take" class="mode-btn" style="background:var(--success); border-color:var(--success);" onclick="setDebtType('take')">Menga qaytaradi</button>
@@ -401,16 +428,18 @@
                 "Ichimlik": ["💧 Suv", "🧃 Sharbat", "🥤 Kola/Fanta", "☕ Kofe", "🍬 Konfet", "🍫 Shokolad", "🍪 Pechenye", "🥤 Ayron"]
             },
             "Xo'jalik/Uy": {
-                "Tozalik": ["🫧 Kir kukun", "🧼 Fairy", "🧼 Atir sovun", "🧴 Shampun", "🧻 Tualet qog'oz", "🧻 Salfetka", "🪥 Tish pasta", "🧹 Shvabra", "🧽 Gubka", "🧴 Xlor/Domestos", "🪒 Britva", "🗑️ Musor paket"]
+                "Tozalik": ["🫧 Kir kukun", "🧼 Fairy", "🧼 Atir sovun", "🧴 Shampun", "🧻 Tualet qog'oz", "🧻 Salfetka", "🪥 Tish pasta", "🧹 Shvabra", "🧽 Gubka", "🧴 Xlor/Domestos", "🪒 Britva", "🗑️ Musor paket"],
+                "Kommunal": ["⚡ Svet", "🔥 Gaz", "💧 Suv", "🧹 Musor"]
             },
             "Kiyim": {
                 "Bolalar": ["👕 Futbolka", "👖 Jinsi", "🧥 Kurtka", "👟 Krossovka", "🧦 Paypoq", "🎒 Sumka", "👗 Ko'ylak", "🥿 Tuflik", "🧢 Kepka", "🩲 Ichki kiyim", "🧤 Qishlik kiyim"],
                 "Kattalar": ["👕 Futbolka", "👔 Ko'ylak", "👖 Shim", "🧥 Kurtka", "👞 Tuflik", "👗 Ayollar ko'ylagi", "👜 Sumka"]
             },
             "Ta'lim": {
-                "Kanselyariya": ["📓 Daftar", "🖊️ Ruchka", "✏️ Qalam", "🎒 Sumka", "📏 Chizg'ich", "📚 Kitob", "🖍️ Bo'yoq", "🧼 O'chirg'ich", "📎 Sкрепka/Kley", "✂️ Qaychi", "🗂️ Papka"]
+                "Kanselyariya": ["📓 Daftar", "🖊️ Ruchka", "✏️ Qalam", "🎒 Sumka", "📏 Chizg'ich", "📚 Kitob", "🖍️ Bo'yoq", "🧼 O'chirg'ich", "📎 Skrepka/Kley", "✂️ Qaychi", "🗂️ Papka"]
             },
             "Avto": {
+                "Yoqilg'i": ["⛽ Benzin", "💨 Gaz"],
                 "Ehtiyot qism": ["🛢️ Motor moyi", "⚙️ Filtr", "🛞 Balon", "🔋 Akkumulyator", "💡 Lampa", "🧴 Oyna suvi", "🧽 Salon tozalagich", "🛑 Nakladka", "🧪 Antifriz"]
             },
             "O'yinchoq": {
@@ -418,41 +447,21 @@
             }
         };
 
-        const CATS_DATA = {
-            general: [
-                { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B", subs: [ { id: "bozor", label: "Bozor", icon: "⚖️", items: [ {id:"g1", label:"Go'sht", icon:"🥩"}, {id:"m1", label:"Sabzavot", icon:"🍅"}, {id:"b1", label:"Baqqollik", icon:"🍚"} ]}, { id: "super", label: "Market", icon: "🏪", items: [ {id:"s1", label:"Sut/Tuxum", icon:"🥛"}, {id:"n1", label:"Non/Shirin", icon:"🍞"}, {id:"mayda", label:"Mayda", icon:"🍬"} ]}, { id: "dokon", label: "Do'kon", icon: "🏪", items: [] }, { id: "kafe", label: "Kafe", icon: "🍔", items: [] } ]},
-                { id: "uy", label: "Uy/Kommunal", icon: "🏠", color: "#FBBF24", subs: [ { id: "kom", label: "Kommunal", icon: "🧾", items: [ {id:"svet", label:"Svet", icon:"⚡"}, {id:"gaz", label:"Gaz", icon:"🔥"}, {id:"suv", label:"Suv", icon:"💧"}, {id:"mus", label:"Musor", icon:"🧹"} ]}, { id: "aloqa", label: "Aloqa", icon: "📡", items: []}, { id: "xoja", label: "Xo'jalik", icon: "🧽", items: []}, { id: "jihoz", label: "Ta'mir", icon: "🛠️", items: []} ]},
-                { id: "avto", label: "Avto", icon: "🚗", color: "#2196F3", subs: [ { id: "zap", label: "Yoqilg'i", icon: "⛽", items: [ {id:"b92", label:"Benzin", icon:"⛽"}, {id:"gas", label:"Gaz", icon:"💨"} ]}, { id: "ser", label: "Servis", icon: "🔧", items: []}, { id: "moyka", label: "Moyka", icon: "🧼", items: [] }, { id: "tyun", label: "Qo'shimcha", icon: "🛡️", items: [] } ]},
-                { id: "oila", label: "Oila/Bola", icon: "🧸", color: "#8B5CF6", subs: [ { id: "kiyim", label: "Kiyim", icon: "👕", items: [ {id:"k1", label:"Kattalarga", icon:"👔"}, {id:"k2", label:"Bolalarga", icon:"👶"} ]}, { id: "talim", label: "Ta'lim", icon: "📚", items: [ {id:"b2", label:"Bog'cha", icon:"🏫"}, {id:"m2", label:"Maktab", icon:"📖"} ]} ]},
-                { id: "biznes", label: "IMSOA", icon: "🏢", color: "#607D8B", subs: []},
-                { id: "sog", label: "Sog'liq", icon: "💊", color: "#34D399", subs: [ { id: "apteka", label: "Apteka", icon: "🏥", items: []}, { id: "shifo", label: "Shifokor", icon: "🩺", items: []}, { id: "salon", label: "Go'zallik", icon: "✂️", items: []} ]}, 
-                { id: "boshqa", label: "Boshqa", icon: "📦", color: "#94A3B8", subs: [] }
-            ],
-            child_m: [
-                { id: "talim", label: "Maktab", icon: "📚", color: "#8B5CF6", subs: []}, { id: "kiyim", label: "Kiyim", icon: "👕", color: "#2196F3", subs: []}, { id: "texnika", label: "Gadjet", icon: "💻", color: "#607D8B", subs: []}, { id: "chontak", label: "Cho'ntak", icon: "💵", color: "#10B981", subs: []}, { id: "kngil", label: "Ko'ngiloch", icon: "🎢", color: "#FF6B6B", subs: []}
-            ],
-            child_f: [
-                { id: "talim", label: "Maktab", icon: "📚", color: "#8B5CF6", subs: []}, { id: "kiyim", label: "Kiyim", icon: "👗", color: "#E91E63", subs: []}, { id: "kosm", label: "Go'zallik", icon: "💅", color: "#F48FB1", subs: []}, { id: "chontak", label: "Cho'ntak", icon: "💵", color: "#10B981", subs: []}, { id: "kngil", label: "Kafe/Dugona", icon: "🍕", color: "#FF6B6B", subs: []}
-            ],
-            home: [
-                { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B", subs: [ { id: "bozor", label: "Bozor", icon: "⚖️", items: [ {id:"g1", label:"Go'sht", icon:"🥩"}, {id:"m1", label:"Sabzavot", icon:"🍅"}, {id:"b1", label:"Baqqollik", icon:"🍚"} ]}, { id: "super", label: "Market", icon: "🏪", items: [ {id:"s1", label:"Sut/Tuxum", icon:"🥛"}, {id:"n1", label:"Non/Shirin", icon:"🍞"} ]} ]},
-                { id: "uy", label: "Uy/Xo'jalik", icon: "🏠", color: "#FBBF24", subs: [ { id: "kom", label: "Kommunal", icon: "🧾", items: [ {id:"svet", label:"Svet", icon:"⚡"}, {id:"gaz", label:"Gaz", icon:"🔥"}, {id:"suv", label:"Suv", icon:"💧"}, {id:"mus", label:"Musor", icon:"🧹"} ]}, { id: "xoja", label: "Xo'jalik", icon: "🧽", items: []} ]}
-            ]
-        };
-
+        const CATS_DATA = { general: [], child_m: [], child_f: [], home: [] };
         const INC_SOURCES = [ { label: "Oylik maosh", icon: "💼" }, { label: "IMSOA foyda", icon: "💰" }, { label: "Qo'shimcha", icon: "🎁" } ];
         const OY_NOMLARI = ["Yanvar","Fevral","Mart","Aprel","May","Iyun","Iyul","Avgust","Sentabr","Oktabr","Noyabr","Dekabr"];
 
         // ==========================================
         // 2. STATE MANAGEMENT & ARCHIVE
         // ==========================================
-        let state = { profiles: [], txs: [], incs: [], debts: [], sched: [], plan: [], deps: [] };
-        let showArch = { plan: false, sched: false, debt: false, dep: false }; // Arxivni ko'rsatish/yashirish holati
+        let state = { profiles: [], txs: [], incs: [], debts: [], sched: [], plan: [], deps: [], credits: [] };
+        let showArch = { plan: false, sched: false, debt: false, dep: false, credit: false };
 
         let curProf = "general", curTab = "home", addMode = "expense";
         let amtStr = "", actMainCat = null, actSubCat = null;
-        let debtType = "take"; let buyPlanId = null; let curDepId = null;
+        let debtType = "take"; let buyPlanId = null; let curDepId = null; let curCreditId = null;
         let sessionData = []; let tgUser = "Siz";
+        let confirmAction = null; // Tasdiqlangach bajariladigan funksiya
 
         try { if (window.Telegram?.WebApp?.initDataUnsafe?.user) tgUser = window.Telegram.WebApp.initDataUnsafe.user.first_name; } catch(e) {}
 
@@ -468,57 +477,65 @@
             const p = el(panelId), h = el(headerId);
             if(p && h) { p.classList.toggle('hidden'); h.classList.toggle('open'); }
         };
-        
-        window.toggleArch = (type) => { 
-            showArch[type] = !showArch[type]; 
-            if(type === 'plan') renderPlanned(); 
-            else if(type === 'sched') renderSchedSet(); 
-            else render(); 
-        };
-
+        window.toggleArch = (type) => { showArch[type] = !showArch[type]; render(); };
         const formatM = n => new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
         const toast = (msg, err=false) => { const t = el("toast-msg"); if(t){ t.innerText=msg; t.style.background=err?"var(--danger)":"var(--success)"; t.style.display="block"; setTimeout(()=>t.style.display="none", 2500); } };
 
         function init() {
-            const raw = localStorage.getItem("xarajat_pro_v3");
+            const raw = localStorage.getItem("xarajat_pro_v4");
             if (raw) { try { state = JSON.parse(raw); } catch(e) {} }
             if (!state.profiles || !state.profiles.length) state.profiles = [ { id: "general", name: "Umumiy", icon: "🏠", age: null, role: "parent_m" }, { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", age: null, role: "home" } ];
-            ['txs','incs','debts','sched','plan','deps'].forEach(k => { if(!state[k]) state[k] = []; });
+            ['txs','incs','debts','sched','plan','deps','credits'].forEach(k => { if(!state[k]) state[k] = []; });
             
+            buildDetailedCategories(); // PLAN_TAGS ni CATS_DATA ga o'tkazish
+
             const t = new Date().toISOString().slice(0,10);
             setVal("rep-from", t); setVal("rep-to", t);
-            setVal("debt-start", t); setVal("dep-date", t);
+            setVal("debt-start", t); setVal("dep-date", t); setVal("credit-date", t);
             
             renderSidebar(); updatePlanCats(); render();
         }
-        function save() { localStorage.setItem("xarajat_pro_v3", JSON.stringify(state)); render(); }
+        function save() { localStorage.setItem("xarajat_pro_v4", JSON.stringify(state)); render(); }
 
-        // ==========================================
-        // 3. UI & MODALS
-        // ==========================================
-        window.toggleSidebar = () => {
-            const m = el("sidebar-menu"), o = el("sidebar-overlay");
-            if (m.classList.contains("open")) { m.classList.remove("open"); o.style.display="none"; } 
-            else { m.classList.add("open"); o.style.display="block"; }
-        };
-        
-        function renderSidebar() {
-            let h = "";
-            state.profiles.forEach(p => {
-                h += `<div class="sidebar-item ${p.id === curProf ? 'active' : ''}" onclick="selectProfile('${p.id}')">
-                    <div class="sidebar-avatar">${p.icon}</div><div>${p.name}</div>
-                </div>`;
+        // MUKAMMAL TOIFALAR (PLAN_TAGS ni avtomatik o'qiydi)
+        function buildDetailedCategories() {
+            const icons = { "Oziq-ovqat":"🛒", "Xo'jalik/Uy":"🏠", "Kiyim":"👕", "Ta'lim":"📚", "Avto":"🚗", "O'yinchoq":"🧸" };
+            const colors = { "Oziq-ovqat":"#FF6B6B", "Xo'jalik/Uy":"#FBBF24", "Kiyim":"#8B5CF6", "Ta'lim":"#2196F3", "Avto":"#607D8B", "O'yinchoq":"#34D399" };
+            
+            let gen = [];
+            Object.keys(PLAN_TAGS).forEach(catName => {
+                let catItem = { id: 'c_'+catName, label: catName, icon: icons[catName]||"📦", color: colors[catName]||"#94A3B8", subs: [] };
+                Object.keys(PLAN_TAGS[catName]).forEach(subName => {
+                    let items = PLAN_TAGS[catName][subName].map(i => {
+                        let iconMatch = i.match(/^(\p{Emoji})/u);
+                        return { id: 'i_'+Math.random(), label: i.replace(/^(\p{Emoji})\s*/u, '').trim(), icon: iconMatch?iconMatch[1]:"▪️" };
+                    });
+                    catItem.subs.push({ id: 's_'+subName, label: subName, icon: "📂", items: items });
+                });
+                gen.push(catItem);
             });
-            h += `<div class="sidebar-item" onclick="openModal('modal-profile')" style="border:1px dashed var(--border-color); justify-content:center; opacity:0.8; margin-top:15px;"><div>➕ Yangi qo'shish</div></div>`;
-            setHtml("sidebar-profiles-list", h);
-            const p = state.profiles.find(x => x.id === curProf); setTxt("current-profile-name", p ? p.name : "Umumiy");
+            gen.push({ id: "boshqa", label: "Boshqa Chiqimlar", icon: "📦", color: "#94A3B8", subs: [] });
+            CATS_DATA.general = gen; CATS_DATA.home = gen; CATS_DATA.child_m = gen; CATS_DATA.child_f = gen;
         }
 
-        window.selectProfile = id => { curProf = id; actMainCat = null; actSubCat = null; toggleSidebar(); renderSidebar(); checkAccess(); updatePlanCats(); render(); };
+        // ==========================================
+        // 3. UI & MODALS & TASDIQLASH (YOPISH)
+        // ==========================================
         window.openModal = id => { el(id).style.display = "flex"; };
         window.closeModal = id => { el(id).style.display = "none"; };
         window.closeModalOutside = (e, id) => { if(e.target.id === id) closeModal(id); };
 
+        window.toggleSidebar = () => {
+            const m = el("sidebar-menu"), o = el("sidebar-overlay");
+            if (m.classList.contains("open")) { m.classList.remove("open"); o.style.display="none"; } else { m.classList.add("open"); o.style.display="block"; }
+        };
+        function renderSidebar() {
+            let h = state.profiles.map(p => `<div class="sidebar-item ${p.id === curProf ? 'active' : ''}" onclick="selectProfile('${p.id}')"><div class="sidebar-avatar">${p.icon}</div><div>${p.name}</div></div>`).join("");
+            h += `<div class="sidebar-item" onclick="openModal('modal-profile')" style="border:1px dashed var(--border-color); justify-content:center; opacity:0.8; margin-top:15px;"><div>➕ Yangi qo'shish</div></div>`;
+            setHtml("sidebar-profiles-list", h);
+            const p = state.profiles.find(x => x.id === curProf); setTxt("current-profile-name", p ? p.name : "Umumiy");
+        }
+        window.selectProfile = id => { curProf = id; actMainCat = null; actSubCat = null; toggleSidebar(); renderSidebar(); checkAccess(); updatePlanCats(); render(); };
         window.saveNewProfile = () => {
             const n = val("prof-name").trim(), a = parseInt(val("prof-age")), r = val("prof-role");
             let em = val("prof-emoji").trim(); if(!em) em = r.endsWith('_f') ? "👧" : "👦";
@@ -526,30 +543,27 @@
             state.profiles.push({ id: "p_"+Date.now(), name: n, age: isNaN(a)?null:a, role: r, icon: em });
             closeModal('modal-profile'); setVal("prof-name",""); setVal("prof-age",""); setVal("prof-emoji",""); save(); renderSidebar(); toast("Qo'shildi!");
         };
-
         function checkAccess() {
-            const p = state.profiles.find(x => x.id === curProf);
-            const isChild = p && p.age !== null && p.age < 16 && p.id !== "general" && p.id !== "home_profile";
-            
-            if(isChild) {
-                hide("nav-other"); hide("mode-inc"); hide("rep-inc-card"); hide("user-stats-container");
-                if(curTab === "other") switchTab("home");
-                if(addMode !== "expense") setAddMode("expense");
-            } else {
-                show("nav-other"); show("mode-inc"); show("rep-inc-card"); show("user-stats-container");
-            }
+            const p = state.profiles.find(x => x.id === curProf); const isChild = p && p.age !== null && p.age < 16 && p.id !== "general" && p.id !== "home_profile";
+            if(isChild) { hide("nav-other"); hide("mode-inc"); hide("rep-inc-card"); hide("user-stats-container"); if(curTab === "other") switchTab("home"); if(addMode !== "expense") setAddMode("expense"); } 
+            else { show("nav-other"); show("mode-inc"); show("rep-inc-card"); show("user-stats-container"); }
         }
-
         window.switchTab = id => {
-            curTab = id; 
-            document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
-            if(el("nav-"+id)) el("nav-"+id).classList.add("active");
-            
-            ["home", "add", "other", "report"].forEach(t => { 
-                const e = el("tab-"+t); 
-                if(e) { if(t===id) e.classList.remove('hidden'); else e.classList.add('hidden'); }
-            });
+            curTab = id; document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active")); if(el("nav-"+id)) el("nav-"+id).classList.add("active");
+            ["home", "add", "other", "report"].forEach(t => { const e = el("tab-"+t); if(e) { if(t===id) e.classList.remove('hidden'); else e.classList.add('hidden'); } });
             if(id === 'add') checkAccess(); if(id === 'home') updatePlanCats(); render();
+        };
+
+        // Yopishni tasdiqlash mantig'i
+        window.initCloseAction = (actionFunc) => {
+            confirmAction = actionFunc;
+            setVal("confirm-code", "");
+            openModal("modal-confirm");
+        };
+        window.executeConfirm = () => {
+            if(val("confirm-code").trim() !== "YOPISH") return toast("Xato: YOPISH deb yozing!", true);
+            if(confirmAction) confirmAction();
+            closeModal("modal-confirm"); confirmAction = null;
         };
 
         // ==========================================
@@ -557,121 +571,61 @@
         // ==========================================
         window.updatePlanCats = () => {
             const cEl = el("smart-plan-cat"); if(!cEl) return;
-            const p = state.profiles.find(x=>x.id===curProf);
-            const isChild = p && p.age !== null && p.age < 16 && p.id !== "general" && p.id !== "home_profile";
+            const p = state.profiles.find(x=>x.id===curProf); const isChild = p && p.age !== null && p.age < 16 && p.id !== "general" && p.id !== "home_profile";
             let c = isChild ? ["Kiyim", "Ta'lim", "O'yinchoq"] : (p?.id === "home_profile" ? ["Oziq-ovqat", "Xo'jalik/Uy"] : Object.keys(PLAN_TAGS));
-            cEl.innerHTML = c.map(x => `<option value="${x}">${x}</option>`).join("");
-            updateSmartTags();
+            cEl.innerHTML = c.map(x => `<option value="${x}">${x}</option>`).join(""); updateSmartTags();
         };
-        window.updateSmartTags = () => {
-            const cat = val("smart-plan-cat"), subEl = el("smart-plan-subcat");
-            if(!cat || !subEl) return;
-            subEl.innerHTML = "";
-            if (PLAN_TAGS[cat]) { show("smart-plan-subcat"); Object.keys(PLAN_TAGS[cat]).forEach(s => { subEl.innerHTML += `<option value="${s}">${s}</option>`; }); } 
-            else hide("smart-plan-subcat");
-            renderSmartTags();
-        };
-        window.renderSmartTags = () => {
-            const c = val("smart-plan-cat"), s = val("smart-plan-subcat"), cont = el("smart-tags-container");
-            cont.innerHTML = "";
-            if(PLAN_TAGS[c] && PLAN_TAGS[c][s]) PLAN_TAGS[c][s].forEach(t => { cont.innerHTML += `<div class="smart-tag" onclick="quickAddPlan('${t}')">${t}</div>`; });
-            else cont.innerHTML = "<span style='color:var(--text-muted); font-size:12px;'>Shablon yo'q.</span>";
-        };
-        window.quickAddPlan = t => {
-            const ni = el("plan-name"), qi = el("plan-qty");
-            ni.value = t; qi.value = ""; 
-            ni.style.borderColor = "var(--success)"; setTimeout(() => ni.style.borderColor = "var(--border-color)", 600);
-            qi.focus(); toast("Endi hajmi yoki sonini yozing");
-        };
-        window.addPlannedItemManual = () => {
-            const n = val("plan-name").trim(), q = val("plan-qty").trim(), c = val("smart-plan-cat"), m = val("plan-market"), p = parseFloat(val("plan-price"))||0;
-            if(!n) return toast("Nomini yozing!", true);
-            state.plan.push({ id: Date.now(), text: q ? `${n} (${q})` : n, cat: c, market: m, price: p, prof: curProf, skip: null, archived: false });
-            setVal("plan-name",""); setVal("plan-qty",""); save(); toast("Qo'shildi!"); renderPlanned();
-        };
-        window.toggleSkipPlan = id => { const t = new Date().toISOString().slice(0,10); const i = state.plan.find(x=>x.id==id); if(i) { i.skip = i.skip===t ? null : t; save(); renderPlanned(); } };
+        window.updateSmartTags = () => { const cat = val("smart-plan-cat"), subEl = el("smart-plan-subcat"); if(!cat || !subEl) return; subEl.innerHTML = ""; if (PLAN_TAGS[cat]) { show("smart-plan-subcat"); Object.keys(PLAN_TAGS[cat]).forEach(s => { subEl.innerHTML += `<option value="${s}">${s}</option>`; }); } else hide("smart-plan-subcat"); renderSmartTags(); };
+        window.renderSmartTags = () => { const c = val("smart-plan-cat"), s = val("smart-plan-subcat"), cont = el("smart-tags-container"); cont.innerHTML = ""; if(PLAN_TAGS[c] && PLAN_TAGS[c][s]) PLAN_TAGS[c][s].forEach(t => { cont.innerHTML += `<div class="smart-tag" onclick="quickAddPlan('${t}')">${t}</div>`; }); else cont.innerHTML = "<span style='color:var(--text-muted); font-size:12px;'>Shablon yo'q.</span>"; };
+        window.quickAddPlan = t => { const ni = el("plan-name"), qi = el("plan-qty"); ni.value = t; qi.value = ""; ni.style.borderColor = "var(--success)"; setTimeout(() => ni.style.borderColor = "var(--border-color)", 600); qi.focus(); toast("Hajmi/sonini yozing"); };
+        window.addPlannedItemManual = () => { const n = val("plan-name").trim(), q = val("plan-qty").trim(), c = val("smart-plan-cat"), m = val("plan-market"), p = parseFloat(val("plan-price"))||0; if(!n) return toast("Nomi kerak!", true); state.plan.push({ id: Date.now(), text: q ? `${n} (${q})` : n, cat: c, market: m, price: p, prof: curProf, skip: null, archived: false }); setVal("plan-name",""); setVal("plan-qty",""); save(); toast("Qo'shildi!"); };
+        window.toggleSkipPlan = id => { const t = new Date().toISOString().slice(0,10); const i = state.plan.find(x=>x.id==id); if(i) { i.skip = i.skip===t ? null : t; save(); } };
         window.openBuyModal = id => { const i = state.plan.find(x=>x.id==id); if(!i) return; buyPlanId = id; setTxt("buy-item-name", `✅ Olinyapti: ${i.text}`); setVal("buy-price", i.price||""); openModal("modal-buy"); };
-        
         window.confirmBuyItem = () => {
-            const p = parseFloat(val("buy-price")); if(!p || p<=0) return toast("Narx xato!", true);
-            const i = state.plan.find(x=>x.id==buyPlanId); if(!i) return;
-            const d = new Date();
+            const p = parseFloat(val("buy-price")); if(!p || p<=0) return toast("Narx xato!", true); const i = state.plan.find(x=>x.id==buyPlanId); if(!i) return; const d = new Date();
             state.txs.unshift({ id: Date.now(), amount: p, desc: i.text, cat: i.cat, subCat: i.market, date: d.toISOString().slice(0,10), time: d.toLocaleTimeString("uz-UZ", {hour:'2-digit', minute:'2-digit'}), user: tgUser, prof: i.prof });
-            
-            // O'chirish o'rniga ARXIVGA o'tkazish
-            i.archived = true; i.buyPrice = p; i.buyDate = d.toISOString().slice(0,10);
-            
-            closeModal("modal-buy"); save(); toast("Xarajatga o'tdi ✅"); renderPlanned();
+            i.archived = true; i.buyPrice = p; i.buyDate = d.toISOString().slice(0,10); closeModal("modal-buy"); save(); toast("Xarajatga o'tdi ✅");
         };
-        window.permDelPlan = id => { state.plan = state.plan.filter(x=>x.id!=id); save(); renderPlanned(); toast("O'chirildi!"); };
+        window.permDelPlan = id => { state.plan = state.plan.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
 
         function renderPlanned() {
             const fc = val("filter-cat"), fm = val("filter-market"), t = new Date().toISOString().slice(0,10);
             let p = state.plan.filter(x => x.prof === curProf || curProf === "general" || (curProf === "home_profile" && x.prof === "home_profile"));
             if(fc && fc!=="all") p = p.filter(x=>x.cat===fc); if(fm && fm!=="all") p = p.filter(x=>x.market===fm);
-            
-            let active = p.filter(x => !x.archived);
-            let arch = p.filter(x => x.archived);
+            let active = p.filter(x => !x.archived), arch = p.filter(x => x.archived);
 
-            let h = active.map(x => {
-                const sk = x.skip === t;
-                return `<div class="plan-item ${sk?'skipped':''}">
-                    <div class="custom-checkbox ${!sk?'checked':''}" onclick="toggleSkipPlan(${x.id})"></div>
-                    <div style="flex:1;">
-                        <div style="font-weight:bold; color:var(--primary); font-size:15px; text-decoration:${sk?'line-through':'none'};">${x.text}</div>
-                        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">📍 ${x.market} | 🏷️ ${x.cat}</div>
-                    </div>
-                    <button onclick="openBuyModal(${x.id})" class="btn-primary btn-success" style="width:auto; padding:10px 14px; font-size:13px;" ${sk?'disabled':''}>Olish</button>
-                </div>`;
-            }).join("");
-
-            let archBtn = `<div class="arch-toggle-btn" onclick="toggleArch('plan')">📂 Olinganlar arxivi ${showArch.plan?'(Yashirish)':'(Ko\'rish)'} (${arch.length})</div>`;
-            let archHtml = "";
-            if(showArch.plan && arch.length > 0) {
-                archHtml = `<div style="margin-top:10px; opacity:0.8;">` + arch.map(x => `<div class="plan-item" style="border-color:var(--border-color); filter: grayscale(100%);"><div style="flex:1;"><div style="font-weight:bold; color:var(--text-muted); font-size:15px; text-decoration:line-through;">${x.text}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;">✅ Olingan: ${x.buyDate||''} | ${formatM(x.buyPrice||0)}</div></div><button onclick="permDelPlan(${x.id})" style="background:transparent; border:none; color:var(--danger); font-size:18px; cursor:pointer;">🗑️</button></div>`).join("") + `</div>`;
-            }
-
-            setHtml("planned-list-container", (h || "<div style='color:var(--text-muted); font-size:13px; text-align:center;'>Ro'yxat bo'sh.</div>") + archBtn + archHtml);
+            let h = active.map(x => { const sk = x.skip === t; return `<div class="plan-item ${sk?'skipped':''}"><div class="custom-checkbox ${!sk?'checked':''}" onclick="toggleSkipPlan(${x.id})"></div><div style="flex:1;"><div style="font-weight:bold; color:var(--primary); font-size:15px; text-decoration:${sk?'line-through':'none'};">${x.text}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;">📍 ${x.market} | 🏷️ ${x.cat}</div></div><button onclick="openBuyModal(${x.id})" class="btn-primary btn-success" style="width:auto; padding:10px 14px; font-size:13px;" ${sk?'disabled':''}>Olish</button></div>`; }).join("");
+            let archHtml = showArch.plan && arch.length ? `<div style="margin-top:10px; opacity:0.8;">` + arch.map(x => `<div class="plan-item" style="border-color:var(--border-color); filter: grayscale(100%);"><div style="flex:1;"><div style="font-weight:bold; color:var(--text-muted); font-size:15px; text-decoration:line-through;">${x.text}</div><div style="font-size:12px; color:var(--text-muted); margin-top:4px;">✅ ${x.buyDate||''} | ${formatM(x.buyPrice||0)}</div></div><button onclick="permDelPlan(${x.id})" style="background:transparent; border:none; color:var(--danger); font-size:18px; cursor:pointer;">🗑️</button></div>`).join("") + `</div>` : "";
+            setHtml("planned-list-container", (h || "<div style='color:var(--text-muted); font-size:13px; text-align:center;'>Ro'yxat bo'sh.</div>") + `<div class="arch-toggle-btn" onclick="toggleArch('plan')">📂 Arxiv ${showArch.plan?'(Yashirish)':'(Ko\'rish)'} (${arch.length})</div>` + archHtml);
         }
 
         // ==========================================
-        // 5. SCHEDULED (REJALI TO'LOVLAR)
+        // 5. SCHEDULED (REJALI)
         // ==========================================
         const getWD = (y,m) => { let d=new Date(y,m,0).getDate(), w=0; for(let i=1;i<=d;i++) { let day=new Date(y,m-1,i).getDay(); if(day!==0&&day!==6) w++; } return w; };
         window.addScheduled = () => {
             const n = val("sched-name").trim(), d = parseInt(val("sched-day")), a = parseFloat(val("sched-amount")), c = val("sched-cat");
-            if(!n||!d||d<1||d>31||!a) return toast("Xato!", true);
-            const tm = new Date().getFullYear() + "-" + String(new Date().getMonth()+1).padStart(2,'0');
-            state.sched.push({ id: Date.now(), label: n, day: d, amt: a, cat: c, tMonth: tm, miss: 0, prof: curProf, archived: false });
+            if(!n||!d||d<1||d>31||!a) return toast("Xato!", true); const tm = new Date().getFullYear() + "-" + String(new Date().getMonth()+1).padStart(2,'0');
+            state.sched.push({ id: Date.now(), label: n, day: d, amt: a, cat: c, tMonth: tm, miss: 0, prof: curProf, archived: false, paidTotal: 0 });
             setVal("sched-name",""); setVal("sched-day",""); setVal("sched-amount",""); toggleWidget("sched-setup-panel", "sched-header"); save(); toast("Qo'shildi!");
         };
-        
-        window.delSched = id => { const s=state.sched.find(x=>x.id==id); if(s) { s.archived=true; save(); renderSchedSet(); render(); toast("Arxivlandi!"); } };
-        window.permDelSched = id => { state.sched=state.sched.filter(x=>x.id!=id); save(); renderSchedSet(); render(); toast("O'chirildi!"); };
-        window.updMiss = (id, v) => { const s = state.sched.find(x=>x.id==id); if(s) { s.miss = parseInt(v)||0; save(); render(); } };
-        
+        window.delSched = id => { initCloseAction(() => { const s=state.sched.find(x=>x.id==id); if(s) { s.archived=true; s.closeDate = new Date().toISOString().slice(0,10); save(); toast("Arxivlandi!"); } }); };
+        window.permDelSched = id => { state.sched=state.sched.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
+        window.updMiss = (id, v) => { const s = state.sched.find(x=>x.id==id); if(s) { s.miss = parseInt(v)||0; save(); } };
         window.paySched = id => {
             const s = state.sched.find(x=>x.id==id); if(!s) return;
             const actAmt = s.miss > 0 ? Math.max(0, Math.round(s.amt - ((s.amt / getWD(parseInt(s.tMonth.split('-')[0]), parseInt(s.tMonth.split('-')[1]))) * s.miss))) : s.amt;
-            const d = new Date();
-            state.txs.unshift({ id: Date.now(), amount: actAmt, desc: `${s.label} (${s.tMonth})`, cat: s.cat, subCat: "", date: d.toISOString().slice(0,10), time: d.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'}), user: tgUser, prof: s.prof });
-            let [y, m] = s.tMonth.split('-'); m = parseInt(m)+1; if(m>12){m=1;y=parseInt(y)+1;}
-            s.tMonth = `${y}-${m.toString().padStart(2,'0')}`; s.miss = 0; save(); toast("To'landi ✅"); render();
+            const d = new Date(); state.txs.unshift({ id: Date.now(), amount: actAmt, desc: `${s.label} (${s.tMonth})`, cat: s.cat, subCat: "", date: d.toISOString().slice(0,10), time: d.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'}), user: tgUser, prof: s.prof });
+            s.paidTotal = (s.paidTotal||0) + actAmt;
+            let [y, m] = s.tMonth.split('-'); m = parseInt(m)+1; if(m>12){m=1;y=parseInt(y)+1;} s.tMonth = `${y}-${m.toString().padStart(2,'0')}`; s.miss = 0; save(); toast("To'landi ✅");
         };
 
         function renderSchedSet() {
             let p = state.sched.filter(s=>s.prof===curProf || curProf==="general");
-            let active = p.filter(s=>!s.archived);
-            let arch = p.filter(s=>s.archived);
-
+            let active = p.filter(s=>!s.archived), arch = p.filter(s=>s.archived);
             let h = active.map(s => `<div class="list-item"><span><b>${s.label}</b> (${s.day}-sana)</span><button onclick="delSched(${s.id})" class="delete-btn">✕</button></div>`).join("");
-            
-            let archBtn = `<div class="arch-toggle-btn" onclick="toggleArch('sched')">📂 Arxiv ${showArch.sched?'(Yashirish)':'(Ko\'rish)'} (${arch.length})</div>`;
-            let archHtml = "";
-            if(showArch.sched && arch.length>0) {
-                archHtml = `<div style="margin-top:10px; opacity:0.8;">` + arch.map(s => `<div class="list-item" style="border-color:var(--border-color);"><span style="text-decoration:line-through; color:var(--text-muted);"><b>${s.label}</b> (${s.day}-sana)</span><button onclick="permDelSched(${s.id})" class="delete-btn">🗑️</button></div>`).join("") + `</div>`;
-            }
-            setHtml("sched-edit-list", h + archBtn + archHtml);
+            let archHtml = showArch.sched && arch.length ? `<div style="margin-top:10px; opacity:0.8;">` + arch.map(s => `<div class="list-item" style="border-color:var(--border-color); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%;"><span style="text-decoration:line-through; color:var(--text-muted);"><b>${s.label}</b></span><button onclick="permDelSched(${s.id})" class="delete-btn" style="padding:0;">🗑️</button></div><div class="archive-info-grid"><div><span>Yopilgan sana:</span><b>${s.closeDate||''}</b></div><div><span>Jami to'langan:</span><b style="color:var(--danger);">${formatM(s.paidTotal||0)}</b></div></div></div>`).join("") + `</div>` : "";
+            setHtml("sched-edit-list", h + `<div class="arch-toggle-btn" onclick="toggleArch('sched')">📂 Arxiv ${showArch.sched?'(Yashirish)':'(Ko\'rish)'} (${arch.length})</div>` + archHtml);
         }
 
         // ==========================================
@@ -680,191 +634,224 @@
         window.pressNum = v => { if (v==="C") amtStr=""; else if(v==="⌫") amtStr=amtStr.slice(0,-1); else if(amtStr.length<10) amtStr+=v; setTxt("num-display", amtStr ? formatM(parseInt(amtStr)).replace(" so'm","") : "0"); };
         window.setAddMode = m => { addMode = m; actMainCat = null; actSubCat = null; el("mode-exp").style.background = m==="expense" ? "var(--danger)" : "var(--bg-card)"; el("mode-exp").style.borderColor = m==="expense" ? "var(--danger)" : "var(--border-color)"; el("mode-inc").style.background = m==="income" ? "var(--success)" : "var(--bg-card)"; el("mode-inc").style.borderColor = m==="income" ? "var(--success)" : "var(--border-color)"; setHtml("stay-hint",""); renderAddCats(); };
         
-        function getCats() {
-            const p = state.profiles.find(x=>x.id===curProf);
-            if(p && p.role === "home") return CATS_DATA.home;
-            if(p && p.role === "child_m") return CATS_DATA.child_m;
-            if(p && p.role === "child_f") return CATS_DATA.child_f;
-            return CATS_DATA.general;
-        }
+        function getCats() { return CATS_DATA[curProf === "home_profile" ? "home" : (state.profiles.find(x=>x.id===curProf)?.role||"general")] || CATS_DATA.general; }
 
         function renderAddCats() {
             const cont = el("cats-container"), head = el("cats-header-container"); if(!cont || !head) return;
-            if (addMode === "income") { 
-                head.innerHTML = "";
-                cont.innerHTML = `<div class="cat-grid">${INC_SOURCES.map(s => `<button class="cat-btn" onclick="saveTx('${s.label}')"><span style="font-size:24px;">${s.icon}</span><span>${s.label}</span></button>`).join("")}</div>`; 
-                return; 
-            }
+            if (addMode === "income") { head.innerHTML = ""; cont.innerHTML = `<div class="cat-grid">${INC_SOURCES.map(s => `<button class="cat-btn" onclick="saveTx('${s.label}')"><span style="font-size:24px;">${s.icon}</span><span>${s.label}</span></button>`).join("")}</div>`; return; }
+            
             const cats = getCats();
             if (actSubCat) {
                 head.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border-color);"><span style="font-size:12px; color:var(--text-muted);">${actMainCat.label} <b style="color:var(--primary); margin:0 4px;">›</b> <b style="color:#fff">${actSubCat.label}</b></span><button onclick="backCat()" style="background:transparent; color:var(--primary); border:none; font-weight:bold; font-size:13px; cursor:pointer;">⬅ Orqaga</button></div>`;
-                let h = `<div class="cat-grid">`;
-                actSubCat.items.forEach(i => { h += `<button class="cat-btn" style="background:rgba(59, 130, 246, 0.2); border-color:var(--primary);" onclick="saveTx('${i.label}')"><span style="font-size:26px;">${i.icon}</span><span>${i.label}</span></button>`; });
-                cont.innerHTML = h + `</div>`;
+                cont.innerHTML = `<div class="cat-grid">` + actSubCat.items.map(i => `<button class="cat-btn" style="background:rgba(59, 130, 246, 0.2); border-color:var(--primary);" onclick="saveTx('${i.label}', true)"><span style="font-size:26px;">${i.icon}</span><span>${i.label}</span></button>`).join("") + `</div>`;
             } else if (actMainCat && actMainCat.subs && actMainCat.subs.length > 0) {
                 head.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border-color);"><span style="font-size:13px; color:var(--text-muted);">Rukun: <b style="color:#fff">${actMainCat.label}</b></span><button onclick="backCat()" style="background:transparent; color:var(--primary); border:none; font-weight:bold; font-size:13px; cursor:pointer;">⬅ Orqaga</button></div>`;
-                let h = `<div class="cat-grid">`;
-                actMainCat.subs.forEach(s => { const f = s.items?.length>0; h += `<button class="cat-btn" style="background:var(--bg-card);" onclick="${f ? `clickSubCat('${s.id}')` : `saveTx('${s.label}')`}"><span style="font-size:26px;">${s.icon}</span><span>${s.label} ${f?'📂':''}</span></button>`; });
-                cont.innerHTML = h + `<button class="cat-btn" style="background:var(--bg-card); border:1px dashed var(--text-muted);" onclick="saveTx('${actMainCat.label}')"><span style="font-size:26px;">⚙️</span><span>Umumiy</span></button></div>`;
+                cont.innerHTML = `<div class="cat-grid">` + actMainCat.subs.map(s => { const f = s.items?.length>0; return `<button class="cat-btn" style="background:var(--bg-card);" onclick="${f ? `clickSubCat('${s.id}')` : `saveTx('${s.label}')`}"><span style="font-size:26px;">${s.icon}</span><span>${s.label} ${f?'📂':''}</span></button>`; }).join("") + `<button class="cat-btn" style="background:var(--bg-card); border:1px dashed var(--text-muted);" onclick="saveTx('${actMainCat.label}')"><span style="font-size:26px;">⚙️</span><span>Umumiy</span></button></div>`;
             } else {
                 head.innerHTML = "";
                 cont.innerHTML = `<div class="cat-grid">${cats.map(c => `<button class="cat-btn" style="background:${c.color||'var(--bg-card)'}; border-color:${c.color||'var(--border-color)'};" onclick="clickMainCat('${c.id}')"><span style="font-size:26px;">${c.icon}</span><span>${c.label}</span></button>`).join("")}</div>`;
             }
         }
-
         window.clickMainCat = id => { const c = getCats().find(x=>x.id==id); if(c && c.subs?.length) { actMainCat = c; renderAddCats(); setHtml("stay-hint",""); } else if(c) saveTx(c.label); };
         window.clickSubCat = id => { const s = actMainCat.subs.find(x=>x.id==id); if(s && s.items?.length) { actSubCat = s; renderAddCats(); setHtml("stay-hint",""); } else if(s) saveTx(s.label); };
         window.backCat = () => { if(actSubCat) actSubCat = null; else actMainCat = null; setHtml("stay-hint",""); renderAddCats(); };
 
-        window.saveTx = l => {
+        window.saveTx = (l, isDeepItem=false) => {
             const a = parseFloat(amtStr); if(!a || a<=0) return toast("Summani yozing!", true);
-            const d = new Date(), de = el("add-desc"), desc = de?.value.trim() || (l==="Oylik maosh" ? OY_NOMLARI[d.getMonth()]+" oyligi" : l);
-            const i = { id: Date.now(), amount: a, desc: desc, cat: actMainCat?actMainCat.label:l, subCat: actSubCat?actMainCat.label+" ➔ "+l:l, date: d.toISOString().slice(0,10), time: d.toLocaleTimeString("uz-UZ",{hour:'2-digit',minute:'2-digit'}), user: tgUser, prof: curProf };
+            const d = new Date(), de = el("add-desc");
+            let realCat = actMainCat ? actMainCat.label : l;
+            let realSubCat = l;
+            if(isDeepItem && actSubCat) realSubCat = `${actSubCat.label} ➔ ${l}`;
+            else if(actMainCat) realSubCat = l;
+
+            const i = { id: Date.now(), amount: a, desc: de?.value.trim() || l, cat: realCat, subCat: realSubCat, date: d.toISOString().slice(0,10), time: d.toLocaleTimeString("uz-UZ",{hour:'2-digit',minute:'2-digit'}), user: tgUser, prof: curProf };
             if(addMode==="expense") state.txs.unshift(i); else state.incs.unshift(i);
             sessionData.push({ amount: a, category: `${i.desc} [${tgUser}]`, type: addMode==='expense'?'minus':'plus' });
             amtStr = ""; if(de) de.value = ""; setTxt("num-display", "0"); save();
             if(actSubCat||actMainCat) { setHtml("stay-hint", `✅ Oxirgi: <b>${formatM(a)}</b>. Yana kiriting!`); renderAddCats(); } else setHtml("stay-hint", "");
             toast("Saqlandi!");
         };
-        window.delItem = (type, id) => { if(type==='tx') state.txs = state.txs.filter(x=>x.id!=id); else state.incs = state.incs.filter(x=>x.id!=id); save(); render(); toast("O'chirildi!"); };
+        window.delItem = (type, id) => { if(type==='tx') state.txs = state.txs.filter(x=>x.id!=id); else state.incs = state.incs.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
 
         // ==========================================
-        // 7. OTHER TAB (BOSHQA: QARZ, OMONAT)
+        // 7. OTHER TAB (OMONAT, KREDIT, QARZ)
         // ==========================================
         window.switchOther = sec => {
-            el("other-mode-dep").style.background = sec==="dep" ? "var(--primary)" : "var(--bg-card)";
-            el("other-mode-dep").style.borderColor = sec==="dep" ? "var(--primary)" : "var(--border-color)";
-            el("other-mode-debt").style.background = sec==="debt" ? "var(--primary)" : "var(--bg-card)";
-            el("other-mode-debt").style.borderColor = sec==="debt" ? "var(--primary)" : "var(--border-color)";
-            if(sec === "dep") { show("other-sec-dep"); hide("other-sec-debt"); } else { hide("other-sec-dep"); show("other-sec-debt"); }
+            ['dep','credit','debt'].forEach(s => {
+                el(`other-mode-${s}`).style.background = sec===s ? "var(--primary)" : "var(--bg-card)";
+                el(`other-mode-${s}`).style.borderColor = sec===s ? "var(--primary)" : "var(--border-color)";
+                if(sec===s) show(`other-sec-${s}`); else hide(`other-sec-${s}`);
+            });
         };
 
-        window.openScheduleModal = id => {
-            const d = state.deps.find(x=>x.id==id); if(!d) return;
-            setTxt("schedule-info", `🏦 ${d.name}\nBoshlang'ich: ${formatM(d.amount)}\nShart: ${d.rate}% ${d.rateType==='annual'?'Yillik':'Oylik'} (${d.cap?'Kapitalizatsiya':'Oddiy'})`);
-            let html = "", currentBal = d.amount, mRate = d.rateType === 'annual' ? (d.rate/100)/12 : (d.rate/100), startDate = new Date(d.start), totalProfit = 0;
-            for(let i=1; i<=d.duration; i++) {
-                startDate.setMonth(startDate.getMonth() + 1); let monthStr = startDate.toISOString().slice(0,10);
-                let interest = d.cap ? (currentBal * mRate) : (d.amount * mRate);
-                totalProfit += interest; if(d.cap) currentBal += interest;
-                html += `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-color); font-size:13px;"><div><b style="color:var(--primary);">${i}-oy</b><div style="color:var(--text-muted); font-size:11px;">${monthStr}</div></div><div style="text-align:right;"><b style="color:var(--success);">+${formatM(interest)}</b><div style="color:var(--text-muted); font-size:11px;">Jami qoldiq: ${formatM(currentBal)}</div></div></div>`;
-            }
-            html += `<div style="text-align:right; font-weight:bold; color:var(--warning); margin-top:15px; font-size:15px;">Jami sof foyda: ${formatM(totalProfit)}</div>`;
-            setHtml("schedule-list", html); openModal("modal-dep-schedule");
-        };
-
+        // QARZ
         window.setDebtType = t => { debtType = t; el("debt-type-take").style.background = t==="take"?"var(--success)":"var(--bg-card)"; el("debt-type-give").style.background = t==="give"?"var(--danger)":"var(--bg-card)"; el("debt-type-take").style.borderColor = t==="take"?"var(--success)":"var(--border-color)"; el("debt-type-give").style.borderColor = t==="give"?"var(--danger)":"var(--border-color)"; };
-        
         window.saveDebt = () => { 
             const n=val("debt-name").trim(), a=parseFloat(val("debt-amount")), s=val("debt-start"), e=val("debt-due"); 
             if(!n||!a) return toast("Ma'lumot kam!", true); 
             state.debts.unshift({id:Date.now(), name:n, amount:a, type:debtType, start:s, due:e, archived:false}); 
-            if(debtType==="take") state.txs.unshift({id:Date.now()+1, amount:a, desc:`Qarz berildi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:tgUser, prof:"general"}); 
-            else state.incs.unshift({id:Date.now()+1, amount:a, desc:`Qarz olindi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:tgUser, prof:"general"}); 
+            if(debtType==="take") state.txs.unshift({id:Date.now()+1, amount:a, desc:`Qarz berildi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:tgUser, prof:"general"}); else state.incs.unshift({id:Date.now()+1, amount:a, desc:`Qarz olindi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:tgUser, prof:"general"}); 
             setVal("debt-name",""); setVal("debt-amount",""); toggleWidget('debt-form', 'debt-header'); save(); toast("Saqlandi!"); 
         };
-        
-        window.closeDebt = id => { 
-            const d=state.debts.find(x=>x.id==id); if(!d) return; const t=new Date().toISOString().slice(0,10); 
-            if(d.type==="take") state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz qaytdi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:tgUser, prof:"general"}); 
-            else state.txs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz to'landi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:tgUser, prof:"general"}); 
-            d.archived = true; d.closeDate = t; save(); toast("Uzildi va Arxivlandi!"); 
+        window.closeDebt = id => {
+            initCloseAction(() => {
+                const d=state.debts.find(x=>x.id==id); if(!d) return; const t=new Date().toISOString().slice(0,10); 
+                if(d.type==="take") state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz qaytdi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:tgUser, prof:"general"}); else state.txs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz to'landi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:tgUser, prof:"general"}); 
+                d.archived = true; d.closeDate = t; save(); toast("Uzildi va Arxivlandi!");
+            });
         };
         window.permDelDebt = id => { state.debts=state.debts.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
         
+        // OMONAT
         window.saveDeposit = () => { 
             const n=val("dep-name").trim(), a=parseFloat(val("dep-amount")), s=val("dep-date"), d=parseInt(val("dep-duration")), r=parseFloat(val("dep-rate")), rt=val("dep-ratetype"), cap=el("dep-cap").checked;
             if(!n||!a||!s||!d||!r) return toast("Barcha maydonlarni to'ldiring!", true); 
-            state.deps.push({id:Date.now(), name:n, amount:a, start:s, duration:d, rate:r, rateType:rt, cap:cap, archived:false}); 
+            state.deps.push({id:Date.now(), name:n, amount:a, start:s, duration:d, rate:r, rateType:rt, cap:cap, archived:false, topups:0, profits:0, initAmt:a}); 
             state.txs.unshift({id:Date.now()+1, amount:a, desc:`Omonat: ${n}`, cat:"Bank", date:s, time:new Date().toLocaleTimeString("uz-UZ",{hour:'2-digit',minute:'2-digit'}), user:tgUser, prof:"general"}); 
             setVal("dep-name",""); setVal("dep-amount",""); setVal("dep-duration",""); setVal("dep-rate",""); toggleWidget('dep-form', 'dep-header'); save(); toast("Ochildi!"); 
         };
-        
         window.openTopupModal = id => { curDepId = id; const d=state.deps.find(x=>x.id==id); setTxt("topup-name", d.name); setVal("topup-amount", ""); openModal('modal-dep-topup'); };
         window.confirmTopup = () => {
-            const a = parseFloat(val("topup-amount")); if(!a||a<=0) return toast("Xato", true);
-            const dep = state.deps.find(x=>x.id==curDepId); if(!dep) return;
-            dep.amount += a; state.txs.unshift({id:Date.now(), amount:a, desc:`Omonat ustiga qo'shildi: ${dep.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"});
+            const a = parseFloat(val("topup-amount")); if(!a||a<=0) return toast("Xato", true); const dep = state.deps.find(x=>x.id==curDepId); if(!dep) return;
+            dep.amount += a; dep.topups = (dep.topups||0) + a;
+            state.txs.unshift({id:Date.now(), amount:a, desc:`Omonat qo'shildi: ${dep.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"});
             closeModal('modal-dep-topup'); save(); toast("Pul qo'shildi!");
         };
-
         window.openIntModal = id => { 
-            curDepId = id; const d=state.deps.find(x=>x.id==id); 
-            let est = d.rateType === 'annual' ? (d.amount * (d.rate/100) / 12) : (d.amount * (d.rate/100));
-            setTxt("interest-info", `${d.name} (${d.rate}% ${d.rateType==='annual'?'yillik':'oylik'}).\nKapitalizatsiya: ${d.cap?'HA (Ustiga qo\'shiladi)':'YO\'Q (Daromadga o\'tadi)'}`);
-            setVal("interest-amount", Math.round(est)); openModal('modal-dep-interest'); 
+            curDepId = id; const d=state.deps.find(x=>x.id==id); let est = d.rateType === 'annual' ? (d.amount * (d.rate/100) / 12) : (d.amount * (d.rate/100));
+            setTxt("interest-info", `${d.name} (${d.rate}% ${d.rateType==='annual'?'yillik':'oylik'}).\nKapitalizatsiya: ${d.cap?'HA (Qo\'shiladi)':'YO\'Q (Daromad)'}`); setVal("interest-amount", Math.round(est)); openModal('modal-dep-interest'); 
         };
         window.confirmInterest = () => { 
-            const a=parseFloat(val("interest-amount")); if(!a||a<=0) return toast("Xato!", true); 
-            const d=state.deps.find(x=>x.id==curDepId); if(!d) return; 
+            const a=parseFloat(val("interest-amount")); if(!a||a<=0) return toast("Xato!", true); const d=state.deps.find(x=>x.id==curDepId); if(!d) return; 
+            d.profits = (d.profits||0) + a;
             if(d.cap) { d.amount += a; } else { state.incs.unshift({id:Date.now(), amount:a, desc:`Foiz: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); }
             closeModal('modal-dep-interest'); save(); toast("Foiz hisoblandi!"); 
         };
+        window.openScheduleModal = id => {
+            const d = state.deps.find(x=>x.id==id); if(!d) return;
+            setTxt("schedule-title", "Omonat Grafigi");
+            setTxt("schedule-info", `🏦 ${d.name}\nBoshlang'ich: ${formatM(d.amount)}\nShart: ${d.rate}% ${d.rateType==='annual'?'Yillik':'Oylik'} (${d.cap?'Kapitalizatsiya':'Oddiy'})`);
+            let html = "", currentBal = d.amount, mRate = d.rateType === 'annual' ? (d.rate/100)/12 : (d.rate/100), startDate = new Date(d.start), totalProfit = 0;
+            for(let i=1; i<=d.duration; i++) {
+                startDate.setMonth(startDate.getMonth() + 1); let monthStr = startDate.toISOString().slice(0,10); let interest = d.cap ? (currentBal * mRate) : (d.amount * mRate); totalProfit += interest; if(d.cap) currentBal += interest;
+                html += `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-color); font-size:13px;"><div><b style="color:var(--primary);">${i}-oy</b><div style="color:var(--text-muted); font-size:11px;">${monthStr}</div></div><div style="text-align:right;"><b style="color:var(--success);">+${formatM(interest)}</b><div style="color:var(--text-muted); font-size:11px;">Qoldiq: ${formatM(currentBal)}</div></div></div>`;
+            }
+            html += `<div style="text-align:right; font-weight:bold; color:var(--warning); margin-top:15px; font-size:15px;">Kutilayotgan Jami foyda: ${formatM(totalProfit)}</div>`;
+            setHtml("schedule-list", html); openModal("modal-schedule");
+        };
         window.closeDep = id => { 
-            const d=state.deps.find(x=>x.id==id); if(!d) return; 
-            state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Omonat qaytdi: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); 
-            d.archived = true; d.closeDate = new Date().toISOString().slice(0,10); save(); toast("Yopildi va Arxivlandi!"); 
+            initCloseAction(() => {
+                const d=state.deps.find(x=>x.id==id); if(!d) return; 
+                state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Omonat qaytdi: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); 
+                d.archived = true; d.closeDate = new Date().toISOString().slice(0,10); save(); toast("Yopildi va Arxivlandi!"); 
+            });
         };
         window.permDelDep = id => { state.deps=state.deps.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
+
+        // KREDIT
+        window.saveCredit = () => {
+            const n=val("credit-name").trim(), a=parseFloat(val("credit-amount")), s=val("credit-date"), d=parseInt(val("credit-duration")), r=parseFloat(val("credit-rate")), tp=val("credit-type");
+            if(!n||!a||!s||!d||!r) return toast("To'ldiring!", true);
+            state.credits.push({ id:Date.now(), name:n, initAmt:a, remainAmt:a, start:s, duration:d, rate:r, type:tp, paidTotal:0, archived:false, closedDate:null });
+            state.incs.unshift({id:Date.now()+1, amount:a, desc:`Kredit olindi: ${n}`, cat:"Kredit", date:s, time:new Date().toLocaleTimeString("uz-UZ",{hour:'2-digit',minute:'2-digit'}), user:tgUser, prof:"general"}); 
+            setVal("credit-name",""); setVal("credit-amount",""); setVal("credit-duration",""); toggleWidget('credit-form', 'credit-header'); save(); toast("Saqlandi!");
+        };
+        window.openCreditScheduleModal = id => {
+            const cr = state.credits.find(x=>x.id==id); if(!cr) return;
+            setTxt("schedule-title", "Kredit Grafigi");
+            setTxt("schedule-info", `💳 ${cr.name} (${formatM(cr.initAmt)})\nMuddat: ${cr.duration} oy | Stavka: ${cr.rate}% Yillik\nTuri: ${cr.type==='annuity'?'Annuitet':'Differensial'}`);
+            
+            let html = "", totalPay = 0, currentBal = cr.initAmt;
+            const mRate = (cr.rate / 100) / 12;
+            let startDate = new Date(cr.start);
+
+            let annuitetPayment = 0;
+            if (cr.type === 'annuity') { annuitetPayment = cr.initAmt * (mRate * Math.pow(1+mRate, cr.duration)) / (Math.pow(1+mRate, cr.duration) - 1); }
+
+            for(let i=1; i<=cr.duration; i++) {
+                startDate.setMonth(startDate.getMonth() + 1); let monthStr = startDate.toISOString().slice(0,10);
+                let payment = 0, interest = 0, principal = 0;
+                
+                if (cr.type === 'annuity') {
+                    payment = annuitetPayment; interest = currentBal * mRate; principal = payment - interest;
+                } else {
+                    principal = cr.initAmt / cr.duration; interest = currentBal * mRate; payment = principal + interest;
+                }
+                
+                currentBal -= principal; totalPay += payment;
+                html += `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-color); font-size:13px;"><div><b style="color:var(--danger);">${i}-oy</b><div style="color:var(--text-muted); font-size:11px;">${monthStr}</div></div><div style="text-align:right;"><b style="color:var(--danger);">${formatM(payment)}</b><div style="color:var(--text-muted); font-size:11px;">Qarz: ${formatM(Math.max(0, currentBal))}</div></div></div>`;
+            }
+            html += `<div style="text-align:right; font-weight:bold; color:var(--warning); margin-top:15px; font-size:15px;">Jami to'lanadi: ${formatM(totalPay)}</div>`;
+            setHtml("schedule-list", html); openModal("modal-schedule");
+        };
+        window.openCreditPayModal = id => {
+            curCreditId = id; const cr = state.credits.find(x=>x.id==id);
+            setTxt("credit-pay-info", `Qolgan qarz: ${formatM(cr.remainAmt)}`);
+            setVal("credit-pay-amount", ""); openModal("modal-credit-pay");
+        };
+        window.confirmCreditPay = () => {
+            const a = parseFloat(val("credit-pay-amount")); if(!a||a<=0) return toast("Xato", true);
+            const cr = state.credits.find(x=>x.id==curCreditId); if(!cr) return;
+            cr.remainAmt -= a; cr.paidTotal += a;
+            state.txs.unshift({id:Date.now(), amount:a, desc:`Kredit to'lovi: ${cr.name}`, cat:"Kredit", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"});
+            closeModal('modal-credit-pay'); save(); toast("To'landi!");
+        };
+        window.closeCredit = id => {
+            initCloseAction(() => {
+                const cr = state.credits.find(x=>x.id==id); if(!cr) return;
+                if(cr.remainAmt > 0) {
+                    state.txs.unshift({id:Date.now(), amount:cr.remainAmt, desc:`Kredit to'liq yopildi: ${cr.name}`, cat:"Kredit", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"});
+                    cr.paidTotal += cr.remainAmt; cr.remainAmt = 0;
+                }
+                cr.archived = true; cr.closedDate = new Date().toISOString().slice(0,10); save(); toast("Kredit Yopildi va Arxivlandi!");
+            });
+        };
+        window.permDelCredit = id => { state.credits = state.credits.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
+
 
         // ==========================================
         // 8. RENDER ALL
         // ==========================================
         function render() {
             const tInc = state.incs.reduce((s,i)=>s+i.amount, 0), tExp = state.txs.reduce((s,t)=>s+t.amount, 0);
-            setTxt("main-total-balance", formatM(tInc - tExp));
-            setTxt("sched-prof-label", state.profiles.find(x=>x.id===curProf)?.name || "Umumiy");
+            setTxt("main-total-balance", formatM(tInc - tExp)); setTxt("sched-prof-label", state.profiles.find(x=>x.id===curProf)?.name || "Umumiy");
 
-            // ACTIVE SCHEDULER
             const d = new Date(), tM = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0');
-            let sHtml = "";
-            state.sched.filter(s => !s.archived && (s.prof === curProf || curProf === "general")).forEach(s => {
+            let sHtml = ""; state.sched.filter(s => !s.archived && (s.prof === curProf || curProf === "general")).forEach(s => {
                 const actAmt = s.miss > 0 ? Math.max(0, Math.round(s.amt - ((s.amt / getWD(parseInt(s.tMonth.split('-')[0]), parseInt(s.tMonth.split('-')[1]))) * s.miss))) : s.amt;
-                const sm = parseInt(s.tMonth.replace("-","")), cm = parseInt(tM.replace("-",""));
-                let isDue = false, st = "";
-                if(sm < cm) { isDue = true; st = "O'tib ketgan!"; }
-                else if(sm === cm) { if(d.getDate() >= s.day) { isDue = true; st = "Vaqti keldi!"; } else if(s.day - d.getDate() <= 3) { isDue = true; st = `${s.day - d.getDate()} kun qoldi`; } }
+                const sm = parseInt(s.tMonth.replace("-","")), cm = parseInt(tM.replace("-","")); let isDue = false, st = "";
+                if(sm < cm) { isDue = true; st = "O'tib ketgan!"; } else if(sm === cm) { if(d.getDate() >= s.day) { isDue = true; st = "Vaqti keldi!"; } else if(s.day - d.getDate() <= 3) { isDue = true; st = `${s.day - d.getDate()} kun qoldi`; } }
                 if(isDue) sHtml += `<div class="scheduled-item" style="background:var(--bg-card); padding:15px; border-radius:14px; margin-bottom:10px; border:1px solid var(--border-color);"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>⚠️ <b style="font-size:14px;">${s.label}</b> <span style="font-size:11px; color:var(--danger);">(${st})</span></span></div><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;"><span style="font-size:12px;">Dam/Qoldirilgan kun:</span><input type="number" placeholder="Kun" onchange="updMiss(${s.id}, this.value)" value="${s.miss||''}" style="width:70px; padding:6px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-dark); color:#fff; text-align:center;"></div><div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-weight:bold; font-size:16px; color:#fff;">${formatM(actAmt)}</span><button onclick="paySched(${s.id})" class="btn-primary btn-success" style="width:auto; padding:8px 16px; font-size:13px;">✅ To'lash</button></div></div>`;
-            });
-            setHtml("sched-list-container", sHtml || "<div style='text-align:center; color:var(--text-muted); font-size:13px; padding:10px;'>Majburiy to'lovlar yo'q.</div>");
-            renderSchedSet();
+            }); setHtml("sched-list-container", sHtml || "<div style='text-align:center; color:var(--text-muted); font-size:13px; padding:10px;'>Majburiy to'lovlar yo'q.</div>"); renderSchedSet();
 
             if(curTab === "home") renderPlanned();
             if(curTab === "add") renderAddCats();
             if(curTab === "other") {
-                // DEBTS RENDER
-                const today = new Date();
-                let activeDebts = state.debts.filter(x=>!x.archived);
-                let archDebts = state.debts.filter(x=>x.archived);
-                
+                // QARZ
+                const today = new Date(); let activeDebts = state.debts.filter(x=>!x.archived), archDebts = state.debts.filter(x=>x.archived);
                 let hDebts = activeDebts.map(x => {
-                    let dueStr = "";
-                    if(x.due) { const days = Math.ceil((new Date(x.due) - today) / 86400000); dueStr = days < 0 ? `<span style="color:var(--danger);">(${Math.abs(days)} kun o'tib ketdi)</span>` : `<span>(${days} kun qoldi)</span>`; }
+                    let dueStr = ""; if(x.due) { const days = Math.ceil((new Date(x.due) - today) / 86400000); dueStr = days < 0 ? `<span style="color:var(--danger);">(${Math.abs(days)} kun o'tib ketdi)</span>` : `<span>(${days} kun qoldi)</span>`; }
                     return `<div class="list-item" style="border-left: 5px solid ${x.type==='take'?'var(--success)':'var(--danger)'}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:6px;"><div><div style="font-size:15px; font-weight:bold;">${x.name}</div><div style="font-size:11px; color:var(--text-muted);">${x.type==='take'?'Olaman':'Beraman'} | Sana: ${x.start||''}</div><div style="font-size:11px; color:var(--warning); font-weight:bold; margin-top:2px;">Muddat: ${x.due||'Yo\'q'} ${dueStr}</div></div><div style="font-weight:bold; font-size:15px;">${formatM(x.amount)}</div></div><button onclick="closeDebt(${x.id})" class="btn-primary btn-success" style="padding:10px; font-size:13px;">✅ Qarz uzildi</button></div>`;
                 }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Qarzlar yo'q.</div>";
-                
-                let archBtnDebts = `<div class="arch-toggle-btn" onclick="toggleArch('debt')">📂 Uzilgan qarzlar arxivi ${showArch.debt?'(Yashirish)':'(Ko\'rish)'} (${archDebts.length})</div>`;
-                let archHtmlDebts = "";
-                if(showArch.debt && archDebts.length>0) {
-                    archHtmlDebts = `<div style="margin-top:10px; opacity:0.8;">` + archDebts.map(x => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; text-decoration:line-through; color:var(--text-muted);">${x.name}</div><div style="font-size:11px; color:var(--text-muted);">Sana: ${x.start||''} | Yopildi: ${x.closeDate||''}</div></div><div style="font-weight:bold; font-size:15px; color:var(--text-muted);">${formatM(x.amount)}</div></div><button onclick="permDelDebt(${x.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%;">🗑️ Butunlay o'chirish</button></div>`).join("") + `</div>`;
-                }
-                setHtml("debts-list", hDebts + archBtnDebts + archHtmlDebts);
+                let archHtmlDebts = showArch.debt && archDebts.length>0 ? `<div style="margin-top:10px; opacity:0.8;">` + archDebts.map(x => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; text-decoration:line-through; color:var(--text-muted);">${x.name}</div><div style="font-size:11px; color:var(--text-muted);">Sana: ${x.start||''} | Yopildi: ${x.closeDate||''}</div></div><div style="font-weight:bold; font-size:15px; color:var(--text-muted);">${formatM(x.amount)}</div></div><div class="archive-info-grid"><div><span>Turi:</span><b>${x.type==='take'?'Qaytib olindi':'Qaytarib berildi'}</b></div><div><span>Qarz miqdori:</span><b>${formatM(x.amount)}</b></div></div><button onclick="permDelDebt(${x.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%;">🗑️ Butunlay o'chirish</button></div>`).join("") + `</div>` : "";
+                setHtml("debts-list", hDebts + `<div class="arch-toggle-btn" onclick="toggleArch('debt')">📂 Uzilgan qarzlar arxivi ${showArch.debt?'(Yashirish)':'(Ko\'rish)'} (${archDebts.length})</div>` + archHtmlDebts);
 
-                // DEPOSITS RENDER
-                let activeDeps = state.deps.filter(x=>!x.archived);
-                let archDeps = state.deps.filter(x=>x.archived);
-                
+                // OMONAT
+                let activeDeps = state.deps.filter(x=>!x.archived), archDeps = state.deps.filter(x=>x.archived);
                 let hDeps = activeDeps.map(dep => {
                     let endD = new Date(dep.start); endD.setMonth(endD.getMonth() + dep.duration);
                     return `<div class="list-item" style="border-left: 5px solid var(--success); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:var(--success);">${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Stavka: ${dep.rate}% (${dep.rateType==='annual'?'Yillik':'Oylik'})</div><div style="font-size:11px; color:var(--text-muted);">Tugaydi: ${endD.toISOString().slice(0,10)}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px;">${formatM(dep.amount)}</div><div style="font-size:10px; color:var(--warning); margin-top:4px;">Kapitalizatsiya: ${dep.cap?'HA':'YO\'Q'}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="openTopupModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 2px; font-size:11px;">+ Qo'shish</button><button onclick="openIntModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 2px; font-size:11px;">💸 Foiz</button><button onclick="openScheduleModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 2px; font-size:11px;">📊 Grafik</button></div><button onclick="closeDep(${dep.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px;">Omonatni Yopish</button></div>`;
                 }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Omonatlar yo'q.</div>";
+                let archHtmlDeps = showArch.dep && archDeps.length>0 ? `<div style="margin-top:10px; opacity:0.8;">` + archDeps.map(dep => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Ochildi: ${dep.start} | Yopildi: ${dep.closeDate||''}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${formatM(dep.amount)}</div></div></div><div class="archive-info-grid"><div><span>Boshlang'ich:</span><b>${formatM(dep.initAmt||0)}</b></div><div><span>Qo'shilgan summa:</span><b style="color:var(--primary);">${formatM(dep.topups||0)}</b></div><div><span>Olingan Sof Foyda:</span><b style="color:var(--success);">${formatM(dep.profits||0)}</b></div><div><span>Jami Yechilgan:</span><b>${formatM(dep.amount)}</b></div></div><button onclick="permDelDep(${dep.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%;">🗑️ Butunlay o'chirish</button></div>`).join("") + `</div>` : "";
+                setHtml("deposits-list", hDeps + `<div class="arch-toggle-btn" onclick="toggleArch('dep')">📂 Yopilgan omonatlar arxivi ${showArch.dep?'(Yashirish)':'(Ko\'rish)'} (${archDeps.length})</div>` + archHtmlDeps);
 
-                let archBtnDeps = `<div class="arch-toggle-btn" onclick="toggleArch('dep')">📂 Yopilgan omonatlar arxivi ${showArch.dep?'(Yashirish)':'(Ko\'rish)'} (${archDeps.length})</div>`;
-                let archHtmlDeps = "";
-                if(showArch.dep && archDeps.length>0) {
-                    archHtmlDeps = `<div style="margin-top:10px; opacity:0.8;">` + archDeps.map(dep => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Ochildi: ${dep.start} | Yopildi: ${dep.closeDate||''}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${formatM(dep.amount)}</div></div></div><button onclick="permDelDep(${dep.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%;">🗑️ Butunlay o'chirish</button></div>`).join("") + `</div>`;
-                }
-                setHtml("deposits-list", hDeps + archBtnDeps + archHtmlDeps);
+                // KREDIT
+                let activeCredits = state.credits.filter(x=>!x.archived), archCredits = state.credits.filter(x=>x.archived);
+                let hCredits = activeCredits.map(cr => {
+                    return `<div class="list-item" style="border-left: 5px solid var(--danger); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:var(--danger);">${cr.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${cr.rate}% Yillik | ${cr.type==='annuity'?'Annuitet':'Differensial'}</div></div><div style="text-align:right;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:3px;">Qolgan qarz:</div><div style="font-weight:bold; font-size:16px; color:var(--danger);">${formatM(cr.remainAmt)}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="openCreditPayModal(${cr.id})" class="btn-primary" style="flex:2; background:var(--bg-card); border:1px solid var(--success); color:var(--success); padding:8px; font-size:12px;">✅ To'lash</button><button onclick="openCreditScheduleModal(${cr.id})" class="btn-primary" style="flex:1; background:var(--bg-card); border:1px solid var(--primary); color:var(--primary); padding:8px; font-size:12px;">📊 Grafik</button></div><button onclick="closeCredit(${cr.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px;">Kreditni Yopish (To'liq)</button></div>`;
+                }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Kreditlar yo'q.</div>";
+                let archHtmlCredits = showArch.credit && archCredits.length>0 ? `<div style="margin-top:10px; opacity:0.8;">` + archCredits.map(cr => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${cr.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Olindi: ${cr.start} | Yopildi: ${cr.closedDate||''}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${formatM(cr.initAmt)}</div></div></div><div class="archive-info-grid"><div><span>Asosiy olingan:</span><b>${formatM(cr.initAmt||0)}</b></div><div><span>Kredit turi:</span><b>${cr.type==='annuity'?'Annuitet':'Differensial'}</b></div><div><span>Jami to'langan:</span><b style="color:var(--danger);">${formatM(cr.paidTotal||0)}</b></div><div><span>Ortiqcha (Ustama):</span><b style="color:var(--warning);">${formatM((cr.paidTotal||0) - (cr.initAmt||0))}</b></div></div><button onclick="permDelCredit(${cr.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%;">🗑️ Butunlay o'chirish</button></div>`).join("") + `</div>` : "";
+                setHtml("credits-list", hCredits + `<div class="arch-toggle-btn" onclick="toggleArch('credit')">📂 Yopilgan kreditlar arxivi ${showArch.credit?'(Yashirish)':'(Ko\'rish)'} (${archCredits.length})</div>` + archHtmlCredits);
             }
             if(curTab === "report") renderReport();
         }
@@ -873,7 +860,6 @@
             let f = val("rep-from"), t = val("rep-to"); if(!f||!t) { const d = new Date().toISOString().slice(0,10); f=d; t=d; }
             const fTxs = state.txs.filter(x => x.date>=f && x.date<=t && (x.prof===curProf || curProf==='general'));
             const fIncs = state.incs.filter(x => x.date>=f && x.date<=t && (x.prof===curProf || curProf==='general'));
-            
             const pInc = fIncs.reduce((s,i)=>s+i.amount, 0), pExp = fTxs.reduce((s,x)=>s+x.amount, 0);
             setTxt("rep-inc-val", formatM(pInc)); setTxt("rep-exp-val", formatM(pExp));
 
