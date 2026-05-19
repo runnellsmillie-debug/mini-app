@@ -3,69 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1Money Family ERP - Pro Version</title>
+    <title>1Money Family ERP - Ultimate Bank</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --bg-dark: #0f172a; --bg-card: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8;
-            --primary: #3b82f6; --success: #10b981; --danger: #ef4444; --warning: #fbbf24;
+            --primary: #3b82f6; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
             --border-color: #334155; --border-focus: #3b82f6;
         }
 
-        /* COMPACT DESIGN: Paddinglar va marginlar maksimal qisqartirildi */
-        body { margin: 0; background-color: var(--bg-dark); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-user-select: none; user-select: none; padding: 10px; padding-bottom: 70px; max-width: 480px; margin: 0 auto; box-sizing: border-box; overflow-x: hidden;}
+        /* Qulay o'lchamlar (Comfortable Mobile Size) */
+        body { margin: 0; background-color: var(--bg-dark); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-user-select: none; user-select: none; padding: 15px; padding-bottom: 85px; max-width: 480px; margin: 0 auto; box-sizing: border-box; overflow-x: hidden; }
         
-        .top-header { display: flex; align-items: center; margin-bottom: 10px; }
-        .menu-btn { background: transparent; border: none; color: var(--text-muted); padding: 2px 0; font-weight: bold; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .menu-btn span.icon { font-size: 18px; color: var(--primary); }
+        .top-header { display: flex; align-items: center; margin-bottom: 18px; }
+        .menu-btn { background: transparent; border: none; color: var(--text-muted); padding: 5px 0; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .menu-btn span.icon { font-size: 22px; color: var(--primary); }
         
         .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; backdrop-filter: blur(3px); }
-        .sidebar-menu { position: fixed; top: 0; left: -280px; width: 260px; height: 100%; background: var(--bg-dark); z-index: 2001; transition: 0.3s ease; padding: 20px; box-sizing: border-box; border-right: 1px solid var(--border-color); overflow-y: auto; }
+        .sidebar-menu { position: fixed; top: 0; left: -280px; width: 270px; height: 100%; background: var(--bg-dark); z-index: 2001; transition: 0.3s ease; padding: 25px 20px; box-sizing: border-box; border-right: 1px solid var(--border-color); overflow-y: auto; }
         .sidebar-menu.open { left: 0; }
-        .sidebar-item { display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: 12px; margin-bottom: 8px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 14px; border: 1px solid transparent; }
+        .sidebar-item { display: flex; align-items: center; gap: 15px; padding: 14px 16px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 15px; border: 1px solid transparent; transition: 0.2s; }
         .sidebar-item.active { background: rgba(59, 130, 246, 0.1); color: var(--primary); border-color: rgba(59, 130, 246, 0.3); }
-        .sidebar-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-size: 18px; border: 1px solid var(--border-color); }
+        .sidebar-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid var(--border-color); }
         
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; padding: 8px 5px; box-sizing: border-box; z-index: 1000; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
-        .nav-item { flex: 1; text-align: center; color: var(--text-muted); font-size: 11px; font-weight: bold; padding: 6px 0; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; padding: 10px 5px; box-sizing: border-box; z-index: 1000; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+        .nav-item { flex: 1; text-align: center; color: var(--text-muted); font-size: 12px; font-weight: bold; padding: 8px 0; border-radius: 12px; cursor: pointer; transition: 0.2s; }
         .nav-item.active { color: var(--primary); background: rgba(59, 130, 246, 0.1); }
-        .nav-item i { display: block; font-size: 18px; margin-bottom: 2px; font-style: normal; }
+        .nav-item i { display: block; font-size: 20px; margin-bottom: 4px; font-style: normal; }
 
-        .balance-card-main { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid var(--border-color); border-radius: 16px; padding: 15px; text-align: center; margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .widget-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px; margin-bottom: 10px; }
+        .balance-card-main { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid var(--border-color); border-radius: 20px; padding: 22px 15px; text-align: center; margin-bottom: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .widget-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 15px; margin-bottom: 15px; }
         
-        /* KOMPAKT INPUTLAR VA TUGMALAR */
-        .input-text { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); font-size: 13px; box-sizing: border-box; outline: none; margin-bottom: 8px; transition: 0.2s; }
+        /* OCHILIB-YOPILUVCHI SARLAVHA (Accordion Header) */
+        .toggle-header { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: bold; color: var(--primary); cursor: pointer; padding-bottom: 5px; }
+        .toggle-header span.chevron { font-size: 12px; transition: transform 0.3s; }
+        .toggle-header.open span.chevron { transform: rotate(180deg); }
+
+        .input-text { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); font-size: 14px; box-sizing: border-box; outline: none; margin-bottom: 10px; transition: 0.2s; }
         .input-text:focus { border-color: var(--primary); }
-        .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; font-weight: bold; border-radius: 10px; font-size: 14px; cursor: pointer; }
+        .btn-primary { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; font-weight: bold; border-radius: 12px; font-size: 15px; cursor: pointer; }
         .btn-success { background: var(--success); }
         
-        /* KIRITISH TABI (1 EKRANGA SIG'ISHI UCHUN O'ZGARTIRILDI) */
-        .mode-selector { display: flex; gap: 6px; margin-bottom: 8px; }
-        .mode-btn { flex: 1; padding: 10px; border-radius: 10px; border: none; font-weight: bold; color: #fff; background: var(--bg-card); cursor: pointer; font-size: 13px; }
-        .num-display { font-size: 28px; font-weight: bold; text-align: center; margin-bottom: 8px; height: 35px; color: #fff; }
+        .mode-selector { display: flex; gap: 8px; margin-bottom: 12px; }
+        .mode-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: bold; color: #fff; background: var(--bg-card); cursor: pointer; font-size: 14px; border: 1px solid var(--border-color); }
+        .num-display { font-size: 32px; font-weight: bold; text-align: center; margin-bottom: 12px; height: 40px; color: #fff; }
         
-        /* CATEGORY GRID (Hamma qavatlar 4 ta ustun qilib tekislandi) */
-        .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
-        .cat-btn { padding: 6px 2px; border: none; border-radius: 10px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-weight: bold; font-size: 10px; background: var(--bg-card); min-height: 55px; transition: transform 0.1s; line-height: 1.1; text-align: center; white-space: pre-wrap; word-break: break-word;}
+        .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+        .cat-btn { padding: 10px 4px; border: none; border-radius: 12px; color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-weight: bold; font-size: 11px; background: var(--bg-card); min-height: 70px; transition: 0.1s; line-height: 1.2; text-align: center; border: 1px solid var(--border-color); }
         .cat-btn:active { transform: scale(0.95); }
         
-        /* NUMPAD (Kompaktlashdi) */
-        .num-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .num-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; font-size: 22px; border-radius: 10px; padding: 10px 0; cursor: pointer; outline: none; }
+        .num-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .num-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; font-size: 24px; border-radius: 12px; padding: 16px 0; cursor: pointer; outline: none; }
         .num-btn:active { background: rgba(255, 255, 255, 0.15); }
 
-        .list-item { display: flex; align-items: center; background: var(--bg-card); padding: 10px; border-radius: 10px; margin-bottom: 8px; font-size: 12px; border: 1px solid var(--border-color); }
-        .delete-btn { background: none; border: none; color: var(--danger); font-weight: bold; cursor: pointer; font-size: 16px; padding: 5px; margin-left: auto; }
+        .list-item { display: flex; align-items: center; background: var(--bg-card); padding: 14px; border-radius: 14px; margin-bottom: 10px; font-size: 13px; border: 1px solid var(--border-color); }
+        .delete-btn { background: none; border: none; color: var(--danger); font-weight: bold; cursor: pointer; font-size: 18px; padding: 5px; margin-left: auto; }
         
-        .modal-layer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 4000; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
-        .modal-box { background: var(--bg-dark); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width: 85%; max-width: 340px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .modal-layer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 4000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-box { background: var(--bg-dark); padding: 24px; border-radius: 20px; border: 1px solid var(--border-color); width: 90%; max-width: 360px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; }
         
-        .tags-wrapper { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-        .smart-tag { background: var(--bg-card); color: #fff; border: 1px solid var(--primary); padding: 6px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .tags-wrapper { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .smart-tag { background: var(--bg-card); color: #fff; border: 1px solid var(--primary); padding: 8px 14px; border-radius: 10px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.1s; }
+        .smart-tag:active { background: var(--primary); transform: scale(0.95); }
         
-        #toast-msg { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 20px; z-index: 9999; font-weight: bold; font-size: 13px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        #toast-msg { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 20px; z-index: 9999; font-weight: bold; font-size: 14px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
         .hidden { display: none !important; }
+
+        /* Custom Checkbox */
+        .plan-item { background: var(--bg-card); border: 1px solid var(--primary); padding: 14px; border-radius: 14px; margin-bottom: 10px; font-size: 14px; display:flex; gap:12px; align-items:center; transition: 0.3s; }
+        .plan-item.skipped { opacity: 0.4; filter: grayscale(100%); border-color:var(--border-color); }
+        .custom-checkbox { width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--primary); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; background:rgba(59,130,246,0.1); }
+        .custom-checkbox.checked::after { content: '✓'; color: var(--primary); font-size: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -76,7 +84,7 @@
         <div class="modal-box">
             <h3 style="margin-top:0; margin-bottom:15px; color:var(--primary);">Yangi profil</h3>
             <input type="text" id="prof-name" class="input-text" placeholder="Ism (Masalan: Odina)" />
-            <div style="display:flex; gap:8px; margin-bottom:10px;">
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
                 <input type="number" id="prof-age" class="input-text" placeholder="Yoshi" style="flex:1; margin:0;" />
                 <select id="prof-role" class="input-text" style="flex:2; margin:0;">
                     <option value="child_m">O'g'il farzand</option>
@@ -86,7 +94,7 @@
                 </select>
             </div>
             <input type="text" id="prof-emoji" class="input-text" placeholder="Emoji (Ixtiyoriy)" value="" />
-            <div style="display:flex; gap:10px; margin-top:5px;">
+            <div style="display:flex; gap:10px; margin-top:10px;">
                 <button onclick="closeModal('modal-profile')" class="btn-primary" style="background:var(--border-color);">Bekor</button>
                 <button onclick="saveNewProfile()" class="btn-primary btn-success">Saqlash</button>
             </div>
@@ -96,123 +104,137 @@
     <div id="modal-buy" class="modal-layer" onclick="closeModalOutside(event, 'modal-buy')">
         <div class="modal-box">
             <h3 style="margin-top:0; margin-bottom:10px; color:var(--success);">Tasdiqlash</h3>
-            <div id="buy-item-name" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">Mahsulot...</div>
+            <div id="buy-item-name" style="color:var(--text-muted); font-size:14px; margin-bottom:15px;">Mahsulot...</div>
             <input type="number" id="buy-price" class="input-text" placeholder="Haqiqiy narxi (so'mda)" />
-            <div style="display:flex; gap:10px; margin-top:5px;">
+            <div style="display:flex; gap:10px; margin-top:10px;">
                 <button onclick="closeModal('modal-buy')" class="btn-primary" style="background:var(--border-color);">Bekor</button>
                 <button onclick="confirmBuyItem()" class="btn-primary btn-success">Xarid qilish</button>
             </div>
         </div>
     </div>
 
-    <div id="modal-interest" class="modal-layer" onclick="closeModalOutside(event, 'modal-interest')">
+    <div id="modal-dep-topup" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-topup')">
         <div class="modal-box">
-            <h3 style="margin-top:0; margin-bottom:10px; color:var(--success);">Foiz qo'shish</h3>
-            <div style="color:var(--text-muted); font-size:12px; margin-bottom:10px;">Bankdan tushgan foyda:</div>
-            <input type="number" id="interest-amount" class="input-text" placeholder="Summa..." />
-            <div style="display:flex; gap:10px; margin-top:5px;">
-                <button onclick="closeModal('modal-interest')" class="btn-primary" style="background:var(--border-color);">Bekor</button>
-                <button onclick="confirmInterest()" class="btn-primary btn-success">Qo'shish</button>
+            <h3 style="margin-top:0; color:var(--primary);">Omonatga pul qo'shish</h3>
+            <div id="topup-name" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">...</div>
+            <input type="number" id="topup-amount" class="input-text" placeholder="Qo'shiladigan summa..." />
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="closeModal('modal-dep-topup')" class="btn-primary" style="background:var(--border-color);">Bekor</button>
+                <button onclick="confirmTopup()" class="btn-primary btn-success">Qo'shish</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-dep-interest" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-interest')">
+        <div class="modal-box">
+            <h3 style="margin-top:0; color:var(--success);">Foiz hisoblash</h3>
+            <div id="interest-info" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">...</div>
+            <input type="number" id="interest-amount" class="input-text" placeholder="Hisoblangan summa..." />
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="closeModal('modal-dep-interest')" class="btn-primary" style="background:var(--border-color);">Bekor</button>
+                <button onclick="confirmInterest()" class="btn-primary btn-success">Tasdiqlash</button>
             </div>
         </div>
     </div>
 
     <div class="top-header">
         <button class="menu-btn" onclick="toggleSidebar()">
-            <span class="icon">☰</span> <span id="current-profile-name">Umumiy</span>
+            <span class="icon">☰</span> <span id="current-profile-name" style="font-size:16px;">Umumiy</span>
         </button>
     </div>
 
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div id="sidebar-menu" class="sidebar-menu">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:10px; border-bottom:1px dashed var(--border-color);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px dashed var(--border-color);">
             <h3 style="margin:0; color:var(--primary);">Profillar</h3>
-            <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text-muted); font-size:20px;">✕</button>
+            <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text-muted); font-size:22px;">✕</button>
         </div>
         <div id="sidebar-profiles-list"></div>
     </div>
 
     <div id="tab-home" class="tab-content">
         <div class="balance-card-main">
-            <div style="color: var(--text-muted); font-size: 11px; font-weight:bold; letter-spacing:1px; margin-bottom:4px;">JAMI MAVJUD MABLAG'</div>
-            <div id="main-total-balance" style="font-size: 28px; font-weight: bold; color: #fff;">0 so'm</div>
+            <div style="color: var(--text-muted); font-size: 12px; font-weight:bold; letter-spacing:1px; margin-bottom:8px;">JAMI MAVJUD MABLAG'</div>
+            <div id="main-total-balance" style="font-size: 34px; font-weight: bold; color: #fff;">0 so'm</div>
         </div>
 
         <div class="widget-box" id="sched-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 13px; color: var(--primary); font-weight: bold;">📅 Rejali to'lovlar (<span id="sched-prof-label"></span>):</div>
-                <button onclick="toggleBlock('sched-setup-panel')" style="background:none; border:1px solid var(--border-focus); color:var(--primary); font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer;">⚙ Boshqarish</button>
+            <div class="toggle-header" id="sched-header" onclick="toggleWidget('sched-setup-panel', 'sched-header')">
+                <span>📅 Rejali to'lovlar (<span id="sched-prof-label"></span>)</span> <span class="chevron">▼</span>
             </div>
             
-            <div id="sched-setup-panel" class="hidden" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid var(--border-color);">
+            <div id="sched-setup-panel" class="hidden" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
                 <input type="text" id="sched-name" class="input-text" placeholder="Nomi (Mas: Bog'cha)" />
-                <div style="display:flex; gap:6px; margin-bottom:8px;">
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
                     <select id="sched-cat" class="input-text" style="flex:1; margin:0;">
                         <option value="Oila/Bolalar">Oila/Bolalar</option><option value="Uy/Kommunal">Uy/Kommunal</option><option value="Majburiyatlar">Kredit</option><option value="Boshqa">Boshqa</option>
                     </select>
-                    <input type="number" id="sched-day" placeholder="Sana (1-31)" class="input-text" style="width:80px; margin:0;" />
+                    <input type="number" id="sched-day" placeholder="Sana (1-31)" class="input-text" style="width:90px; margin:0;" />
                 </div>
                 <input type="number" id="sched-amount" placeholder="Summa (To'liq)" class="input-text" />
-                <button onclick="addScheduled()" class="btn-primary btn-success" style="margin-bottom:8px; padding:10px;">➕ Qo'shish</button>
+                <button onclick="addScheduled()" class="btn-primary btn-success" style="margin-bottom:15px;">➕ To'lov Qo'shish</button>
                 <div id="sched-edit-list"></div>
             </div>
-            <div id="sched-list-container"></div>
+            <div id="sched-list-container" style="margin-top:15px;"></div>
         </div>
 
         <div class="widget-box" id="plan-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 13px; color: var(--primary); font-weight: bold;">🛒 Bozorlik / Xarid Rejasi:</div>
-                <button onclick="toggleBlock('plan-setup-panel')" style="background:none; border:1px solid var(--border-focus); color:var(--primary); font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer;">➕ Reja Tuzish</button>
+            <div class="toggle-header open" id="plan-header" onclick="toggleWidget('plan-setup-panel', 'plan-header')">
+                <span>🛒 Bozorlik / Xarid Rejasi</span> <span class="chevron">▼</span>
             </div>
             
-            <div id="plan-setup-panel" class="hidden" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid var(--border-focus);">
-                <div style="display:flex; gap:6px; margin-bottom:10px;">
+            <div id="plan-setup-panel" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
                     <select id="smart-plan-cat" class="input-text" onchange="updateSmartTags()" style="flex:1; margin:0;"></select>
                     <select id="smart-plan-subcat" class="input-text" onchange="renderSmartTags()" style="flex:1; margin:0;"></select>
                 </div>
                 <div id="smart-tags-container" class="tags-wrapper"></div>
                 
-                <hr style="border:none; border-top:1px dashed var(--border-color); margin:10px 0;">
-                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                <hr style="border:none; border-top:1px dashed var(--border-color); margin:15px 0;">
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
                     <input type="text" id="plan-name" class="input-text" placeholder="Nima? (Mas: 🍅 Pomidor)" style="flex:2; margin:0;" />
                     <input type="text" id="plan-qty" class="input-text" placeholder="Hajmi/Soni" style="flex:1; margin:0;" />
                 </div>
-                <div style="display:flex; gap:6px; margin-bottom:10px;">
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
                     <select id="plan-market" class="input-text" style="flex:1; margin:0;">
                         <option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Makro">Makro</option><option value="Uzum">Uzum</option><option value="Do'kon">Do'kon</option>
                     </select>
                     <input type="number" id="plan-price" class="input-text" placeholder="Taxminiy narx" style="flex:1; margin:0;" />
                 </div>
-                <button onclick="addPlannedItemManual()" class="btn-primary btn-success" style="padding:10px;">➕ Ro'yxatga Saqlash</button>
+                <button onclick="addPlannedItemManual()" class="btn-primary btn-success">➕ Ro'yxatga Saqlash</button>
             </div>
 
-            <div style="display:flex; gap:6px; margin-bottom:10px;">
-                <select id="filter-market" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0; padding:8px;">
+            <div style="display:flex; gap:10px; margin: 15px 0;">
+                <select id="filter-market" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;">
                     <option value="all">Manzil: Barcha</option>
                     <option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Makro">Makro</option><option value="Uzum">Uzum</option><option value="Do'kon">Do'kon</option>
                 </select>
-                <select id="filter-cat" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0; padding:8px;">
+                <select id="filter-cat" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;">
                     <option value="all">Toifa: Barcha</option>
                     <option value="Oziq-ovqat">Oziq-ovqat</option><option value="Xo'jalik/Uy">Xo'jalik</option><option value="Kiyim">Kiyim</option><option value="Ta'lim">Ta'lim</option><option value="O'yinchoq">O'yinchoq</option>
                 </select>
             </div>
             <div id="planned-list-container"></div>
         </div>
-        <button onclick="saveAndExit()" class="btn-primary btn-success" style="margin-top:5px; padding:12px; box-shadow: 0 4px 10px rgba(16,185,129,0.2);">✅ Saqlash va Chiqish (<span id="session-count">0</span>)</button>
+
+        <button onclick="saveAndExit()" class="btn-primary btn-success" style="margin-top:10px; padding:16px; font-size:16px; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">
+            ✅ Saqlash va Chiqish (<span id="session-count">0</span>)
+        </button>
     </div>
 
     <div id="tab-add" class="tab-content hidden">
         <div class="mode-selector">
-            <button id="mode-exp" class="mode-btn" style="background:var(--danger);" onclick="setAddMode('expense')">▼ Chiqim</button>
+            <button id="mode-exp" class="mode-btn" style="background:var(--danger); border-color:var(--danger);" onclick="setAddMode('expense')">▼ Chiqim</button>
             <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">▲ Kirim</button>
         </div>
         
         <div id="num-display" class="num-display">0</div>
+        <div style="text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 15px; height: 18px;" id="stay-hint"></div>
         
         <div id="cats-header-container"></div>
         <div id="cats-container"></div>
         
-        <input type="text" id="add-desc" class="input-text" placeholder="Izoh yozing (ixtiyoriy)..." style="margin-top:4px; margin-bottom:8px;" />
+        <input type="text" id="add-desc" class="input-text" placeholder="Izoh yozing (ixtiyoriy)..." style="margin-top:15px; margin-bottom:15px;" />
         
         <div class="num-grid">
             <button class="num-btn" onclick="pressNum('1')">1</button><button class="num-btn" onclick="pressNum('2')">2</button><button class="num-btn" onclick="pressNum('3')">3</button>
@@ -223,93 +245,141 @@
     </div>
 
     <div id="tab-other" class="tab-content hidden">
+        
         <div class="widget-box">
-            <div style="font-size: 13px; font-weight: bold; margin-bottom: 10px; color:var(--primary);">🤝 Qarz amallari:</div>
-            <input type="text" id="debt-name" class="input-text" placeholder="Ism yozing..." />
-            <input type="number" id="debt-amount" class="input-text" placeholder="Summa..." />
-            <div class="mode-selector" style="margin-bottom:8px;">
-                <button id="debt-type-take" class="mode-btn" style="background:var(--success); font-size:12px; padding:10px;" onclick="setDebtType('take')">Menga qaytaradi</button>
-                <button id="debt-type-give" class="mode-btn" style="font-size:12px; padding:10px;" onclick="setDebtType('give')">Men qaytaraman</button>
+            <div class="toggle-header" id="dep-header" onclick="toggleWidget('dep-form', 'dep-header')">
+                <span>🏦 Bank / Omonat (Depozit)</span> <span class="chevron">▼</span>
             </div>
-            <button onclick="saveDebt()" class="btn-primary" style="padding:10px;">Qarzni Saqlash</button>
+            
+            <div id="dep-form" class="hidden" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
+                <input type="text" id="dep-name" class="input-text" placeholder="Omonat nomi (Mas: Ipoteka Bank)" />
+                <input type="number" id="dep-amount" class="input-text" placeholder="Boshlang'ich summa..." />
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <div style="flex:1;">
+                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Ochilgan sana:</div>
+                        <input type="date" id="dep-date" class="input-text" style="margin:0;" />
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat (oy):</div>
+                        <input type="number" id="dep-duration" class="input-text" placeholder="Mas: 12" style="margin:0;" />
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <div style="flex:1;">
+                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Foiz stavka (%):</div>
+                        <input type="number" id="dep-rate" class="input-text" placeholder="Mas: 22" style="margin:0;" />
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Stavka turi:</div>
+                        <select id="dep-ratetype" class="input-text" style="margin:0;">
+                            <option value="annual">Yillik</option>
+                            <option value="monthly">Oylik</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; background:var(--bg-dark); padding:10px; border-radius:10px; border:1px solid var(--border-color);">
+                    <input type="checkbox" id="dep-cap" style="width:20px; height:20px;" />
+                    <label for="dep-cap" style="font-size:13px; color:var(--text-main);">Kapitalizatsiya (Tushgan foiz asosiy qarzga qo'shilsinmi?)</label>
+                </div>
+                <button onclick="saveDeposit()" class="btn-primary btn-success">Omonat Ochish</button>
+            </div>
+            <div id="deposits-list" style="margin-top:15px;"></div>
         </div>
-        <div id="debts-list" style="margin-bottom:15px;"></div>
 
         <div class="widget-box">
-            <div style="font-size: 13px; font-weight: bold; margin-bottom: 10px; color:var(--success);">🏦 Bank / Omonat (Depozit):</div>
-            <input type="text" id="dep-name" class="input-text" placeholder="Bank yoki Omonat nomi" />
-            <input type="number" id="dep-amount" class="input-text" placeholder="Summa..." />
-            <button onclick="saveDeposit()" class="btn-primary btn-success" style="padding:10px;">Omonatga O'tkazish</button>
+            <div class="toggle-header" id="debt-header" onclick="toggleWidget('debt-form', 'debt-header')">
+                <span>🤝 Qarz Daftari</span> <span class="chevron">▼</span>
+            </div>
+            
+            <div id="debt-form" class="hidden" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
+                <input type="text" id="debt-name" class="input-text" placeholder="Kimga / Kimdan (Ism yozing)" />
+                <input type="number" id="debt-amount" class="input-text" placeholder="Summa..." />
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <div style="flex:1;">
+                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Olingan/Berilgan sana:</div>
+                        <input type="date" id="debt-start" class="input-text" style="margin:0;" />
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Qaytarish muddati:</div>
+                        <input type="date" id="debt-due" class="input-text" style="margin:0;" />
+                    </div>
+                </div>
+                <div class="mode-selector" style="margin-top:5px;">
+                    <button id="debt-type-take" class="mode-btn" style="background:var(--success); border-color:var(--success);" onclick="setDebtType('take')">Menga qaytaradi</button>
+                    <button id="debt-type-give" class="mode-btn" onclick="setDebtType('give')">Men qaytaraman</button>
+                </div>
+                <button onclick="saveDebt()" class="btn-primary">Qarzni Saqlash</button>
+            </div>
+            <div id="debts-list" style="margin-top:15px;"></div>
         </div>
-        <div id="deposits-list"></div>
     </div>
 
     <div id="tab-report" class="tab-content hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span id="report-title-text" style="font-size: 16px; font-weight: bold;">📊 Hisobot</span>
-            <button onclick="downloadExcel()" class="btn-primary btn-success" style="width:auto; padding:6px 12px; font-size:11px;">📥 Excel</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <span id="report-title-text" style="font-size: 18px; font-weight: bold;">📊 Hisobot</span>
+            <button onclick="downloadExcel()" class="btn-primary btn-success" style="width:auto; padding:10px 18px; font-size:13px;">📥 Excel</button>
         </div>
         
-        <div style="display:flex; gap:6px; margin-bottom:12px;">
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
             <input type="date" id="rep-from" class="input-text" style="margin:0;" onchange="renderReport()" />
             <input type="date" id="rep-to" class="input-text" style="margin:0;" onchange="renderReport()" />
         </div>
         
-        <div id="user-stats-container" style="display:flex; gap:6px; margin-bottom:12px; overflow-x:auto;"></div>
+        <div id="user-stats-container" style="display:flex; gap:10px; margin-bottom:20px; overflow-x:auto;"></div>
         
-        <div class="balance-grid" style="margin-bottom:10px;">
+        <div class="balance-grid" style="margin-bottom:20px;">
             <div class="balance-card" style="border: 1px solid var(--success);" id="rep-inc-card">
-                <div style="font-size: 10px; color: var(--text-muted); margin-bottom:4px;">Kirim (Tushum)</div>
-                <div id="rep-inc-val" style="font-size: 15px; font-weight: bold; color: var(--success);">0</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-bottom:6px;">Kirim (Tushum)</div>
+                <div id="rep-inc-val" style="font-size: 18px; font-weight: bold; color: var(--success);">0</div>
             </div>
             <div class="balance-card" style="border: 1px solid var(--danger);">
-                <div style="font-size: 10px; color: var(--text-muted); margin-bottom:4px;">Chiqim (Xarajat)</div>
-                <div id="rep-exp-val" style="font-size: 15px; font-weight: bold; color: var(--danger);">0</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-bottom:6px;">Chiqim (Xarajat)</div>
+                <div id="rep-exp-val" style="font-size: 18px; font-weight: bold; color: var(--danger);">0</div>
             </div>
         </div>
         
-        <div style="font-size: 13px; font-weight: bold; color: var(--primary); margin: 15px 0 8px 0;">📉 Toifalar tahlili:</div>
+        <div style="font-size: 15px; font-weight: bold; color: var(--primary); margin: 20px 0 12px 0;">📉 Toifalar tahlili:</div>
         <div id="rep-cats-list"></div>
         
-        <div style="font-size: 13px; font-weight: bold; color: var(--primary); margin: 15px 0 8px 0;">📅 Xronologiya:</div>
-        <div id="rep-history-list" style="background: var(--bg-card); padding: 10px; border-radius: 14px; border: 1px solid var(--border-color);"></div>
+        <div style="font-size: 15px; font-weight: bold; color: var(--primary); margin: 25px 0 12px 0;">📅 Xronologiya:</div>
+        <div id="rep-history-list" style="background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color);"></div>
     </div>
 
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><i>🏠</i> Asosiy</div>
         <div class="nav-item" id="nav-add" onclick="switchTab('add')"><i>➕</i> Kiritish</div>
-        <div class="nav-item" id="nav-other" onclick="switchTab('other')"><i>💼</i> Boshqa</div>
+        <div class="nav-item" id="nav-other" onclick="switchTab('other')"><i>🏦</i> Boshqa</div>
         <div class="nav-item" id="nav-report" onclick="switchTab('report')"><i>📊</i> Hisobot</div>
     </div>
 
     <script>
         // ==========================================
-        // 1. MA'LUMOT BAZASI (TARTIBLI, QISQA)
+        // 1. DATA & CONSTANTS (MAX WISHLIST)
         // ==========================================
         const PLAN_TAGS = {
             "Oziq-ovqat": {
-                "Sabzavot/Ko'kat": ["🧅 Piyoz", "🥔 Kartoshka", "🥕 Sabzi", "🍅 Pomidor", "🥒 Bodring", "🥬 Karam", "🌶️ Qalampir", "🧄 Sarimsoq", "🌿 Ko'kat", "🌽 Makka"],
-                "Go'sht/Tuxum": ["🥩 Mol go'shti", "🍖 Qo'y go'shti", "🍗 Tovuq", "🐟 Baliq", "🥚 Tuxum", "🌭 Kolbasa"],
-                "Meva/Poliz": ["🍎 Olma", "🍌 Banan", "🍇 Uzum", "🍉 Tarbuz", "🍊 Mandarin", "🍋 Limon"],
-                "Baqqollik": ["🌾 Un", "🛢️ Yog'", "🍚 Guruch", "🍝 Makaron", "🧂 Shakar", "🫖 Choy", "🧂 Tuz"],
-                "Sut/Non": ["🥛 Sut", "🍶 Qatiq", "🥣 Qaymoq", "🧀 Pishloq", "🍞 Non", "🥟 Somsa"],
-                "Ichimlik": ["💧 Suv", "🧃 Sharbat", "🥤 Kola", "☕ Kofe", "🍬 Konfet", "🍫 Shokolad"]
+                "Sabzavot/Ko'kat": ["🧅 Piyoz", "🥔 Kartoshka", "🥕 Sabzi", "🍅 Pomidor", "🥒 Bodring", "🥬 Karam", "🌶️ Qalampir", "🫑 Bulog'or q.", "🧄 Sarimsoq", "🌿 Ko'kat", "🍆 Baqlajon", "🌽 Makka", "🎃 Qovoq", "🍄 Qo'ziqorin", "🥦 Brokkoli"],
+                "Go'sht/Tuxum": ["🥩 Mol go'shti", "🍖 Qo'y go'shti", "🍗 Tovuq", "🐟 Baliq", "🥚 Tuxum", "🌭 Kolbasa", "🥓 Sosiska", "🥩 Qiyma", "🍗 Qanotcha"],
+                "Meva/Poliz": ["🍎 Olma", "🍌 Banan", "🍇 Uzum", "🍉 Tarbuz", "🍈 Qovun", "🍊 Mandarin", "🍋 Limon", "🍑 Shaftoli", "🍓 Qulupnay", "🍒 Gilos", "🍐 Nok", "🥝 Kivi", "🍍 Ananas", "🥥 Anor"],
+                "Baqqollik": ["🌾 Un", "🛢️ Paxta yog'", "🌻 Pista yog'", "🍚 Guruch", "🍝 Makaron", "🧂 Shakar", "🫖 Choy", "🧂 Tuz", "🥜 Yong'oq", "🍇 Mayiz", "🌿 Zira/Kashnich", "🍯 Asal", "🥫 Ketchup/Mayonez"],
+                "Sut/Non": ["🥛 Sut", "🍶 Qatiq", "🥣 Qaymoq", "🧈 Sariyog'", "🧀 Pishloq(Sir)", "🥡 Tvorog", "🍞 Non", "🥐 Bulochka", "🥟 Somsa", "🍦 Muzqaymoq", "🎂 Tort"],
+                "Ichimlik": ["💧 Suv", "🧃 Sharbat", "🥤 Kola/Fanta", "☕ Kofe", "🍬 Konfet", "🍫 Shokolad", "🍪 Pechenye", "🥤 Ayron"]
             },
             "Xo'jalik/Uy": {
-                "Tozalik": ["🫧 Kir kukun", "🧼 Fairy", "🧼 Atir sovun", "🧴 Shampun", "🧻 Tualet qog'oz", "🧻 Salfetka", "🪥 Tish pasta", "🧹 Shvabra"]
+                "Tozalik": ["🫧 Kir kukun", "🧼 Fairy", "🧼 Atir sovun", "🧴 Shampun", "🧻 Tualet qog'oz", "🧻 Salfetka", "🪥 Tish pasta", "🧹 Shvabra", "🧽 Gubka", "🧴 Xlor/Domestos", "🪒 Britva", "🗑️ Musor paket"]
             },
             "Kiyim": {
-                "Bolalar": ["👕 Futbolka", "👖 Jinsi", "🧥 Kurtka", "👟 Krossovka", "🧦 Paypoq", "🎒 Sumka", "👗 Ko'ylak", "🥿 Tuflik"],
-                "Kattalar": ["👕 Futbolka", "👔 Ko'ylak", "👖 Shim", "🧥 Kurtka", "👞 Tuflik"]
+                "Bolalar": ["👕 Futbolka", "👖 Jinsi", "🧥 Kurtka", "👟 Krossovka", "🧦 Paypoq", "🎒 Sumka", "👗 Ko'ylak", "🥿 Tuflik", "🧢 Kepka", "🩲 Ichki kiyim", "🧤 Qishlik kiyim"],
+                "Kattalar": ["👕 Futbolka", "👔 Ko'ylak", "👖 Shim", "🧥 Kurtka", "👞 Tuflik", "👗 Ayollar ko'ylagi", "👜 Sumka"]
             },
             "Ta'lim": {
-                "Kanselyariya": ["📓 Daftar", "🖊️ Ruchka", "✏️ Qalam", "🎒 Sumka", "📏 Chizg'ich", "📚 Kitob", "🖍️ Bo'yoq", "🧼 O'chirg'ich"]
+                "Kanselyariya": ["📓 Daftar", "🖊️ Ruchka", "✏️ Qalam", "🎒 Sumka", "📏 Chizg'ich", "📚 Kitob", "🖍️ Bo'yoq", "🧼 O'chirg'ich", "📎 Sкрепka/Kley", "✂️ Qaychi", "🗂️ Papka"]
             },
             "Avto": {
-                "Ehtiyot qism": ["🛢️ Motor moyi", "⚙️ Filtr", "🛞 Balon", "🔋 Akkumulyator", "💡 Lampa"]
+                "Ehtiyot qism": ["🛢️ Motor moyi", "⚙️ Filtr", "🛞 Balon", "🔋 Akkumulyator", "💡 Lampa", "🧴 Oyna suvi", "🧽 Salon tozalagich", "🛑 Nakladka", "🧪 Antifriz"]
             },
             "O'yinchoq": {
-                "Bolalar": ["🚗 Mashina", "🧸 Ayiqcha", "🧩 Lego", "🚁 Dron", "🪆 Qo'g'irchoq"]
+                "Bolalar": ["🚗 Mashina", "🧸 Ayiqcha", "🧩 Lego", "🚁 Dron", "🪆 Qo'g'irchoq", "⚽ Koptok", "🔫 To'pponcha", "🛹 Skeyt/Rolik"]
             }
         };
 
@@ -327,7 +397,7 @@
                 { id: "talim", label: "Maktab", icon: "📚", color: "#8B5CF6", subs: []}, { id: "kiyim", label: "Kiyim", icon: "👕", color: "#2196F3", subs: []}, { id: "texnika", label: "Gadjet", icon: "💻", color: "#607D8B", subs: []}, { id: "chontak", label: "Cho'ntak", icon: "💵", color: "#10B981", subs: []}, { id: "kngil", label: "Ko'ngiloch", icon: "🎢", color: "#FF6B6B", subs: []}
             ],
             child_f: [
-                { id: "talim", label: "Maktab", icon: "📚", color: "#8B5CF6", subs: []}, { id: "kiyim", label: "Kiyim", icon: "👗", color: "#E91E63", subs: []}, { id: "kosm", label: "Go'zallik", icon: "💅", color: "#F48FB1", subs: []}, { id: "chontak", label: "Cho'ntak", icon: "💵", color: "#10B981", subs: []}, { id: "kngil", label: "Dugona/Kafe", icon: "🍕", color: "#FF6B6B", subs: []}
+                { id: "talim", label: "Maktab", icon: "📚", color: "#8B5CF6", subs: []}, { id: "kiyim", label: "Kiyim", icon: "👗", color: "#E91E63", subs: []}, { id: "kosm", label: "Go'zallik", icon: "💅", color: "#F48FB1", subs: []}, { id: "chontak", label: "Cho'ntak", icon: "💵", color: "#10B981", subs: []}, { id: "kngil", label: "Kafe/Dugona", icon: "🍕", color: "#FF6B6B", subs: []}
             ],
             home: [
                 { id: "oziq", label: "Oziq-ovqat", icon: "🛒", color: "#FF6B6B", subs: [ { id: "bozor", label: "Bozor", icon: "⚖️", items: [ {id:"g1", label:"Go'sht", icon:"🥩"}, {id:"m1", label:"Sabzavot", icon:"🍅"}, {id:"b1", label:"Baqqollik", icon:"🍚"} ]}, { id: "super", label: "Market", icon: "🏪", items: [ {id:"s1", label:"Sut/Tuxum", icon:"🥛"}, {id:"n1", label:"Non/Shirin", icon:"🍞"} ]} ]},
@@ -355,20 +425,28 @@
         const setVal = (id, v) => { if(el(id)) el(id).value = v; };
         const show = id => { if(el(id)) el(id).classList.remove('hidden'); };
         const hide = id => { if(el(id)) el(id).classList.add('hidden'); };
-        const toggleBlock = id => { const e = el(id); if(e) e.classList.toggle('hidden'); };
+        
+        window.toggleWidget = (panelId, headerId) => {
+            const p = el(panelId), h = el(headerId);
+            if(p && h) { p.classList.toggle('hidden'); h.classList.toggle('open'); }
+        };
+
         const formatM = n => new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
         const toast = (msg, err=false) => { const t = el("toast-msg"); if(t){ t.innerText=msg; t.style.background=err?"var(--danger)":"var(--success)"; t.style.display="block"; setTimeout(()=>t.style.display="none", 2500); } };
 
         function init() {
-            const raw = localStorage.getItem("xarajat_pro_v2");
+            const raw = localStorage.getItem("xarajat_pro_v3");
             if (raw) { try { state = JSON.parse(raw); } catch(e) {} }
             if (!state.profiles || !state.profiles.length) state.profiles = [ { id: "general", name: "Umumiy", icon: "🏠", age: null, role: "parent_m" }, { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", age: null, role: "home" } ];
             ['txs','incs','debts','sched','plan','deps'].forEach(k => { if(!state[k]) state[k] = []; });
             
-            const t = new Date().toISOString().slice(0,10); setVal("rep-from", t); setVal("rep-to", t);
+            const t = new Date().toISOString().slice(0,10);
+            setVal("rep-from", t); setVal("rep-to", t);
+            setVal("debt-start", t); setVal("dep-date", t);
+            
             renderSidebar(); updatePlanCats(); render();
         }
-        function save() { localStorage.setItem("xarajat_pro_v2", JSON.stringify(state)); render(); }
+        function save() { localStorage.setItem("xarajat_pro_v3", JSON.stringify(state)); render(); }
 
         // ==========================================
         // 3. UI & MODALS
@@ -408,22 +486,30 @@
         function checkAccess() {
             const p = state.profiles.find(x => x.id === curProf);
             const isChild = p && p.age !== null && p.age < 16 && p.id !== "general" && p.id !== "home_profile";
+            
             if(isChild) {
                 hide("nav-other"); hide("mode-inc"); hide("report-inc-card"); hide("user-stats-container");
                 if(curTab === "other") switchTab("home");
                 if(addMode !== "expense") setAddMode("expense");
-            } else { show("nav-other"); show("mode-inc"); show("report-inc-card"); show("user-stats-container"); }
+            } else {
+                show("nav-other"); show("mode-inc"); show("report-inc-card"); show("user-stats-container");
+            }
         }
 
         window.switchTab = id => {
-            curTab = id; document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+            curTab = id; 
+            document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
             if(el("nav-"+id)) el("nav-"+id).classList.add("active");
-            ["home", "add", "other", "report"].forEach(t => { const e = el("tab-"+t); if(e) { if(t===id) e.classList.remove('hidden'); else e.classList.add('hidden'); } });
+            
+            ["home", "add", "other", "report"].forEach(t => { 
+                const e = el("tab-"+t); 
+                if(e) { if(t===id) e.classList.remove('hidden'); else e.classList.add('hidden'); }
+            });
             if(id === 'add') checkAccess(); if(id === 'home') updatePlanCats(); render();
         };
 
         // ==========================================
-        // 4. PLAN (WISHLIST) & SMART TAGS
+        // 4. PLAN (WISHLIST)
         // ==========================================
         window.updatePlanCats = () => {
             const cEl = el("smart-plan-cat"); if(!cEl) return;
@@ -436,21 +522,28 @@
 
         window.updateSmartTags = () => {
             const cat = val("smart-plan-cat"), subEl = el("smart-plan-subcat");
-            if(!cat || !subEl) return; subEl.innerHTML = "";
-            if (PLAN_TAGS[cat]) { show("smart-plan-subcat"); Object.keys(PLAN_TAGS[cat]).forEach(s => { subEl.innerHTML += `<option value="${s}">${s}</option>`; }); } else hide("smart-plan-subcat");
+            if(!cat || !subEl) return;
+            subEl.innerHTML = "";
+            if (PLAN_TAGS[cat]) {
+                show("smart-plan-subcat");
+                Object.keys(PLAN_TAGS[cat]).forEach(s => { subEl.innerHTML += `<option value="${s}">${s}</option>`; });
+            } else hide("smart-plan-subcat");
             renderSmartTags();
         };
 
         window.renderSmartTags = () => {
-            const c = val("smart-plan-cat"), s = val("smart-plan-subcat"), cont = el("smart-tags-container"); cont.innerHTML = "";
-            if(PLAN_TAGS[c] && PLAN_TAGS[c][s]) { PLAN_TAGS[c][s].forEach(t => { cont.innerHTML += `<div class="smart-tag" onclick="quickAddPlan('${t}')">${t}</div>`; }); } else cont.innerHTML = "<span style='color:var(--text-muted); font-size:11px;'>Shablon yo'q.</span>";
+            const c = val("smart-plan-cat"), s = val("smart-plan-subcat"), cont = el("smart-tags-container");
+            cont.innerHTML = "";
+            if(PLAN_TAGS[c] && PLAN_TAGS[c][s]) {
+                PLAN_TAGS[c][s].forEach(t => { cont.innerHTML += `<div class="smart-tag" onclick="quickAddPlan('${t}')">${t}</div>`; });
+            } else cont.innerHTML = "<span style='color:var(--text-muted); font-size:12px;'>Shablon yo'q.</span>";
         };
 
         window.quickAddPlan = t => {
             const ni = el("plan-name"), qi = el("plan-qty");
             ni.value = t; qi.value = ""; 
-            ni.style.borderColor = "var(--success)"; setTimeout(() => ni.style.borderColor = "var(--border-color)", 500);
-            qi.focus(); toast("Hajm/Soni yozing");
+            ni.style.borderColor = "var(--success)"; setTimeout(() => ni.style.borderColor = "var(--border-color)", 600);
+            qi.focus(); toast("Endi hajmi yoki sonini yozing");
         };
 
         window.addPlannedItemManual = () => {
@@ -464,7 +557,8 @@
         window.openBuyModal = id => { const i = state.plan.find(x=>x.id==id); if(!i) return; buyPlanId = id; setTxt("buy-item-name", `✅ Olinyapti: ${i.text}`); setVal("buy-price", i.price||""); openModal("modal-buy"); };
         window.confirmBuyItem = () => {
             const p = parseFloat(val("buy-price")); if(!p || p<=0) return toast("Narx xato!", true);
-            const i = state.plan.find(x=>x.id==buyPlanId); if(!i) return; const d = new Date();
+            const i = state.plan.find(x=>x.id==buyPlanId); if(!i) return;
+            const d = new Date();
             state.txs.unshift({ id: Date.now(), amount: p, desc: i.text, cat: i.cat, subCat: i.market, date: d.toISOString().slice(0,10), time: d.toLocaleTimeString("uz-UZ", {hour:'2-digit', minute:'2-digit'}), user: tgUser, prof: i.prof });
             state.plan = state.plan.filter(x=>x.id!=buyPlanId); closeModal("modal-buy"); save(); toast("Xarajatga o'tdi ✅");
         };
@@ -479,13 +573,13 @@
                 h += `<div class="plan-item ${sk?'skipped':''}">
                     <div class="custom-checkbox ${!sk?'checked':''}" onclick="toggleSkipPlan(${x.id})"></div>
                     <div style="flex:1;">
-                        <div style="font-weight:bold; color:var(--primary); font-size:13px; text-decoration:${sk?'line-through':'none'};">${x.text}</div>
-                        <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">📍 ${x.market} | 🏷️ ${x.cat}</div>
+                        <div style="font-weight:bold; color:var(--primary); font-size:15px; text-decoration:${sk?'line-through':'none'};">${x.text}</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">📍 ${x.market} | 🏷️ ${x.cat}</div>
                     </div>
-                    <button onclick="openBuyModal(${x.id})" class="btn-primary btn-success" style="width:auto; padding:6px 10px; font-size:11px;" ${sk?'disabled':''}>Olish</button>
+                    <button onclick="openBuyModal(${x.id})" class="btn-primary btn-success" style="width:auto; padding:10px 14px; font-size:13px;" ${sk?'disabled':''}>Olish</button>
                 </div>`;
             });
-            setHtml("planned-list-container", h || "<div style='color:var(--text-muted); font-size:11px; text-align:center;'>Ro'yxat bo'sh.</div>");
+            setHtml("planned-list-container", h || "<div style='color:var(--text-muted); font-size:13px; text-align:center;'>Ro'yxat bo'sh.</div>");
         }
 
         // ==========================================
@@ -497,7 +591,7 @@
             if(!n||!d||d<1||d>31||!a) return toast("Xato!", true);
             const tm = new Date().getFullYear() + "-" + String(new Date().getMonth()+1).padStart(2,'0');
             state.sched.push({ id: Date.now(), label: n, day: d, amt: a, cat: c, tMonth: tm, miss: 0, prof: curProf });
-            setVal("sched-name",""); setVal("sched-day",""); setVal("sched-amount",""); toggleBlock("sched-setup-panel"); save(); toast("Qo'shildi!");
+            setVal("sched-name",""); setVal("sched-day",""); setVal("sched-amount",""); toggleWidget("sched-setup-panel", "sched-header"); save(); toast("Qo'shildi!");
         };
         window.delSched = id => { state.sched = state.sched.filter(s=>s.id!=id); save(); toast("O'chirildi!"); };
         window.updMiss = (id, v) => { const s = state.sched.find(x=>x.id==id); if(s) { s.miss = parseInt(v)||0; save(); } };
@@ -511,15 +605,15 @@
         };
 
         function renderSchedSet() {
-            let h = ""; state.sched.filter(s=>s.prof===curProf || curProf==="general").forEach(s => { h += `<div class="list-item" style="padding:8px;"><span><b>${s.label}</b> (${s.day}-sana)</span><button onclick="delSched(${s.id})" class="delete-btn">✕</button></div>`; });
+            let h = ""; state.sched.filter(s=>s.prof===curProf || curProf==="general").forEach(s => { h += `<div class="list-item"><span><b>${s.label}</b> (${s.day}-sana)</span><button onclick="delSched(${s.id})" class="delete-btn">✕</button></div>`; });
             setHtml("sched-edit-list", h);
         }
 
         // ==========================================
-        // 6. ADD TAB (KIRITISH) - 4 KOLONKA TEKIS DIZAYN
+        // 6. ADD TAB (KIRITISH)
         // ==========================================
         window.pressNum = v => { if (v==="C") amtStr=""; else if(v==="⌫") amtStr=amtStr.slice(0,-1); else if(amtStr.length<10) amtStr+=v; setTxt("num-display", amtStr ? formatM(parseInt(amtStr)).replace(" so'm","") : "0"); };
-        window.setAddMode = m => { addMode = m; actMainCat = null; actSubCat = null; el("mode-exp").style.background = m==="expense" ? "var(--danger)" : "var(--bg-card)"; el("mode-inc").style.background = m==="income" ? "var(--success)" : "var(--bg-card)"; setHtml("stay-hint",""); renderAddCats(); };
+        window.setAddMode = m => { addMode = m; actMainCat = null; actSubCat = null; el("mode-exp").style.background = m==="expense" ? "var(--danger)" : "var(--bg-card)"; el("mode-exp").style.borderColor = m==="expense" ? "var(--danger)" : "var(--border-color)"; el("mode-inc").style.background = m==="income" ? "var(--success)" : "var(--bg-card)"; el("mode-inc").style.borderColor = m==="income" ? "var(--success)" : "var(--border-color)"; setHtml("stay-hint",""); renderAddCats(); };
         
         function getCats() {
             const p = state.profiles.find(x=>x.id===curProf);
@@ -533,30 +627,27 @@
             const cont = el("cats-container"), head = el("cats-header-container"); if(!cont || !head) return;
             if (addMode === "income") { 
                 head.innerHTML = "";
-                cont.innerHTML = `<div class="cat-grid">${INC_SOURCES.map(s => `<button class="cat-btn" onclick="saveTx('${s.label}')"><span style="font-size:20px;">${s.icon}</span><span>${s.label}</span></button>`).join("")}</div>`; 
+                cont.innerHTML = `<div class="cat-grid">${INC_SOURCES.map(s => `<button class="cat-btn" onclick="saveTx('${s.label}')"><span style="font-size:24px;">${s.icon}</span><span>${s.label}</span></button>`).join("")}</div>`; 
                 return; 
             }
             
             const cats = getCats();
             
-            // XAVFSIZ RENDER: 3-qavat
             if (actSubCat) {
-                head.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; background:var(--bg-card); padding:8px 12px; border-radius:10px;"><span style="font-size:11px; color:var(--text-muted);">${actMainCat.label} <b style="color:var(--primary)">›</b> <b style="color:#fff">${actSubCat.label}</b></span><button onclick="backCat()" style="background:transparent; color:var(--primary); border:none; font-weight:bold; font-size:11px; cursor:pointer;">⬅ Orqaga</button></div>`;
+                head.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border-color);"><span style="font-size:12px; color:var(--text-muted);">${actMainCat.label} <b style="color:var(--primary); margin:0 4px;">›</b> <b style="color:#fff">${actSubCat.label}</b></span><button onclick="backCat()" style="background:transparent; color:var(--primary); border:none; font-weight:bold; font-size:13px; cursor:pointer;">⬅ Orqaga</button></div>`;
                 let h = `<div class="cat-grid">`;
-                actSubCat.items.forEach(i => { h += `<button class="cat-btn" style="background:rgba(59, 130, 246, 0.2); border:1px solid rgba(59, 130, 246, 0.4);" onclick="saveTx('${i.label}')"><span style="font-size:20px;">${i.icon}</span><span>${i.label}</span></button>`; });
+                actSubCat.items.forEach(i => { h += `<button class="cat-btn" style="background:rgba(59, 130, 246, 0.2); border-color:var(--primary);" onclick="saveTx('${i.label}')"><span style="font-size:26px;">${i.icon}</span><span>${i.label}</span></button>`; });
                 cont.innerHTML = h + `</div>`;
             } 
-            // XAVFSIZ RENDER: 2-qavat
             else if (actMainCat && actMainCat.subs && actMainCat.subs.length > 0) {
-                head.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; background:var(--bg-card); padding:8px 12px; border-radius:10px;"><span style="font-size:11px; color:var(--text-muted);">Rukun: <b style="color:#fff">${actMainCat.label}</b></span><button onclick="backCat()" style="background:transparent; color:var(--primary); border:none; font-weight:bold; font-size:11px; cursor:pointer;">⬅ Orqaga</button></div>`;
+                head.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border-color);"><span style="font-size:13px; color:var(--text-muted);">Rukun: <b style="color:#fff">${actMainCat.label}</b></span><button onclick="backCat()" style="background:transparent; color:var(--primary); border:none; font-weight:bold; font-size:13px; cursor:pointer;">⬅ Orqaga</button></div>`;
                 let h = `<div class="cat-grid">`;
-                actMainCat.subs.forEach(s => { const f = s.items?.length>0; h += `<button class="cat-btn" style="background:var(--bg-card); border:1px solid var(--border-color);" onclick="${f ? `clickSubCat('${s.id}')` : `saveTx('${s.label}')`}"><span style="font-size:20px;">${s.icon}</span><span>${s.label}</span></button>`; });
-                cont.innerHTML = h + `<button class="cat-btn" style="background:var(--bg-card); border:1px dashed var(--text-muted);" onclick="saveTx('${actMainCat.label}')"><span style="font-size:20px;">⚙️</span><span>Umumiy</span></button></div>`;
+                actMainCat.subs.forEach(s => { const f = s.items?.length>0; h += `<button class="cat-btn" style="background:var(--bg-card);" onclick="${f ? `clickSubCat('${s.id}')` : `saveTx('${s.label}')`}"><span style="font-size:26px;">${s.icon}</span><span>${s.label} ${f?'📂':''}</span></button>`; });
+                cont.innerHTML = h + `<button class="cat-btn" style="background:var(--bg-card); border:1px dashed var(--text-muted);" onclick="saveTx('${actMainCat.label}')"><span style="font-size:26px;">⚙️</span><span>Umumiy</span></button></div>`;
             } 
-            // XAVFSIZ RENDER: 1-qavat
             else {
                 head.innerHTML = "";
-                cont.innerHTML = `<div class="cat-grid">${cats.map(c => `<button class="cat-btn" style="background:${c.color||'var(--bg-card)'};" onclick="clickMainCat('${c.id}')"><span style="font-size:20px;">${c.icon}</span><span>${c.label}</span></button>`).join("")}</div>`;
+                cont.innerHTML = `<div class="cat-grid">${cats.map(c => `<button class="cat-btn" style="background:${c.color||'var(--bg-card)'}; border-color:${c.color||'var(--border-color)'};" onclick="clickMainCat('${c.id}')"><span style="font-size:26px;">${c.icon}</span><span>${c.label}</span></button>`).join("")}</div>`;
             }
         }
 
@@ -579,14 +670,61 @@
         // ==========================================
         // 7. OTHER TAB (BOSHQA: QARZ, OMONAT)
         // ==========================================
-        window.setDebtType = t => { debtType = t; el("debt-type-take").style.background = t==="take"?"var(--success)":"var(--bg-card)"; el("debt-type-give").style.background = t==="give"?"var(--danger)":"var(--bg-card)"; };
-        window.saveDebt = () => { const n=val("debt-name").trim(), a=parseFloat(val("debt-amount")); if(!n||!a) return toast("Xato!", true); const d=new Date().toISOString().slice(0,10); state.debts.unshift({id:Date.now(), name:n, amount:a, type:debtType, date:d}); if(debtType==="take") state.txs.unshift({id:Date.now()+1, amount:a, desc:`Qarz berildi: ${n}`, cat:"Qarz", date:d, time:"00:00", user:tgUser, prof:"general"}); else state.incs.unshift({id:Date.now()+1, amount:a, desc:`Qarz olindi: ${n}`, cat:"Qarz", date:d, time:"00:00", user:tgUser, prof:"general"}); setVal("debt-name",""); setVal("debt-amount",""); save(); toast("Saqlandi!"); };
-        window.closeDebt = id => { const d=state.debts.find(x=>x.id==id); if(!d) return; const t=new Date().toISOString().slice(0,10); if(d.type==="take") state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz qaytdi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:tgUser, prof:"general"}); else state.txs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz to'landi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:tgUser, prof:"general"}); state.debts=state.debts.filter(x=>x.id!=id); save(); toast("Uzildi!"); };
+        window.setDebtType = t => { debtType = t; el("debt-type-take").style.background = t==="take"?"var(--success)":"var(--bg-card)"; el("debt-type-give").style.background = t==="give"?"var(--danger)":"var(--bg-card)"; el("debt-type-take").style.borderColor = t==="take"?"var(--success)":"var(--border-color)"; el("debt-type-give").style.borderColor = t==="give"?"var(--danger)":"var(--border-color)"; };
+        window.saveDebt = () => { 
+            const n=val("debt-name").trim(), a=parseFloat(val("debt-amount")), s=val("debt-start"), e=val("debt-due"); 
+            if(!n||!a) return toast("Ma'lumot kam!", true); 
+            state.debts.unshift({id:Date.now(), name:n, amount:a, type:debtType, start:s, due:e}); 
+            if(debtType==="take") state.txs.unshift({id:Date.now()+1, amount:a, desc:`Qarz berildi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:tgUser, prof:"general"}); 
+            else state.incs.unshift({id:Date.now()+1, amount:a, desc:`Qarz olindi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:tgUser, prof:"general"}); 
+            setVal("debt-name",""); setVal("debt-amount",""); toggleWidget('debt-form', 'debt-header'); save(); toast("Saqlandi!"); 
+        };
+        window.closeDebt = id => { 
+            const d=state.debts.find(x=>x.id==id); if(!d) return; const t=new Date().toISOString().slice(0,10); 
+            if(d.type==="take") state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz qaytdi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:tgUser, prof:"general"}); 
+            else state.txs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz to'landi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:tgUser, prof:"general"}); 
+            state.debts=state.debts.filter(x=>x.id!=id); save(); toast("Uzildi!"); 
+        };
         
-        window.saveDeposit = () => { const n=val("dep-name").trim(), a=parseFloat(val("dep-amount")); if(!n||!a) return toast("Xato!", true); const d=new Date().toISOString().slice(0,10); state.deps.push({id:Date.now(), name:n, amount:a, date:d}); state.txs.unshift({id:Date.now()+1, amount:a, desc:`Omonat: ${n}`, cat:"Bank", date:d, time:"00:00", user:tgUser, prof:"general"}); setVal("dep-name",""); setVal("dep-amount",""); save(); toast("Ochildi!"); };
-        window.openIntModal = id => { curDepId = id; setVal("interest-amount", ""); openModal('modal-interest'); };
-        window.confirmInterest = () => { const a=parseFloat(val("interest-amount")); if(!a||a<=0) return toast("Xato!", true); const d=state.deps.find(x=>x.id==curDepId); if(!d) return; state.incs.unshift({id:Date.now(), amount:a, desc:`Foiz: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); closeModal('modal-interest'); save(); toast("Qo'shildi!"); };
-        window.closeDep = id => { const d=state.deps.find(x=>x.id==id); if(!d) return; state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Omonat qaytdi: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); state.deps=state.deps.filter(x=>x.id!=id); save(); toast("Yopildi!"); };
+        window.saveDeposit = () => { 
+            const n=val("dep-name").trim(), a=parseFloat(val("dep-amount")), s=val("dep-date"), d=parseInt(val("dep-duration")), r=parseFloat(val("dep-rate")), rt=val("dep-ratetype"), cap=el("dep-cap").checked;
+            if(!n||!a||!s||!d||!r) return toast("Barcha maydonlarni to'ldiring!", true); 
+            state.deps.push({id:Date.now(), name:n, amount:a, start:s, duration:d, rate:r, rateType:rt, cap:cap}); 
+            state.txs.unshift({id:Date.now()+1, amount:a, desc:`Omonat: ${n}`, cat:"Bank", date:s, time:new Date().toLocaleTimeString("uz-UZ",{hour:'2-digit',minute:'2-digit'}), user:tgUser, prof:"general"}); 
+            setVal("dep-name",""); setVal("dep-amount",""); setVal("dep-duration",""); setVal("dep-rate",""); toggleWidget('dep-form', 'dep-header'); save(); toast("Ochildi!"); 
+        };
+        
+        window.openTopupModal = id => { curDepId = id; const d=state.deps.find(x=>x.id==id); setTxt("topup-name", d.name); setVal("topup-amount", ""); openModal('modal-dep-topup'); };
+        window.confirmTopup = () => {
+            const a = parseFloat(val("topup-amount")); if(!a||a<=0) return toast("Xato", true);
+            const dep = state.deps.find(x=>x.id==curDepId); if(!dep) return;
+            dep.amount += a;
+            state.txs.unshift({id:Date.now(), amount:a, desc:`Omonat ustiga qo'shildi: ${dep.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"});
+            closeModal('modal-dep-topup'); save(); toast("Pul qo'shildi!");
+        };
+
+        window.openIntModal = id => { 
+            curDepId = id; const d=state.deps.find(x=>x.id==id); 
+            let est = d.rateType === 'annual' ? (d.amount * (d.rate/100) / 12) : (d.amount * (d.rate/100));
+            setTxt("interest-info", `${d.name} (${d.rate}% ${d.rateType==='annual'?'yillik':'oylik'}).\nKapitalizatsiya: ${d.cap?'HA (Ustiga qo\'shiladi)':'YO\'Q (Daromadga o\'tadi)'}`);
+            setVal("interest-amount", Math.round(est)); 
+            openModal('modal-interest'); 
+        };
+        window.confirmInterest = () => { 
+            const a=parseFloat(val("interest-amount")); if(!a||a<=0) return toast("Xato!", true); 
+            const d=state.deps.find(x=>x.id==curDepId); if(!d) return; 
+            if(d.cap) {
+                d.amount += a; // Ustiga qo'shiladi
+            } else {
+                state.incs.unshift({id:Date.now(), amount:a, desc:`Foiz: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); 
+            }
+            closeModal('modal-interest'); save(); toast("Foiz hisoblandi!"); 
+        };
+        window.closeDep = id => { 
+            const d=state.deps.find(x=>x.id==id); if(!d) return; 
+            state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Omonat qaytdi: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); 
+            state.deps=state.deps.filter(x=>x.id!=id); save(); toast("Yopildi!"); 
+        };
 
         // ==========================================
         // 8. RENDER ALL
@@ -606,17 +744,29 @@
                 let isDue = false, st = "";
                 if(sm < cm) { isDue = true; st = "O'tib ketgan!"; }
                 else if(sm === cm) { if(d.getDate() >= s.day) { isDue = true; st = "Vaqti keldi!"; } else if(s.day - d.getDate() <= 3) { isDue = true; st = `${s.day - d.getDate()} kun qoldi`; } }
-                if(isDue) sHtml += `<div class="scheduled-item"><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>⚠️ <b>${s.label}</b> <span style="font-size:10px; color:var(--danger);">(${st})</span></span></div><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;"><span style="font-size:10px;">Dam kun:</span><input type="number" placeholder="Kun" onchange="updMiss(${s.id}, this.value)" value="${s.miss||''}" style="width:50px; padding:4px; border-radius:6px; border:none; text-align:center;"></div><div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-weight:bold; font-size:14px; color:#fff;">${formatM(actAmt)}</span><button onclick="paySched(${s.id})" class="btn-primary btn-success" style="width:auto; padding:6px 10px; font-size:11px;">✅ To'lash</button></div></div>`;
+                if(isDue) sHtml += `<div class="scheduled-item"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>⚠️ <b style="font-size:14px;">${s.label}</b> <span style="font-size:11px; color:var(--danger);">(${st})</span></span></div><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;"><span style="font-size:12px;">Dam/Qoldirilgan kun:</span><input type="number" placeholder="Kun" onchange="updMiss(${s.id}, this.value)" value="${s.miss||''}" style="width:70px; padding:6px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-dark); color:#fff; text-align:center;"></div><div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-weight:bold; font-size:16px; color:#fff;">${formatM(actAmt)}</span><button onclick="paySched(${s.id})" class="btn-primary btn-success" style="width:auto; padding:8px 16px; font-size:13px;">✅ To'lash</button></div></div>`;
             });
-            setHtml("sched-list-container", sHtml || "<div style='text-align:center; color:var(--text-muted); font-size:11px; padding:4px;'>Majburiy to'lovlar yo'q.</div>");
+            setHtml("sched-list-container", sHtml || "<div style='text-align:center; color:var(--text-muted); font-size:13px; padding:10px;'>Majburiy to'lovlar yo'q.</div>");
             renderSchedSet();
 
             // TABS
             if(curTab === "home") renderPlanned();
             if(curTab === "add") renderAddCats();
             if(curTab === "other") {
-                setHtml("debts-list", state.debts.map(d => `<div class="list-item" style="border-left: 4px solid ${d.type==='take'?'var(--success)':'var(--danger)'};"><div style="flex:1;"><b>${d.name}</b><br><span style="font-size:10px; color:var(--text-muted);">${d.type==='take'?'Olaman':'Beraman'}</span></div><div style="font-weight:bold; margin-right:10px;">${formatM(d.amount)}</div><button onclick="closeDebt(${d.id})" class="btn-primary btn-success" style="width:auto; padding:6px 10px; font-size:11px;">Uzildi</button></div>`).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:12px;'>Qarzlar yo'q.</div>");
-                setHtml("deposits-list", state.deps.map(dep => `<div class="list-item" style="border-left: 4px solid var(--success); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:8px;"><div><b>${dep.name}</b></div><div style="font-weight:bold; color:var(--success);">${formatM(dep.amount)}</div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="openIntModal(${dep.id})" class="btn-primary" style="background:transparent; border:1px solid var(--success); color:var(--success); padding:6px; font-size:11px;">+ Foiz</button><button onclick="closeDep(${dep.id})" class="btn-primary" style="background:var(--danger); padding:6px; font-size:11px;">Yopish</button></div></div>`).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:12px;'>Omonatlar yo'q.</div>");
+                const today = new Date();
+                setHtml("debts-list", state.debts.map(x => {
+                    let dueStr = "";
+                    if(x.due) {
+                        const days = Math.ceil((new Date(x.due) - today) / 86400000);
+                        dueStr = days < 0 ? `<span style="color:var(--danger);">(${Math.abs(days)} kun o'tib ketdi)</span>` : `<span>(${days} kun qoldi)</span>`;
+                    }
+                    return `<div class="list-item" style="border-left: 5px solid ${x.type==='take'?'var(--success)':'var(--danger)'}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:6px;"><div><div style="font-size:15px; font-weight:bold;">${x.name}</div><div style="font-size:11px; color:var(--text-muted);">${x.type==='take'?'Olaman':'Beraman'} | Sana: ${x.start||''}</div><div style="font-size:11px; color:var(--warning); font-weight:bold; margin-top:2px;">Muddat: ${x.due||'Yo\'q'} ${dueStr}</div></div><div style="font-weight:bold; font-size:15px;">${formatM(x.amount)}</div></div><button onclick="closeDebt(${x.id})" class="btn-primary btn-success" style="padding:10px; font-size:13px;">✅ Qarz uzildi</button></div>`;
+                }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Qarzlar yo'q.</div>");
+
+                setHtml("deposits-list", state.deps.map(dep => {
+                    let endD = new Date(dep.start); endD.setMonth(endD.getMonth() + dep.duration);
+                    return `<div class="list-item" style="border-left: 5px solid var(--success); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:var(--success);">${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Stavka: ${dep.rate}% (${dep.rateType==='annual'?'Yillik':'Oylik'})</div><div style="font-size:11px; color:var(--text-muted);">Tugaydi: ${endD.toISOString().slice(0,10)}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px;">${formatM(dep.amount)}</div><div style="font-size:10px; color:var(--warning); margin-top:4px;">Kapitalizatsiya: ${dep.cap?'HA':'YO\'Q'}</div></div></div><div style="display:flex; gap:8px; width:100%;"><button onclick="openTopupModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:10px; font-size:12px;">+ Pul qo'shish</button><button onclick="openIntModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:10px; font-size:12px;">💸 Foiz olish</button></div><button onclick="closeDep(${dep.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px;">Omonatni Yopish</button></div>`;
+                }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Omonatlar yo'q.</div>");
             }
             if(curTab === "report") renderReport();
         }
@@ -629,21 +779,18 @@
             const pInc = fIncs.reduce((s,i)=>s+i.amount, 0), pExp = fTxs.reduce((s,x)=>s+x.amount, 0);
             setTxt("rep-inc-val", formatM(pInc)); setTxt("rep-exp-val", formatM(pExp));
 
-            // Users
             let uExp = {}; fTxs.forEach(x => { const u = x.user||"Siz"; uExp[u] = (uExp[u]||0)+x.amount; });
-            setHtml("user-stats-container", Object.entries(uExp).map(([u,a]) => `<div class="user-stat-card"><div style="font-size:11px; color:var(--text-muted);">${u}</div><div style="font-weight:bold; font-size:13px;">${formatM(a).replace(" so'm","")}</div></div>`).join("") || "<div style='color:var(--text-muted); font-size:11px;'>Ma'lumot yo'q</div>");
+            setHtml("user-stats-container", Object.entries(uExp).map(([u,a]) => `<div class="user-stat-card"><div style="font-size:12px; color:var(--text-muted);">${u}</div><div style="font-weight:bold; font-size:15px; margin-top:4px;">${formatM(a).replace(" so'm","")}</div></div>`).join("") || "<div style='color:var(--text-muted); font-size:13px;'>Ma'lumot yo'q</div>");
 
-            // Cats
             let cats = {}; fTxs.forEach(x => { cats[x.cat] = (cats[x.cat]||0)+x.amount; });
-            setHtml("rep-cats-list", Object.entries(cats).map(([c,a]) => { const p = Math.round((a/pExp)*100); return `<div style="background:var(--bg-card); padding:10px; border-radius:12px; margin-bottom:8px;"><div style="display:flex; justify-content:space-between; font-weight:bold; font-size:12px; margin-bottom:6px;"><span>${c} (${p}%)</span><span>${formatM(a)}</span></div><div style="background:rgba(255,255,255,0.05); border-radius:4px; height:6px;"><div style="height:100%; border-radius:4px; width:${p}%; background:var(--primary);"></div></div></div>`; }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:11px;'>Xarajat yo'q.</div>");
+            setHtml("rep-cats-list", Object.entries(cats).map(([c,a]) => { const p = Math.round((a/pExp)*100); return `<div style="background:var(--bg-card); padding:14px; border-radius:14px; margin-bottom:10px;"><div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px; margin-bottom:8px;"><span>${c} (${p}%)</span><span>${formatM(a)}</span></div><div style="background:rgba(255,255,255,0.05); border-radius:6px; height:8px;"><div style="height:100%; border-radius:6px; width:${p}%; background:var(--primary);"></div></div></div>`; }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Xarajat yo'q.</div>");
 
-            // Chrono
             const cb = [...fIncs.map(i=>({...i,m:'plus'})), ...fTxs.map(x=>({...x,m:'minus'}))].sort((a,b)=>b.id-a.id);
-            setHtml("rep-history-list", cb.map(i => `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border-color); font-size:12px;"><div><div style="font-weight:bold; color:${i.m==='plus'?'var(--success)':'#fff'};">${i.desc}</div><div style="font-size:9px; color:var(--text-muted);">👤 ${i.user||'Siz'} | ${i.date}</div></div><div style="display:flex; align-items:center; gap:8px;"><span style="font-weight:bold; color:${i.m==='plus'?'var(--success)':'var(--danger)'};">${i.m==='plus'?'+':'-'}${formatM(i.amount).replace(" so'm","")}</span> <button class="delete-btn" onclick="delItem('${i.m==='minus'?'tx':'inc'}', ${i.id})">✕</button></div></div>`).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:11px;'>Tarix bo'sh.</div>");
+            setHtml("rep-history-list", cb.map(i => `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border-color); font-size:14px;"><div><div style="font-weight:bold; color:${i.m==='plus'?'var(--success)':'#fff'};">${i.desc}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">👤 ${i.user||'Siz'} | 📅 ${i.date}</div></div><div style="display:flex; align-items:center; gap:10px;"><span style="font-weight:bold; color:${i.m==='plus'?'var(--success)':'var(--danger)'};">${i.m==='plus'?'+':'-'}${formatM(i.amount).replace(" so'm","")}</span> <button class="delete-btn" onclick="delItem('${i.m==='minus'?'tx':'inc'}', ${i.id})">✕</button></div></div>`).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Tarix bo'sh.</div>");
         }
 
         window.downloadExcel = () => { let c="\uFEFFSana,Profil,Turi,Odam,Rukun,Kategoriya,Izoh,Summa\n"; [...state.incs.map(i=>({...i,t:"Kirim"})), ...state.txs.map(t=>({...t,t:"Chiqim"}))].sort((a,b)=>b.id-a.id).forEach(r => { const p = state.profiles.find(x=>x.id==r.prof)?.name||'Umumiy'; c+=`${r.date},${p},${r.t},${r.user||'Siz'},${r.cat||''},${r.subCat||''},${r.desc},${r.amount}\n`; }); const b=new Blob([c], {type:'text/csv;charset=utf-8;'}); const l=document.createElement("a"); l.setAttribute("href", URL.createObjectURL(b)); l.setAttribute("download", "Hisobot.csv"); document.body.appendChild(l); l.click(); };
-        window.saveAndExit = () => { if(sessionData.length>0 && window.Telegram?.WebApp) window.Telegram.WebApp.sendData(JSON.stringify(sessionData)); else if(window.Telegram?.WebApp) window.Telegram.WebApp.close(); else showToast("Saqlandi!"); };
+        window.saveAndExit = () => { if(sessionData.length>0 && window.Telegram?.WebApp) window.Telegram.WebApp.sendData(JSON.stringify(sessionData)); else if(window.Telegram?.WebApp) window.Telegram.WebApp.close(); else toast("Saqlandi!"); };
 
         if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init); else init();
     </script>
