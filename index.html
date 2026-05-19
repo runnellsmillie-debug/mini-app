@@ -74,6 +74,9 @@
         .plan-item.skipped { opacity: 0.4; filter: grayscale(100%); border-color:var(--border-color); }
         .custom-checkbox { width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--primary); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; background:rgba(59,130,246,0.1); }
         .custom-checkbox.checked::after { content: '✓'; color: var(--primary); font-size: 18px; font-weight: bold; }
+        
+        .balance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .balance-card { background: var(--bg-card); padding: 15px; border-radius: 16px; text-align: center; }
     </style>
 </head>
 <body>
@@ -134,6 +137,18 @@
                 <button onclick="closeModal('modal-dep-interest')" class="btn-primary" style="background:var(--border-color);">Bekor</button>
                 <button onclick="confirmInterest()" class="btn-primary btn-success">Tasdiqlash</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Grafik uchun yangi modal -->
+    <div id="modal-dep-schedule" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-schedule')">
+        <div class="modal-box" style="max-height: 80vh; display: flex; flex-direction: column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0; color:var(--primary);">Oylik Grafik</h3>
+                <button onclick="closeModal('modal-dep-schedule')" style="background:none; border:none; color:var(--text-muted); font-size:22px; cursor:pointer;">✕</button>
+            </div>
+            <div id="schedule-info" style="color:var(--text-muted); font-size:13px; margin-bottom:10px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;">...</div>
+            <div id="schedule-list" style="overflow-y: auto; flex:1; padding-right:5px; margin-bottom:10px;"></div>
         </div>
     </div>
 
@@ -246,71 +261,83 @@
 
     <div id="tab-other" class="tab-content hidden">
         
-        <div class="widget-box">
-            <div class="toggle-header" id="dep-header" onclick="toggleWidget('dep-form', 'dep-header')">
-                <span>🏦 Bank / Omonat (Depozit)</span> <span class="chevron">▼</span>
-            </div>
-            
-            <div id="dep-form" class="hidden" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
-                <input type="text" id="dep-name" class="input-text" placeholder="Omonat nomi (Mas: Ipoteka Bank)" />
-                <input type="number" id="dep-amount" class="input-text" placeholder="Boshlang'ich summa..." />
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <div style="flex:1;">
-                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Ochilgan sana:</div>
-                        <input type="date" id="dep-date" class="input-text" style="margin:0;" />
-                    </div>
-                    <div style="flex:1;">
-                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat (oy):</div>
-                        <input type="number" id="dep-duration" class="input-text" placeholder="Mas: 12" style="margin:0;" />
-                    </div>
-                </div>
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <div style="flex:1;">
-                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Foiz stavka (%):</div>
-                        <input type="number" id="dep-rate" class="input-text" placeholder="Mas: 22" style="margin:0;" />
-                    </div>
-                    <div style="flex:1;">
-                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Stavka turi:</div>
-                        <select id="dep-ratetype" class="input-text" style="margin:0;">
-                            <option value="annual">Yillik</option>
-                            <option value="monthly">Oylik</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; background:var(--bg-dark); padding:10px; border-radius:10px; border:1px solid var(--border-color);">
-                    <input type="checkbox" id="dep-cap" style="width:20px; height:20px;" />
-                    <label for="dep-cap" style="font-size:13px; color:var(--text-main);">Kapitalizatsiya (Tushgan foiz asosiy qarzga qo'shilsinmi?)</label>
-                </div>
-                <button onclick="saveDeposit()" class="btn-primary btn-success">Omonat Ochish</button>
-            </div>
-            <div id="deposits-list" style="margin-top:15px;"></div>
+        <!-- Boshqa bo'limi uchun yuqori menyu (Tablar) -->
+        <div class="mode-selector" style="margin-bottom: 15px;">
+            <button id="other-mode-dep" class="mode-btn" style="background:var(--primary); border-color:var(--primary);" onclick="switchOther('dep')">🏦 Omonatlar</button>
+            <button id="other-mode-debt" class="mode-btn" onclick="switchOther('debt')">🤝 Qarz Daftari</button>
         </div>
 
-        <div class="widget-box">
-            <div class="toggle-header" id="debt-header" onclick="toggleWidget('debt-form', 'debt-header')">
-                <span>🤝 Qarz Daftari</span> <span class="chevron">▼</span>
-            </div>
-            
-            <div id="debt-form" class="hidden" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
-                <input type="text" id="debt-name" class="input-text" placeholder="Kimga / Kimdan (Ism yozing)" />
-                <input type="number" id="debt-amount" class="input-text" placeholder="Summa..." />
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <div style="flex:1;">
-                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Olingan/Berilgan sana:</div>
-                        <input type="date" id="debt-start" class="input-text" style="margin:0;" />
-                    </div>
-                    <div style="flex:1;">
-                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Qaytarish muddati:</div>
-                        <input type="date" id="debt-due" class="input-text" style="margin:0;" />
-                    </div>
+        <!-- OMONAT QISMI -->
+        <div id="other-sec-dep">
+            <div class="widget-box">
+                <div class="toggle-header" id="dep-header" onclick="toggleWidget('dep-form', 'dep-header')">
+                    <span>➕ Yangi Omonat Ochish</span> <span class="chevron">▼</span>
                 </div>
-                <div class="mode-selector" style="margin-top:5px;">
-                    <button id="debt-type-take" class="mode-btn" style="background:var(--success); border-color:var(--success);" onclick="setDebtType('take')">Menga qaytaradi</button>
-                    <button id="debt-type-give" class="mode-btn" onclick="setDebtType('give')">Men qaytaraman</button>
+                
+                <div id="dep-form" class="hidden" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
+                    <input type="text" id="dep-name" class="input-text" placeholder="Omonat nomi (Mas: Ipoteka Bank)" />
+                    <input type="number" id="dep-amount" class="input-text" placeholder="Boshlang'ich summa..." />
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <div style="flex:1;">
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Ochilgan sana:</div>
+                            <input type="date" id="dep-date" class="input-text" style="margin:0;" />
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat (oy):</div>
+                            <input type="number" id="dep-duration" class="input-text" placeholder="Mas: 12" style="margin:0;" />
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <div style="flex:1;">
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Foiz stavka (%):</div>
+                            <input type="number" id="dep-rate" class="input-text" placeholder="Mas: 22" style="margin:0;" />
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Stavka turi:</div>
+                            <select id="dep-ratetype" class="input-text" style="margin:0;">
+                                <option value="annual">Yillik</option>
+                                <option value="monthly">Oylik</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; background:var(--bg-dark); padding:10px; border-radius:10px; border:1px solid var(--border-color);">
+                        <input type="checkbox" id="dep-cap" style="width:20px; height:20px;" />
+                        <label for="dep-cap" style="font-size:13px; color:var(--text-main);">Kapitalizatsiya (Tushgan foiz asosiy qarzga qo'shilsinmi?)</label>
+                    </div>
+                    <button onclick="saveDeposit()" class="btn-primary btn-success">Saqlash</button>
                 </div>
-                <button onclick="saveDebt()" class="btn-primary">Qarzni Saqlash</button>
             </div>
-            <div id="debts-list" style="margin-top:15px;"></div>
+            <div id="deposits-list"></div>
+        </div>
+
+        <!-- QARZ QISMI -->
+        <div id="other-sec-debt" class="hidden">
+            <div class="widget-box">
+                <div class="toggle-header" id="debt-header" onclick="toggleWidget('debt-form', 'debt-header')">
+                    <span>➕ Yangi Qarz Qo'shish</span> <span class="chevron">▼</span>
+                </div>
+                
+                <div id="debt-form" class="hidden" style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--border-color);">
+                    <input type="text" id="debt-name" class="input-text" placeholder="Kimga / Kimdan (Ism yozing)" />
+                    <input type="number" id="debt-amount" class="input-text" placeholder="Summa..." />
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <div style="flex:1;">
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Sana:</div>
+                            <input type="date" id="debt-start" class="input-text" style="margin:0;" />
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat:</div>
+                            <input type="date" id="debt-due" class="input-text" style="margin:0;" />
+                        </div>
+                    </div>
+                    <div class="mode-selector" style="margin-top:5px;">
+                        <button id="debt-type-take" class="mode-btn" style="background:var(--success); border-color:var(--success);" onclick="setDebtType('take')">Menga qaytaradi</button>
+                        <button id="debt-type-give" class="mode-btn" onclick="setDebtType('give')">Men qaytaraman</button>
+                    </div>
+                    <button onclick="saveDebt()" class="btn-primary">Qarzni Saqlash</button>
+                </div>
+            </div>
+            <div id="debts-list"></div>
         </div>
     </div>
 
@@ -406,6 +433,7 @@
         };
 
         const INC_SOURCES = [ { label: "Oylik maosh", icon: "💼" }, { label: "IMSOA foyda", icon: "💰" }, { label: "Qo'shimcha", icon: "🎁" } ];
+        const OY_NOMLARI = ["Yanvar","Fevral","Mart","Aprel","May","Iyun","Iyul","Avgust","Sentabr","Oktabr","Noyabr","Dekabr"];
 
         // ==========================================
         // 2. STATE MANAGEMENT
@@ -488,11 +516,11 @@
             const isChild = p && p.age !== null && p.age < 16 && p.id !== "general" && p.id !== "home_profile";
             
             if(isChild) {
-                hide("nav-other"); hide("mode-inc"); hide("report-inc-card"); hide("user-stats-container");
+                hide("nav-other"); hide("mode-inc"); hide("rep-inc-card"); hide("user-stats-container");
                 if(curTab === "other") switchTab("home");
                 if(addMode !== "expense") setAddMode("expense");
             } else {
-                show("nav-other"); show("mode-inc"); show("report-inc-card"); show("user-stats-container");
+                show("nav-other"); show("mode-inc"); show("rep-inc-card"); show("user-stats-container");
             }
         }
 
@@ -515,7 +543,7 @@
             const cEl = el("smart-plan-cat"); if(!cEl) return;
             const p = state.profiles.find(x=>x.id===curProf);
             const isChild = p && p.age !== null && p.age < 16 && p.id !== "general" && p.id !== "home_profile";
-            let c = isChild ? ["Kiyim", "Ta'lim", "O'yinchoq"] : (p.id === "home_profile" ? ["Oziq-ovqat", "Xo'jalik/Uy"] : Object.keys(PLAN_TAGS));
+            let c = isChild ? ["Kiyim", "Ta'lim", "O'yinchoq"] : (p?.id === "home_profile" ? ["Oziq-ovqat", "Xo'jalik/Uy"] : Object.keys(PLAN_TAGS));
             cEl.innerHTML = c.map(x => `<option value="${x}">${x}</option>`).join("");
             updateSmartTags();
         };
@@ -670,6 +698,44 @@
         // ==========================================
         // 7. OTHER TAB (BOSHQA: QARZ, OMONAT)
         // ==========================================
+        window.switchOther = sec => {
+            el("other-mode-dep").style.background = sec==="dep" ? "var(--primary)" : "var(--bg-card)";
+            el("other-mode-dep").style.borderColor = sec==="dep" ? "var(--primary)" : "var(--border-color)";
+            el("other-mode-debt").style.background = sec==="debt" ? "var(--primary)" : "var(--bg-card)";
+            el("other-mode-debt").style.borderColor = sec==="debt" ? "var(--primary)" : "var(--border-color)";
+            
+            if(sec === "dep") { show("other-sec-dep"); hide("other-sec-debt"); }
+            else { hide("other-sec-dep"); show("other-sec-debt"); }
+        };
+
+        window.openScheduleModal = id => {
+            const d = state.deps.find(x=>x.id==id); if(!d) return;
+            setTxt("schedule-info", `🏦 ${d.name}\nBoshlang'ich: ${formatM(d.amount)}\nShart: ${d.rate}% ${d.rateType==='annual'?'Yillik':'Oylik'} (${d.cap?'Kapitalizatsiya':'Oddiy'})`);
+            
+            let html = "";
+            let currentBal = d.amount;
+            let mRate = d.rateType === 'annual' ? (d.rate/100)/12 : (d.rate/100);
+            let startDate = new Date(d.start);
+            let totalProfit = 0;
+
+            for(let i=1; i<=d.duration; i++) {
+                startDate.setMonth(startDate.getMonth() + 1);
+                let monthStr = startDate.toISOString().slice(0,10);
+                let interest = d.cap ? (currentBal * mRate) : (d.amount * mRate);
+                totalProfit += interest;
+                if(d.cap) currentBal += interest;
+
+                html += `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-color); font-size:13px;">
+                    <div><b style="color:var(--primary);">${i}-oy</b><div style="color:var(--text-muted); font-size:11px;">${monthStr}</div></div>
+                    <div style="text-align:right;"><b style="color:var(--success);">+${formatM(interest)}</b><div style="color:var(--text-muted); font-size:11px;">Jami qoldiq: ${formatM(currentBal)}</div></div>
+                </div>`;
+            }
+            
+            html += `<div style="text-align:right; font-weight:bold; color:var(--warning); margin-top:15px; font-size:15px;">Jami sof foyda: ${formatM(totalProfit)}</div>`;
+            setHtml("schedule-list", html);
+            openModal("modal-dep-schedule");
+        };
+
         window.setDebtType = t => { debtType = t; el("debt-type-take").style.background = t==="take"?"var(--success)":"var(--bg-card)"; el("debt-type-give").style.background = t==="give"?"var(--danger)":"var(--bg-card)"; el("debt-type-take").style.borderColor = t==="take"?"var(--success)":"var(--border-color)"; el("debt-type-give").style.borderColor = t==="give"?"var(--danger)":"var(--border-color)"; };
         window.saveDebt = () => { 
             const n=val("debt-name").trim(), a=parseFloat(val("debt-amount")), s=val("debt-start"), e=val("debt-due"); 
@@ -708,7 +774,7 @@
             let est = d.rateType === 'annual' ? (d.amount * (d.rate/100) / 12) : (d.amount * (d.rate/100));
             setTxt("interest-info", `${d.name} (${d.rate}% ${d.rateType==='annual'?'yillik':'oylik'}).\nKapitalizatsiya: ${d.cap?'HA (Ustiga qo\'shiladi)':'YO\'Q (Daromadga o\'tadi)'}`);
             setVal("interest-amount", Math.round(est)); 
-            openModal('modal-interest'); 
+            openModal('modal-dep-interest'); 
         };
         window.confirmInterest = () => { 
             const a=parseFloat(val("interest-amount")); if(!a||a<=0) return toast("Xato!", true); 
@@ -718,7 +784,7 @@
             } else {
                 state.incs.unshift({id:Date.now(), amount:a, desc:`Foiz: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); 
             }
-            closeModal('modal-interest'); save(); toast("Foiz hisoblandi!"); 
+            closeModal('modal-dep-interest'); save(); toast("Foiz hisoblandi!"); 
         };
         window.closeDep = id => { 
             const d=state.deps.find(x=>x.id==id); if(!d) return; 
@@ -744,7 +810,7 @@
                 let isDue = false, st = "";
                 if(sm < cm) { isDue = true; st = "O'tib ketgan!"; }
                 else if(sm === cm) { if(d.getDate() >= s.day) { isDue = true; st = "Vaqti keldi!"; } else if(s.day - d.getDate() <= 3) { isDue = true; st = `${s.day - d.getDate()} kun qoldi`; } }
-                if(isDue) sHtml += `<div class="scheduled-item"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>⚠️ <b style="font-size:14px;">${s.label}</b> <span style="font-size:11px; color:var(--danger);">(${st})</span></span></div><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;"><span style="font-size:12px;">Dam/Qoldirilgan kun:</span><input type="number" placeholder="Kun" onchange="updMiss(${s.id}, this.value)" value="${s.miss||''}" style="width:70px; padding:6px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-dark); color:#fff; text-align:center;"></div><div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-weight:bold; font-size:16px; color:#fff;">${formatM(actAmt)}</span><button onclick="paySched(${s.id})" class="btn-primary btn-success" style="width:auto; padding:8px 16px; font-size:13px;">✅ To'lash</button></div></div>`;
+                if(isDue) sHtml += `<div class="scheduled-item" style="background:var(--bg-card); padding:15px; border-radius:14px; margin-bottom:10px; border:1px solid var(--border-color);"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>⚠️ <b style="font-size:14px;">${s.label}</b> <span style="font-size:11px; color:var(--danger);">(${st})</span></span></div><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;"><span style="font-size:12px;">Dam/Qoldirilgan kun:</span><input type="number" placeholder="Kun" onchange="updMiss(${s.id}, this.value)" value="${s.miss||''}" style="width:70px; padding:6px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-dark); color:#fff; text-align:center;"></div><div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-weight:bold; font-size:16px; color:#fff;">${formatM(actAmt)}</span><button onclick="paySched(${s.id})" class="btn-primary btn-success" style="width:auto; padding:8px 16px; font-size:13px;">✅ To'lash</button></div></div>`;
             });
             setHtml("sched-list-container", sHtml || "<div style='text-align:center; color:var(--text-muted); font-size:13px; padding:10px;'>Majburiy to'lovlar yo'q.</div>");
             renderSchedSet();
@@ -765,8 +831,19 @@
 
                 setHtml("deposits-list", state.deps.map(dep => {
                     let endD = new Date(dep.start); endD.setMonth(endD.getMonth() + dep.duration);
-                    return `<div class="list-item" style="border-left: 5px solid var(--success); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:var(--success);">${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Stavka: ${dep.rate}% (${dep.rateType==='annual'?'Yillik':'Oylik'})</div><div style="font-size:11px; color:var(--text-muted);">Tugaydi: ${endD.toISOString().slice(0,10)}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px;">${formatM(dep.amount)}</div><div style="font-size:10px; color:var(--warning); margin-top:4px;">Kapitalizatsiya: ${dep.cap?'HA':'YO\'Q'}</div></div></div><div style="display:flex; gap:8px; width:100%;"><button onclick="openTopupModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:10px; font-size:12px;">+ Pul qo'shish</button><button onclick="openIntModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:10px; font-size:12px;">💸 Foiz olish</button></div><button onclick="closeDep(${dep.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px;">Omonatni Yopish</button></div>`;
-                }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Omonatlar yo'q.</div>");
+                    return `<div class="list-item" style="border-left: 5px solid var(--success); flex-direction:column; align-items:flex-start;">
+                        <div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;">
+                            <div><div style="font-size:15px; font-weight:bold; color:var(--success);">${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Stavka: ${dep.rate}% (${dep.rateType==='annual'?'Yillik':'Oylik'})</div><div style="font-size:11px; color:var(--text-muted);">Tugaydi: ${endD.toISOString().slice(0,10)}</div></div>
+                            <div style="text-align:right;"><div style="font-weight:bold; font-size:16px;">${formatM(dep.amount)}</div><div style="font-size:10px; color:var(--warning); margin-top:4px;">Kapitalizatsiya: ${dep.cap?'HA':'YO\'Q'}</div></div>
+                        </div>
+                        <div style="display:flex; gap:6px; width:100%;">
+                            <button onclick="openTopupModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 2px; font-size:11px;">+ Qo'shish</button>
+                            <button onclick="openIntModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 2px; font-size:11px;">💸 Foiz</button>
+                            <button onclick="openScheduleModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 2px; font-size:11px;">📊 Grafik</button>
+                        </div>
+                        <button onclick="closeDep(${dep.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px;">Omonatni Yopish</button>
+                    </div>`;
+                }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Omonatlar yo'q.</div>");
             }
             if(curTab === "report") renderReport();
         }
@@ -780,7 +857,7 @@
             setTxt("rep-inc-val", formatM(pInc)); setTxt("rep-exp-val", formatM(pExp));
 
             let uExp = {}; fTxs.forEach(x => { const u = x.user||"Siz"; uExp[u] = (uExp[u]||0)+x.amount; });
-            setHtml("user-stats-container", Object.entries(uExp).map(([u,a]) => `<div class="user-stat-card"><div style="font-size:12px; color:var(--text-muted);">${u}</div><div style="font-weight:bold; font-size:15px; margin-top:4px;">${formatM(a).replace(" so'm","")}</div></div>`).join("") || "<div style='color:var(--text-muted); font-size:13px;'>Ma'lumot yo'q</div>");
+            setHtml("user-stats-container", Object.entries(uExp).map(([u,a]) => `<div class="user-stat-card" style="background:var(--bg-card); padding:10px 15px; border-radius:12px; border:1px solid var(--border-color); min-width:100px; text-align:center;"><div style="font-size:12px; color:var(--text-muted);">${u}</div><div style="font-weight:bold; font-size:15px; margin-top:4px;">${formatM(a).replace(" so'm","")}</div></div>`).join("") || "<div style='color:var(--text-muted); font-size:13px;'>Ma'lumot yo'q</div>");
 
             let cats = {}; fTxs.forEach(x => { cats[x.cat] = (cats[x.cat]||0)+x.amount; });
             setHtml("rep-cats-list", Object.entries(cats).map(([c,a]) => { const p = Math.round((a/pExp)*100); return `<div style="background:var(--bg-card); padding:14px; border-radius:14px; margin-bottom:10px;"><div style="display:flex; justify-content:space-between; font-weight:bold; font-size:14px; margin-bottom:8px;"><span>${c} (${p}%)</span><span>${formatM(a)}</span></div><div style="background:rgba(255,255,255,0.05); border-radius:6px; height:8px;"><div style="height:100%; border-radius:6px; width:${p}%; background:var(--primary);"></div></div></div>`; }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Xarajat yo'q.</div>");
