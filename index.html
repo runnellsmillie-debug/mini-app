@@ -93,6 +93,10 @@
         .bank-table td:first-child { text-align: left; }
         .status-paid { color: var(--success); font-weight:bold; }
         .status-unpaid { color: var(--warning); }
+        
+        .credit-analysis-box { background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary); padding: 12px; border-radius: 10px; margin-bottom: 12px; }
+        .analysis-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+        .analysis-row b { color: #fff; }
     </style>
 </head>
 <body>
@@ -231,35 +235,39 @@
                     
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <div style="font-size:11px; color:var(--text-muted);">Rasmiy Banklar:</div>
-                        <button onclick="updateBankData()" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">🔄 Bazani Yangilash</button>
+                        <button onclick="updateBankData()" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">🔄 Yangilash</button>
                     </div>
                     <div style="display:flex; gap:8px; margin-bottom:8px;">
                         <select id="credit-bank" class="input-text" style="flex:1; margin:0;" onchange="updateCreditTypes()"></select>
-                        <select id="credit-type-name" class="input-text" style="flex:1; margin:0;"></select>
+                        <select id="credit-type-name" class="input-text" style="flex:1; margin:0;" onchange="onCreditTypeChange()"></select>
                     </div>
 
-                    <input type="text" inputmode="numeric" id="credit-amount" class="input-text" placeholder="Olingan jami summa..." oninput="formatSpace(this)" />
+                    <input type="text" inputmode="numeric" id="credit-amount" class="input-text" placeholder="Olingan jami summa..." oninput="formatSpace(this); updateCreditAnalysis();" />
                     
                     <div style="display:flex; gap:8px; margin-bottom:8px;">
                         <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Olingan sana:</div><input type="date" id="credit-date" class="input-text" style="margin:0;" /></div>
                         <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">To'lov kuni (1-31):</div><input type="number" id="credit-payday" class="input-text" placeholder="Mas: 15" style="margin:0;" /></div>
                     </div>
                     <div style="display:flex; gap:8px; margin-bottom:8px;">
-                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat (oy):</div><input type="number" id="credit-duration" class="input-text" placeholder="Mas: 36" style="margin:0;" /></div>
-                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Yillik foiz (%):</div><input type="number" id="credit-rate" class="input-text" placeholder="Mas: 24" style="margin:0;" /></div>
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat (oy):</div><input type="number" id="credit-duration" class="input-text" placeholder="Mas: 36" style="margin:0;" oninput="updateCreditAnalysis()" /></div>
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Yillik foiz (%):</div><input type="number" id="credit-rate" class="input-text" placeholder="Mas: 24" style="margin:0;" oninput="updateCreditAnalysis()" /></div>
                     </div>
                     <div style="margin-bottom:8px;">
                         <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">To'lov turi:</div>
-                        <select id="credit-type" class="input-text" style="margin:0;"><option value="annuity">Annuitet (Bir xil oylik to'lov)</option><option value="differentiated">Differensial (Kamayib boruvchi)</option></select>
+                        <select id="credit-type" class="input-text" style="margin:0;" onchange="updateCreditAnalysis()"><option value="annuity">Annuitet (Bir xil oylik to'lov)</option><option value="differentiated">Differensial (Kamayib boruvchi)</option></select>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; background:var(--bg-dark); padding:10px; border-radius:10px; border:1px solid var(--border-color);">
-                        <input type="checkbox" id="credit-grace-check" style="width:20px; height:20px;" onchange="toggleGraceFields()" />
+                        <input type="checkbox" id="credit-grace-check" style="width:20px; height:20px;" onchange="toggleGraceFields(); updateCreditAnalysis();" />
                         <label for="credit-grace-check" style="font-size:13px; color:var(--text-main);">Imtiyozli davri bormi?</label>
                     </div>
                     <div id="grace-fields" class="hidden" style="gap:8px; margin-bottom:12px;">
-                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Imtiyoz muddati (oy):</div><input type="number" id="credit-grace-dur" class="input-text" style="margin:0;" value="0"/></div>
-                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Imtiyoz foizi (%):</div><input type="number" id="credit-grace-rate" class="input-text" style="margin:0;" value="0"/></div>
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Imtiyoz muddati (oy):</div><input type="number" id="credit-grace-dur" class="input-text" style="margin:0;" value="0" oninput="updateCreditAnalysis()"/></div>
+                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Imtiyoz foizi (%):</div><input type="number" id="credit-grace-rate" class="input-text" style="margin:0;" value="0" oninput="updateCreditAnalysis()"/></div>
+                    </div>
+
+                    <div id="credit-analysis-box" class="credit-analysis-box">
+                        <div style='font-size:11px; color:var(--text-muted); text-align:center;'>Tahlil uchun bank va summani kiriting...</div>
                     </div>
 
                     <button onclick="saveCredit()" class="btn-primary btn-success">Kreditni Saqlash & Grafik Tuzish</button>
@@ -356,24 +364,57 @@
         const CAT_COLORS = { "Oziq-ovqat":"#FF6B6B", "Uy_Xojalik":"#FBBF24", "Kiyim":"#8B5CF6", "Talim":"#2196F3", "Avto":"#607D8B", "Oyinchoq":"#34D399" };
         const CAT_ICONS = { "Oziq-ovqat":"🛒", "Uy_Xojalik":"🏠", "Kiyim":"👕", "Talim":"📚", "Avto":"🚗", "Oyinchoq":"🧸" };
 
-        const UZ_BANKS = {
-            "NBU (Milliy Bank)": ["Iste'mol krediti", "Avtokredit", "Ipoteka", "Ta'lim krediti"],
-            "SQB (O'zSQB)": ["Iste'mol krediti", "Avtokredit (BYD)", "Ipoteka", "Mikroqarz"],
-            "Ipak Yuli Bank": ["Avtokredit", "Mikroqarz", "Ipoteka", "Biznes kredit"],
-            "Kapitalbank": ["Iste'mol krediti", "Avtokredit", "Mikroqarz"],
-            "TBC Bank": ["Mikroqarz", "Avtokredit"],
-            "Asakabank": ["Avtokredit", "Ipoteka", "Ta'lim krediti"],
-            "Aloqabank": ["Iste'mol krediti", "Ipoteka", "Avtokredit"],
-            "Ipoteka Bank": ["Ipoteka", "Mikroqarz", "Avtokredit"],
-            "Agrobank": ["Fermer krediti", "Iste'mol krediti", "Avtokredit"],
-            "Xalq Banki": ["Pensiya krediti", "Mikroqarz", "Ipoteka"]
+        const BANK_DB = {
+            "NBU (Milliy Bank)": {
+                icon: "🏛",
+                credits: [
+                    { id: "n1", name: "Iste'mol krediti", icon: "🛍️", rate: 24, maxDur: 36, maxAmt: 50000000 },
+                    { id: "n2", name: "Avtokredit", icon: "🚗", rate: 23, maxDur: 60, maxAmt: 400000000 },
+                    { id: "n3", name: "Ta'lim krediti", icon: "🎓", rate: 14, maxDur: 48, maxAmt: 30000000 }
+                ]
+            },
+            "Ipak Yuli Bank": {
+                icon: "🐫",
+                credits: [
+                    { id: "i1", name: "Avtokredit (BYD)", icon: "🚙", rate: 16, maxDur: 60, maxAmt: 350000000 },
+                    { id: "i2", name: "Mikroqarz", icon: "💸", rate: 28, maxDur: 24, maxAmt: 50000000 },
+                    { id: "i3", name: "Ipoteka", icon: "🏠", rate: 18, maxDur: 240, maxAmt: 500000000 }
+                ]
+            },
+            "SQB (O'zSQB)": {
+                icon: "🏢",
+                credits: [
+                    { id: "s1", name: "Iste'mol", icon: "🛍️", rate: 25, maxDur: 36, maxAmt: 50000000 },
+                    { id: "s2", name: "Avtokredit", icon: "🚗", rate: 24, maxDur: 48, maxAmt: 300000000 }
+                ]
+            },
+            "Kapitalbank": {
+                icon: "💳",
+                credits: [
+                    { id: "k1", name: "Mikroqarz", icon: "💸", rate: 27, maxDur: 36, maxAmt: 50000000 },
+                    { id: "k2", name: "Avtokredit", icon: "🚗", rate: 24, maxDur: 48, maxAmt: 500000000 }
+                ]
+            },
+            "TBC Bank": {
+                icon: "📱",
+                credits: [
+                    { id: "t1", name: "Mikroqarz (Onlayn)", icon: "📱", rate: 30, maxDur: 24, maxAmt: 50000000 }
+                ]
+            },
+            "Xalq Banki": {
+                icon: "👥",
+                credits: [
+                    { id: "x1", name: "Pensiya krediti", icon: "🧓", rate: 22, maxDur: 36, maxAmt: 20000000 },
+                    { id: "x2", name: "Ipoteka", icon: "🏠", rate: 17, maxDur: 240, maxAmt: 400000000 }
+                ]
+            }
         };
 
         let CATS_DATA = { general: [], child_m: [], child_f: [], home: [] };
         const INC_SOURCES = [ { label: "Oylik maosh", icon: "💼" }, { label: "IMSOA foyda", icon: "💰" }, { label: "Qo'shimcha", icon: "🎁" } ];
 
         // ==========================================
-        // 2. STATE MANAGEMENT
+        // 2. STATE MANAGEMENT & PROBEL NUMBERS
         // ==========================================
         let state = { profiles: [], txs: [], incs: [], debts: [], sched: [], plan: [], deps: [], credits: [] };
         let showArch = { plan: false, sched: false, debt: false, dep: false, credit: false };
@@ -393,7 +434,12 @@
         const show = id => { if(el(id)) el(id).classList.remove('hidden'); };
         const hide = id => { if(el(id)) el(id).classList.add('hidden'); };
         
-        window.formatSpace = (input) => { let v = input.value.replace(/\s+/g, ''); if(v === '') return; v = v.replace(/[^\d.]/g, ''); let p = v.split('.'); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, " "); input.value = p.join('.'); };
+        window.formatSpace = (input) => { 
+            let v = input.value.replace(/\s+/g, ''); if(v === '') return; 
+            v = v.replace(/[^\d.]/g, ''); let p = v.split('.'); 
+            p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, " "); input.value = p.join('.'); 
+            if(input.id.startsWith('credit')) updateCreditAnalysis();
+        };
         window.getNum = (id) => parseFloat(val(id).replace(/\s+/g, '')) || 0;
 
         window.toggleWidget = (panelId, headerId) => { const p = el(panelId), h = el(headerId); if(p && h) { p.classList.toggle('hidden'); h.classList.toggle('open'); } };
@@ -402,7 +448,7 @@
         const toast = (msg, err=false) => { const t = el("toast-msg"); if(t){ t.innerText=msg; t.style.background=err?"var(--danger)":"var(--success)"; t.style.display="block"; setTimeout(()=>t.style.display="none", 2500); } };
 
         function init() {
-            const raw = localStorage.getItem("xarajat_pro_v7");
+            const raw = localStorage.getItem("xarajat_pro_v8");
             if (raw) { try { state = JSON.parse(raw); } catch(e) {} }
             if (!state.profiles || !state.profiles.length) state.profiles = [ { id: "general", name: "Umumiy", icon: "🏠", age: null, role: "parent_m" }, { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", age: null, role: "home" } ];
             ['txs','incs','debts','sched','plan','deps','credits'].forEach(k => { if(!state[k]) state[k] = []; });
@@ -416,7 +462,7 @@
             
             renderSidebar(); updatePlanCats(); render();
         }
-        function save() { localStorage.setItem("xarajat_pro_v7", JSON.stringify(state)); render(); }
+        function save() { localStorage.setItem("xarajat_pro_v8", JSON.stringify(state)); render(); }
 
         const slugify = text => text.replace(/[^a-zA-Z0-9]/g, '_');
 
@@ -552,17 +598,51 @@
         // BANK SELECTION LOGIC
         window.renderBankSelect = () => {
             const bEl = el("credit-bank"); if(!bEl) return;
-            bEl.innerHTML = '<option value="">Bankni tanlang...</option>' + Object.keys(UZ_BANKS).map(b => `<option value="${b}">${b}</option>`).join("");
+            bEl.innerHTML = '<option value="">Bankni tanlang...</option>' + Object.keys(BANK_DB).map(b => `<option value="${b}">${BANK_DB[b].icon} ${b}</option>`).join("");
             updateCreditTypes();
         };
         window.updateCreditTypes = () => {
             const b = val("credit-bank"), tEl = el("credit-type-name"); if(!tEl) return;
-            if(!b || !UZ_BANKS[b]) { tEl.innerHTML = '<option value="">Turini tanlang...</option>'; return; }
-            tEl.innerHTML = UZ_BANKS[b].map(t => `<option value="${t}">${t}</option>`).join("");
+            if(!b || !BANK_DB[b]) { tEl.innerHTML = '<option value="">Turini tanlang...</option>'; return; }
+            tEl.innerHTML = '<option value="">Turini tanlang...</option>' + BANK_DB[b].credits.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join("");
+            onCreditTypeChange();
         };
-        window.updateBankData = () => {
-            toast("Yangi kredit turlari yuklanmoqda...", false);
-            setTimeout(() => { toast("Baza muvaffaqiyatli yangilandi va sinxronlandi!"); }, 1500);
+        window.onCreditTypeChange = () => {
+            const b = val("credit-bank"), tId = val("credit-type-name");
+            if(b && tId && BANK_DB[b]) {
+                const cr = BANK_DB[b].credits.find(x => x.id === tId);
+                if(cr) {
+                    el("credit-amount").placeholder = `Maks: ${new Intl.NumberFormat('ru-RU').format(cr.maxAmt).replace(/,/g, ' ')}`;
+                    el("credit-duration").placeholder = `Maks: ${cr.maxDur} oy`;
+                    el("credit-rate").value = cr.rate;
+                }
+            } else {
+                el("credit-amount").placeholder = "Olingan jami summa...";
+                el("credit-duration").placeholder = "Mas: 36";
+                el("credit-rate").value = "";
+            }
+            updateCreditAnalysis();
+        };
+        window.updateBankData = () => { toast("Yangi kredit turlari yuklanmoqda...", false); setTimeout(() => { toast("Baza muvaffaqiyatli yangilandi va sinxronlandi!"); }, 1500); };
+
+        window.updateCreditAnalysis = () => {
+            const a = getNum("credit-amount"), d = parseInt(val("credit-duration"))||0, r = parseFloat(val("credit-rate"))||0, tp = val("credit-type");
+            const hg = el("credit-grace-check").checked, gd = hg ? (parseInt(val("credit-grace-dur"))||0) : 0, gr = hg ? (parseFloat(val("credit-grace-rate"))||0) : 0;
+            const box = el("credit-analysis-box");
+            if(!a || !d || !r) { box.innerHTML = "<div style='font-size:11px; color:var(--text-muted); text-align:center;'>Tahlil uchun summa, muddat va foizni kiriting...</div>"; return; }
+            
+            let dummy = generateCreditSchedule(a, new Date().toISOString().slice(0,10), 1, d, r, tp, gd, gr);
+            if(dummy.length === 0) return;
+            let total = dummy.reduce((s,i)=>s+i.total, 0), firstPay = dummy[0].total, lastPay = dummy[dummy.length-1].total;
+            let payTxt = tp === 'annuity' ? formatM(firstPay) : `${formatM(firstPay)} dan ${formatM(lastPay)} gacha`;
+
+            box.innerHTML = `
+                <div class="analysis-row"><span style="color:var(--text-muted);">Olinayotgan summa:</span> <b>${formatM(a)}</b></div>
+                <div class="analysis-row"><span style="color:var(--text-muted);">Muddat:</span> <b>${d} oy (${r}% yillik)</b></div>
+                <div class="analysis-row"><span style="color:var(--text-muted);">Oylik to'lov:</span> <b style="color:var(--danger);">${payTxt}</b></div>
+                <div class="analysis-row"><span style="color:var(--text-muted);">Jami qaytariladi:</span> <b style="color:var(--warning);">${formatM(total)}</b></div>
+                <div class="analysis-row"><span style="color:var(--text-muted);">Sof ustama:</span> <b>${formatM(total - a)}</b></div>
+            `;
         };
 
         // QARZ
@@ -611,20 +691,30 @@
         }
 
         window.saveCredit = () => {
-            const b = val("credit-bank"), tn = val("credit-type-name");
-            const n = (b && tn) ? `${b} - ${tn}` : "Nomsiz Kredit";
+            const b = val("credit-bank"), tId = val("credit-type-name");
+            const bankObj = BANK_DB[b]; const crObj = bankObj ? bankObj.credits.find(x => x.id === tId) : null;
+            const n = (bankObj && crObj) ? `${b} - ${crObj.name}` : "Nomsiz Kredit";
+            
             const a=getNum("credit-amount"), s=val("credit-date"), d=parseInt(val("credit-duration")), pd=parseInt(val("credit-payday")), r=parseFloat(val("credit-rate")), tp=val("credit-type");
             const hasGrace = el("credit-grace-check").checked; const gd = hasGrace ? parseInt(val("credit-grace-dur")) : 0, gr = hasGrace ? parseFloat(val("credit-grace-rate")) : 0;
-            if(!b || !tn || !a||!s||!d||!r||!pd) return toast("To'ldiring!", true);
+            if(!b || !tId || !a||!s||!d||!r||!pd) return toast("To'ldiring!", true);
+
+            // Checking bank limits
+            if(crObj) {
+                if(a > crObj.maxAmt) return toast(`Maksimal summa ${formatM(crObj.maxAmt)}!`, true);
+                if(d > crObj.maxDur) return toast(`Maksimal muddat ${crObj.maxDur} oy!`, true);
+            }
+
             let schedule = generateCreditSchedule(a, s, pd, d, r, tp, gd, gr);
-            state.credits.push({ id:Date.now(), name:n, initAmt:a, start:s, payDay:pd, duration:d, rate:r, type:tp, graceDur:gd, graceRate:gr, schedule:schedule, extraPrincipalPaid:0, archived:false, closedDate:null });
+            state.credits.push({ id:Date.now(), name:n, bankIcon: bankObj.icon, typeIcon: crObj.icon, initAmt:a, start:s, payDay:pd, duration:d, rate:r, type:tp, graceDur:gd, graceRate:gr, schedule:schedule, extraPrincipalPaid:0, archived:false, closedDate:null });
             state.incs.unshift({id:Date.now()+1, amount:a, desc:`Kredit: ${n}`, cat:"Kredit", date:s, time:"00:00", user:tgUser, prof:"general"}); 
-            setVal("credit-bank",""); setVal("credit-type-name",""); el("credit-amount").value=""; setVal("credit-duration",""); toggleWidget('credit-form', 'credit-header'); el("credit-grace-check").checked = false; toggleGraceFields(); save(); toast("Saqlandi!");
+            
+            setVal("credit-bank",""); setVal("credit-type-name",""); el("credit-amount").value=""; setVal("credit-duration",""); toggleWidget('credit-form', 'credit-header'); el("credit-grace-check").checked = false; toggleGraceFields(); el("credit-analysis-box").innerHTML = "<div style='font-size:11px; color:var(--text-muted); text-align:center;'>Tahlil uchun bank va summani kiriting...</div>"; save(); toast("Saqlandi!");
         };
 
         window.openCreditScheduleModal = id => {
             const cr = state.credits.find(x=>x.id==id); if(!cr) return;
-            setTxt("schedule-title", "Kredit Grafigi"); setTxt("schedule-info", `💳 ${cr.name} (${formatM(cr.initAmt)})\nMuddat: ${cr.duration} oy | Stavka: ${cr.rate}% Yillik\nTuri: ${cr.type==='annuity'?'Annuitet':'Differensial'}${cr.graceDur>0?`\nImtiyoz: ${cr.graceDur} oy (${cr.graceRate}%)`:''}`);
+            setTxt("schedule-title", "Kredit Grafigi"); setTxt("schedule-info", `${cr.typeIcon} ${cr.name} (${formatM(cr.initAmt)})\nMuddat: ${cr.duration} oy | Stavka: ${cr.rate}% Yillik\nTuri: ${cr.type==='annuity'?'Annuitet':'Differensial'}${cr.graceDur>0?`\nImtiyoz: ${cr.graceDur} oy (${cr.graceRate}%)`:''}`);
             let html = "<tr><th>Oy/Sana</th><th>Asosiy</th><th>Foiz</th><th>Jami</th><th>Status</th></tr>", totalPay = 0;
             cr.schedule.forEach(item => {
                 totalPay += item.total; let statHtml = item.status === 'paid' ? '<span class="status-paid">To\'landi</span>' : '<span class="status-unpaid">Kutilmoqda</span>';
@@ -720,11 +810,11 @@
                     let borderCol = overdue ? "var(--danger)" : "#ec4899"; let bgCol = overdue ? "rgba(239, 68, 68, 0.1)" : "var(--bg-card)";
                     let currentBal = cr.initAmt - cr.schedule.filter(x => x.status === 'paid').reduce((s, x) => s + x.principal, 0) - (cr.extraPrincipalPaid || 0);
                     
-                    return `<div class="list-item" style="border-left: 5px solid ${borderCol}; background:${bgCol}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:${borderCol};">${cr.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${cr.rate}% | ${cr.type==='annuity'?'Annuitet':'Differensial'}</div>${overdue?`<div style="font-size:10px; color:var(--danger); font-weight:bold; margin-top:4px;">⚠️ To'lov vaqti o'tgan!</div>`:''}</div><div style="text-align:right;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:3px;">Qolgan qarz:</div><div style="font-weight:bold; font-size:16px; color:${borderCol};">${formatM(currentBal)}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="payNextMonthCredit(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 4px; font-size:11px;">💸 Oylik</button><button onclick="openPrincipalPayModal(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 4px; font-size:11px;">📉 Tanidan</button><button onclick="openCreditScheduleModal(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 4px; font-size:11px;">📊 Grafik</button></div><button onclick="closeCredit(${cr.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px;">Kreditni Yopish (To'liq)</button></div>`;
+                    return `<div class="list-item" style="border-left: 5px solid ${borderCol}; background:${bgCol}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:${borderCol};">${cr.bankIcon||'🏦'} ${cr.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${cr.rate}% | ${cr.type==='annuity'?'Annuitet':'Differensial'}</div>${overdue?`<div style="font-size:10px; color:var(--danger); font-weight:bold; margin-top:4px;">⚠️ To'lov vaqti o'tgan!</div>`:''}</div><div style="text-align:right;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:3px;">Qolgan qarz:</div><div style="font-weight:bold; font-size:16px; color:${borderCol};">${formatM(currentBal)}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="payNextMonthCredit(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 4px; font-size:11px;">💸 Oylik</button><button onclick="openPrincipalPayModal(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 4px; font-size:11px;">📉 Tanidan</button><button onclick="openCreditScheduleModal(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 4px; font-size:11px;">📊 Grafik</button></div><button onclick="closeCredit(${cr.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px;">Kreditni Yopish (To'liq)</button></div>`;
                 }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Kreditlar yo'q.</div>";
                 let archHtmlCredits = showArch.credit && archCredits.length>0 ? `<div style="margin-top:10px; opacity:0.8;">` + archCredits.map(cr => {
                     let totalPaidNow = cr.schedule.filter(x => x.status === 'paid').reduce((s, x) => s + x.total, 0) + (cr.extraPrincipalPaid || 0);
-                    return `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${cr.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Yopildi: ${cr.closedDate||''}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${formatM(cr.initAmt)}</div></div></div><div class="archive-info-grid"><div><span>Kredit turi:</span><b>${cr.type==='annuity'?'Annuitet':'Differensial'}</b></div><div><span>Jami to'langan:</span><b style="color:var(--danger);">${formatM(totalPaidNow)}</b></div><div><span>Ortiqcha (Ustama):</span><b style="color:var(--warning);">${formatM(totalPaidNow - cr.initAmt)}</b></div></div><button onclick="permDelCredit(${cr.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%;">🗑️ Butunlay o'chirish</button></div>`;
+                    return `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${cr.bankIcon||'🏦'} ${cr.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Yopildi: ${cr.closedDate||''}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${formatM(cr.initAmt)}</div></div></div><div class="archive-info-grid"><div><span>Kredit turi:</span><b>${cr.type==='annuity'?'Annuitet':'Differensial'}</b></div><div><span>Jami to'langan:</span><b style="color:var(--danger);">${formatM(totalPaidNow)}</b></div><div><span>Ortiqcha (Ustama):</span><b style="color:var(--warning);">${formatM(totalPaidNow - cr.initAmt)}</b></div></div><button onclick="permDelCredit(${cr.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%;">🗑️ Butunlay o'chirish</button></div>`;
                 }).join("") + `</div>` : "";
                 setHtml("credits-list", hCredits + `<div class="arch-toggle-btn" onclick="toggleArch('credit')">📂 Yopilgan kreditlar arxivi ${showArch.credit?'(Yashirish)':'(Ko\'rish)'} (${archCredits.length})</div>` + archHtmlCredits);
             }
