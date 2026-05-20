@@ -17,11 +17,11 @@ WEB_APP_URL = "https://runnellsmillie-debug.github.io/mini-app/"
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# --- BAZA QISMI (Professional) ---
+# --- BAZA QISMI ---
 def init_db():
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    # phone ustuni qo'shildi, balans 0 dan boshlanadi
+    # Foydalanuvchilar: user_id, balans, phone
     cursor.execute('''CREATE TABLE IF NOT EXISTS users 
                       (user_id INTEGER PRIMARY KEY, balance REAL DEFAULT 0, phone TEXT)''')
     conn.commit()
@@ -30,14 +30,13 @@ def init_db():
 def register_user(user_id):
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    # Foydalanuvchi yo'q bo'lsa, 0 balans bilan qo'shamiz
     cursor.execute("INSERT OR IGNORE INTO users (user_id, balance) VALUES (?, 0)", (user_id,))
     conn.commit()
     conn.close()
 
 init_db()
 
-# 3. Flask serveri
+# 3. Flask serveri (Render uchun)
 app = Flask(__name__)
 @app.route('/')
 def health_check(): return "Bot is active!", 200
@@ -50,30 +49,49 @@ def run_flask():
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+# Klaviatura sozlamalari
+def get_main_keyboard():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📱 Ilovani ochish", web_app=WebAppInfo(url=WEB_APP_URL))],
+            [KeyboardButton(text="📞 Telefon raqamni yuborish", request_contact=True)]
+        ],
+        resize_keyboard=True
+    )
+
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
     register_user(message.from_user.id)
-    
-    web_app = WebAppInfo(url=WEB_APP_URL)
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="📱 Ilovani ochish", web_app=web_app)]],
-        resize_keyboard=True
-    )
     await message.answer(
         f"Salom, {message.from_user.first_name}! Hisobingiz 0 UZS bilan ochildi.\n"
-        "Nomeringizni qo‘shish uchun uni xabar sifatida yuboring (masalan: 998901234567).",
-        reply_markup=keyboard
+        "Ilovadan foydalanish uchun avval '📞 Telefon raqamni yuborish' tugmasini bosing.",
+        reply_markup=get_main_keyboard()
     )
 
-# Nomer qabul qilish qismi
-@dp.message(F.text.regexp(r'^\+?\d{9,13}$'))
-async def add_phone(message: types.Message):
+# Kontakt (nomer) qabul qilish
+@dp.message(F.contact)
+async def get_contact(message: types.Message):
+    phone = message.contact.phone_number
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    cursor.execute("UPDATE users SET phone = ? WHERE user_id = ?", (message.text, message.from_user.id))
+    cursor.execute("UPDATE users SET phone = ? WHERE user_id = ?", (phone, message.from_user.id))
     conn.commit()
     conn.close()
-    await message.answer(f"✅ Nomer muvaffaqiyatli saqlandi: {message.text}")
+    await message.answer(f"✅ Rahmat! Raqamingiz ({phone}) tasdiqlandi. Endi ilovani ochishingiz mumkin.", reply_markup=get_main_keyboard())
+
+# Ilovani ochishni ruxsat bilan tekshirish
+@dp.message(F.text == "📱 Ilovani ochish")
+async def check_phone_before_open(message: types.Message):
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT phone FROM users WHERE user_id = ?", (message.from_user.id,))
+    result = cursor.fetchone()
+    conn.close()
+    
+    if result and result[0]:
+        await message.answer("Ilova ochilmoqda...")
+    else:
+        await message.answer("❌ Ilovani ochish uchun avval '📞 Telefon raqamni yuborish' tugmasini bosing!")
 
 @dp.message(F.web_app_data)
 async def web_app_handler(message: types.Message):
