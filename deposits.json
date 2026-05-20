@@ -1,0 +1,35 @@
+{
+  "NBU (Milliy Bank)": {
+    "icon": "🏛",
+    "deposits": [
+      { "id": "d_nbu1", "name": "Milliy", "rate": 21, "duration": 13, "minAmt": 1000000, "cap": false, "rateType": "annual" },
+      { "id": "d_nbu2", "name": "Sarmoya (Onlayn)", "rate": 22, "duration": 24, "minAmt": 500000, "cap": true, "rateType": "annual" }
+    ]
+  },
+  "Ipak Yuli Bank": {
+    "icon": "🐫",
+    "deposits": [
+      { "id": "d_iyb1", "name": "Baraka", "rate": 20, "duration": 18, "minAmt": 100000, "cap": true, "rateType": "annual" },
+      { "id": "d_iyb2", "name": "Daromadli", "rate": 22, "duration": 24, "minAmt": 5000000, "cap": false, "rateType": "annual" }
+    ]
+  },
+  "Kapitalbank": {
+    "icon": "💳",
+    "deposits": [
+      { "id": "d_kap1", "name": "Foydali", "rate": 24, "duration": 24, "minAmt": 1000000, "cap": true, "rateType": "annual" },
+      { "id": "d_kap2", "name": "Onlayn 22%", "rate": 22, "duration": 12, "minAmt": 100000, "cap": true, "rateType": "annual" }
+    ]
+  },
+  "SQB (O'zSQB)": {
+    "icon": "🏢",
+    "deposits": [
+      { "id": "d_sqb1", "name": "Kelajak", "rate": 21, "duration": 18, "minAmt": 500000, "cap": true, "rateType": "annual" }
+    ]
+  },
+  "TBC Bank": {
+    "icon": "📱",
+    "deposits": [
+      { "id": "d_tbc1", "name": "TBC Depozit", "rate": 26, "duration": 13, "minAmt": 100000, "cap": true, "rateType": "annual" }
+    ]
+  }
+}
