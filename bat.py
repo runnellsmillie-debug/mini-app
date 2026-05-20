@@ -6,7 +6,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton
 
 # 1. TEPADAGI COPY QILGAN TOKENINGIZNI SHU YERGA QO'YING
-TOKEN = "8619700756:AAFXbmz6TB-cdwrJsDKQw-bVFxrXYmBtYP4" 
+TOKEN = "8619700756:AAHFrcQYILDeM8_ELs5sFNguL9WfDZhL3VQ" 
 
 # 2. GITHUB'DAGI SAYTINGIZ MANZILI
 WEB_APP_URL = "https://runnellsmillie-debug.github.io/mini-app/"
