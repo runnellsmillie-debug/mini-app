@@ -58,11 +58,17 @@ async def web_app_handler(message: types.Message):
         await message.answer("Ma'lumot qabul qilindi, lekin formatda xatolik bor.")
 
 async def main():
-    logging.info("Bot polling boshlandi...")
+    logging.basicConfig(level=logging.INFO)
+    # ESKI SO'ROVLARNI O'CHIRIB TASHLASH (Conflict'ni yo'qotadi)
+    await bot.delete_webhook(drop_pending_updates=True) 
+    print("Bot ishga tushdi!")
     await dp.start_polling(bot)
-
+    
 if __name__ == "__main__":
     # Flask serverini fon rejimida boshlaymiz
     Thread(target=run_flask, daemon=True).start()
     # Botni ishga tushiramiz
     asyncio.run(main())
+
+
+
