@@ -99,27 +99,33 @@ def update_agrobank(db):
 
 
 # =========================================================
-# 4. ASOSIY ISHGA TUSHIRISH QISMI
+# 4. ASOSIY ISHGA TUSHIRISH QISMI (Render uchun cheksiz sikl)
 # =========================================================
 if __name__ == "__main__":
     print("🚀 Bank ma'lumotlarini yangilash boti ishga tushdi!\n")
     
-    banks_db = load_db()
-    
-    if banks_db:
-        # Funksiyalarni birma-bir chaqiramiz. 
-        # Serverni to'ldirib yubormaslik uchun ozgina kutish vaqti (sleep) qo'shamiz
-        update_nbu(banks_db)
-        time.sleep(2)
+    while True:
+        banks_db = load_db()
         
-        update_sqb(banks_db)
-        time.sleep(2)
+        if banks_db:
+            print(f"⏳ Skraping boshlandi: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            # Banklarni tekshirish
+            update_nbu(banks_db)
+            time.sleep(2)
+            
+            update_sqb(banks_db)
+            time.sleep(2)
+            
+            update_ipak_yuli(banks_db)
+            time.sleep(2)
+            
+            # Yangilangan bazani saqlash
+            save_db(banks_db)
+            
+            print("💤 Keyingi yangilanishgacha 1 soat kutish rejimiga o'tilmoqda...")
+        else:
+            print("❌ Baza yuklanmagani sababli skraping bajarilmadi.")
         
-        update_ipak_yuli(banks_db)
-        time.sleep(2)
-        
-        # Kelajakda tayyor bo'lsa, qolgan funksiyalarni ham shu yerda chaqirasiz
-        # update_kapitalbank(banks_db)
-        # update_asakabank(banks_db)
-        
-        save_db(banks_db)
+        # 3600 soniya (1 soat) kutish va keyin sikl boshiga qaytish
+        time.sleep(3600)
