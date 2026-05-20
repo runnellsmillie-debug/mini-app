@@ -1,122 +1,125 @@
-{
-  "NBU (Milliy Bank)": {
-    "icon": "🏛",
-    "credits": [
-      { "id": "nbu1", "name": "Onlayn Mikroqarz", "icon": "📱", "rate": 25, "maxDur": 60, "maxAmt": 100000000 },
-      { "id": "nbu2", "name": "Mikroqarz (Ofisda)", "icon": "💸", "rate": 24, "maxDur": 60, "maxAmt": 100000000 },
-      { "id": "nbu3", "name": "Avtokredit (Yangi)", "icon": "🚗", "rate": 21, "maxDur": 60, "maxAmt": 500000000 },
-      { "id": "nbu4", "name": "Avtokredit (Ikkilamchi)", "icon": "🚙", "rate": 21, "maxDur": 48, "maxAmt": 500000000 },
-      { "id": "nbu5", "name": "Ipoteka", "icon": "🏠", "rate": 16.5, "maxDur": 240, "maxAmt": 5000000000 },
-      { "id": "nbu6", "name": "Ta'lim krediti", "icon": "🎓", "rate": 14, "maxDur": 162, "maxAmt": 30000000 }
-    ]
-  },
-  "Ipak Yuli Bank": {
-    "icon": "🐫",
-    "credits": [
-      { "id": "iyb1", "name": "Mikroqarz (Garovsiz)", "icon": "💸", "rate": 25.9, "maxDur": 36, "maxAmt": 100000000 },
-      { "id": "iyb2", "name": "Avtokredit (BYD, Lixiang)", "icon": "🚗", "rate": 16, "maxDur": 60, "maxAmt": 950000000 },
-      { "id": "iyb3", "name": "Avtokredit (0% li maxsus)", "icon": "⚡", "rate": 0, "maxDur": 36, "maxAmt": 950000000 },
-      { "id": "iyb4", "name": "Kreditni qayta moliyalash", "icon": "🔄", "rate": 21, "maxDur": 60, "maxAmt": 800000000 },
-      { "id": "iyb5", "name": "O'zini o'zi band qilganlar uchun", "icon": "💼", "rate": 26, "maxDur": 60, "maxAmt": 100000000 }
-    ]
-  },
-  "Kapitalbank": {
-    "icon": "💳",
-    "credits": [
-      { "id": "kap1", "name": "Qulay Nasiya (Avto)", "icon": "🚙", "rate": 23.99, "maxDur": 60, "maxAmt": 300000000 },
-      { "id": "kap2", "name": "Avto Nasiya (Ikkilamchi)", "icon": "🚗", "rate": 24, "maxDur": 48, "maxAmt": 300000000 },
-      { "id": "kap3", "name": "Ishonchli Start (Biznes)", "icon": "📈", "rate": 26, "maxDur": 60, "maxAmt": 1000000000 },
-      { "id": "kap4", "name": "Foydali investitsiya", "icon": "💰", "rate": 22.99, "maxDur": 60, "maxAmt": 300000000 },
-      { "id": "kap5", "name": "Iste'mol krediti", "icon": "🛍️", "rate": 26, "maxDur": 36, "maxAmt": 50000000 }
-    ]
-  },
-  "SQB (O'zSQB)": {
-    "icon": "🏢",
-    "credits": [
-      { "id": "sqb1", "name": "Yangicha mikroqarz", "icon": "📱", "rate": 26, "maxDur": 24, "maxAmt": 50000000 },
-      { "id": "sqb2", "name": "Uzavto-Imkon", "icon": "🚗", "rate": 24, "maxDur": 48, "maxAmt": 300000000 },
-      { "id": "sqb3", "name": "Avtokredit JAC", "icon": "🚙", "rate": 22, "maxDur": 60, "maxAmt": 400000000 },
-      { "id": "sqb4", "name": "Ipoteka (Birlamchi)", "icon": "🏠", "rate": 18, "maxDur": 240, "maxAmt": 400000000 },
-      { "id": "sqb5", "name": "O'zini o'zi band qilganlar uchun", "icon": "👨‍🔧", "rate": 26, "maxDur": 36, "maxAmt": 50000000 }
-    ]
-  },
-  "TBC Bank": {
-    "icon": "📱",
-    "credits": [
-      { "id": "tbc1", "name": "Onlayn Mikroqarz", "icon": "💸", "rate": 30, "maxDur": 36, "maxAmt": 50000000 },
-      { "id": "tbc2", "name": "Avtokredit", "icon": "🚗", "rate": 25, "maxDur": 48, "maxAmt": 300000000 }
-    ]
-  },
-  "Asakabank": {
-    "icon": "🏦",
-    "credits": [
-      { "id": "asaka1", "name": "Ipoteka (Davlat dasturi)", "icon": "🏡", "rate": 17, "maxDur": 240, "maxAmt": 416000000 },
-      { "id": "asaka2", "name": "Avtokredit (Yangi)", "icon": "🚗", "rate": 22, "maxDur": 60, "maxAmt": 500000000 },
-      { "id": "asaka3", "name": "Mikroqarz", "icon": "💸", "rate": 26, "maxDur": 36, "maxAmt": 50000000 }
-    ]
-  },
-  "Agrobank": {
-    "icon": "🌾",
-    "credits": [
-      { "id": "agro1", "name": "Fermer krediti", "icon": "🚜", "rate": 20, "maxDur": 60, "maxAmt": 1000000000 },
-      { "id": "agro2", "name": "Mikroqarz", "icon": "💸", "rate": 27, "maxDur": 36, "maxAmt": 50000000 },
-      { "id": "agro3", "name": "Iste'mol krediti", "icon": "🛍️", "rate": 25, "maxDur": 36, "maxAmt": 50000000 },
-      { "id": "agro4", "name": "Avtokredit", "icon": "🚗", "rate": 24, "maxDur": 48, "maxAmt": 400000000 }
-    ]
-  },
-  "Xalq Banki": {
-    "icon": "👥",
-    "credits": [
-      { "id": "xb1", "name": "Pensiya krediti", "icon": "🧓", "rate": 22, "maxDur": 36, "maxAmt": 20000000 },
-      { "id": "xb2", "name": "Mikroqarz", "icon": "💸", "rate": 26, "maxDur": 36, "maxAmt": 100000000 },
-      { "id": "xb3", "name": "Ipoteka", "icon": "🏠", "rate": 17.5, "maxDur": 240, "maxAmt": 416000000 },
-      { "id": "xb4", "name": "Iste'mol krediti", "icon": "🛍️", "rate": 25, "maxDur": 36, "maxAmt": 50000000 }
-    ]
-  },
-  "Hamkorbank": {
-    "icon": "🤝",
-    "credits": [
-      { "id": "ham1", "name": "Mikroqarz", "icon": "💸", "rate": 27, "maxDur": 36, "maxAmt": 50000000 },
-      { "id": "ham2", "name": "Avtokredit", "icon": "🚗", "rate": 23, "maxDur": 60, "maxAmt": 400000000 },
-      { "id": "ham3", "name": "Biznes kredit", "icon": "💼", "rate": 25, "maxDur": 36, "maxAmt": 1000000000 }
-    ]
-  },
-  "Orient Finance Bank": {
-    "icon": "💎",
-    "credits": [
-      { "id": "ofb1", "name": "Avtokredit", "icon": "🚗", "rate": 21, "maxDur": 48, "maxAmt": 500000000 },
-      { "id": "ofb2", "name": "Mikroqarz", "icon": "💸", "rate": 26.9, "maxDur": 36, "maxAmt": 50000000 },
-      { "id": "ofb3", "name": "Iste'mol krediti", "icon": "🛍️", "rate": 26, "maxDur": 36, "maxAmt": 50000000 }
-    ]
-  },
-  "Aloqabank": {
-    "icon": "📡",
-    "credits": [
-      { "id": "alq1", "name": "Mikroqarz", "icon": "💸", "rate": 26, "maxDur": 36, "maxAmt": 50000000 },
-      { "id": "alq2", "name": "Avtokredit", "icon": "🚗", "rate": 24, "maxDur": 48, "maxAmt": 300000000 },
-      { "id": "alq3", "name": "Ipoteka", "icon": "🏠", "rate": 18, "maxDur": 240, "maxAmt": 500000000 }
-    ]
-  },
-  "Anorbank": {
-    "icon": "🍇",
-    "credits": [
-      { "id": "anor1", "name": "Onlayn Mikroqarz", "icon": "📱", "rate": 31, "maxDur": 24, "maxAmt": 50000000 },
-      { "id": "anor2", "name": "Avtokredit", "icon": "🚗", "rate": 25, "maxDur": 60, "maxAmt": 400000000 }
-    ]
-  },
-  "Mikrokreditbank": {
-    "icon": "💰",
-    "credits": [
-      { "id": "mkb1", "name": "Tadbirkorlik mikroqarzi", "icon": "💼", "rate": 24, "maxDur": 36, "maxAmt": 300000000 },
-      { "id": "mkb2", "name": "Iste'mol", "icon": "🛍️", "rate": 26, "maxDur": 36, "maxAmt": 50000000 },
-      { "id": "mkb3", "name": "Avtokredit", "icon": "🚗", "rate": 24, "maxDur": 48, "maxAmt": 300000000 }
-    ]
-  },
-  "Uzum Bank": {
-    "icon": "🟣",
-    "credits": [
-      { "id": "uzm1", "name": "Nasiya (Muddatli to'lov)", "icon": "💳", "rate": 0, "maxDur": 12, "maxAmt": 25000000 },
-      { "id": "uzm2", "name": "Mikroqarz", "icon": "💸", "rate": 35, "maxDur": 24, "maxAmt": 50000000 }
-    ]
-  }
+import json
+import requests
+from bs4 import BeautifulSoup
+import time
+import os
+
+# Saytlar bot ekanligimizni sezib to'sib qo'ymasligi uchun soxta brauzer (User-Agent)
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 }
+
+# 1. BAZANI O'QIB OLISH
+def load_db():
+    try:
+        with open('banks.json', 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Xatolik! banks.json fayli topilmadi yoki xato: {e}")
+        return None
+
+# 2. BAZANI SAQLASH
+def save_db(data):
+    with open('banks.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print("\n💾 Baza muvaffaqiyatli saqlandi!")
+
+# =========================================================
+# 3. BANKLARNI AVTOMAT TEKSHIRISH FUNKSIYALARI (Scraping)
+# =========================================================
+
+def update_nbu(db):
+    print("⏳ NBU tekshirilmoqda...")
+    url = "https://nbu.uz/uz/jismoniy-shaxslarga-kreditlar/avtokredit/"
+    try:
+        res = requests.get(url, headers=HEADERS, timeout=10)
+        if res.status_code == 200:
+            soup = BeautifulSoup(res.text, 'html.parser')
+            # NBU saytida foizlar ko'pincha .percent yoki shunga o'xshash teglarda bo'ladi (Taxminiy)
+            rate_box = soup.find('div', class_='info-percent')
+            if rate_box:
+                # Topilgan matn ichidan faqat raqamni ajratib olish
+                rate_text = ''.join(filter(str.isdigit, rate_box.text))
+                if rate_text:
+                    db["NBU (Milliy Bank)"]["credits"][2]["rate"] = float(rate_text)
+                    print(f"✅ NBU Avtokredit yangilandi: {rate_text}%")
+            else:
+                print("⚠️ NBU: Sayt kodi o'zgargan, raqam topilmadi.")
+    except Exception as e:
+        print(f"❌ NBU dagi xatolik: {e}")
+
+def update_sqb(db):
+    print("⏳ SQB tekshirilmoqda...")
+    url = "https://sqb.uz/uz/individuals/credits/mikroqarz/"
+    try:
+        res = requests.get(url, headers=HEADERS, timeout=10)
+        if res.status_code == 200:
+            soup = BeautifulSoup(res.text, 'html.parser')
+            rate_box = soup.find('div', class_='credit-rate')
+            if rate_box:
+                rate_text = ''.join(filter(str.isdigit, rate_box.text))
+                if rate_text:
+                    db["SQB (O'zSQB)"]["credits"][0]["rate"] = float(rate_text)
+                    print(f"✅ SQB Mikroqarz yangilandi: {rate_text}%")
+            else:
+                print("⚠️ SQB: Sayt kodi o'zgargan, raqam topilmadi.")
+    except Exception as e:
+        print(f"❌ SQB dagi xatolik: {e}")
+
+def update_ipak_yuli(db):
+    print("⏳ Ipak Yo'li tekshirilmoqda...")
+    url = "https://uz.ipakyulibank.uz/physical/kredity/avtokredit"
+    try:
+        res = requests.get(url, headers=HEADERS, timeout=10)
+        if res.status_code == 200:
+            soup = BeautifulSoup(res.text, 'html.parser')
+            rate_box = soup.find('span', class_='val')
+            if rate_box:
+                rate_text = ''.join(filter(str.isdigit, rate_box.text))
+                if rate_text:
+                    db["Ipak Yuli Bank"]["credits"][1]["rate"] = float(rate_text)
+                    print(f"✅ Ipak Yo'li Avtokredit yangilandi: {rate_text}%")
+            else:
+                print("⚠️ Ipak Yo'li: HTML o'zgargan.")
+    except Exception as e:
+        print(f"❌ Ipak Yo'li dagi xatolik: {e}")
+
+# KELAJAKDA QO'SHILADIGAN BANKLAR UCHUN QOLIIPLAR:
+def update_kapitalbank(db):
+    # Bu yerga Kapitalbank logikasi yoziladi
+    pass
+
+def update_asakabank(db):
+    # Bu yerga Asakabank logikasi yoziladi
+    pass
+
+def update_agrobank(db):
+    # Bu yerga Agrobank logikasi yoziladi
+    pass
+
+
+# =========================================================
+# 4. ASOSIY ISHGA TUSHIRISH QISMI
+# =========================================================
+if __name__ == "__main__":
+    print("🚀 Bank ma'lumotlarini yangilash boti ishga tushdi!\n")
+    
+    banks_db = load_db()
+    
+    if banks_db:
+        # Funksiyalarni birma-bir chaqiramiz. 
+        # Serverni to'ldirib yubormaslik uchun ozgina kutish vaqti (sleep) qo'shamiz
+        update_nbu(banks_db)
+        time.sleep(2)
+        
+        update_sqb(banks_db)
+        time.sleep(2)
+        
+        update_ipak_yuli(banks_db)
+        time.sleep(2)
+        
+        # Kelajakda tayyor bo'lsa, qolgan funksiyalarni ham shu yerda chaqirasiz
+        # update_kapitalbank(banks_db)
+        # update_asakabank(banks_db)
+        
+        save_db(banks_db)
