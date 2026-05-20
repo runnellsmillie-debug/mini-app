@@ -4,6 +4,8 @@ import json
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
 from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton
+from flask import Flask
+from threading import Thread
 
 # 1. TEPADAGI COPY QILGAN TOKENINGIZNI SHU YERGA QO'YING
 TOKEN = "8619700756:AAHFrcQYILDeM8_ELs5sFNguL9WfDZhL3VQ" 
@@ -13,6 +15,16 @@ WEB_APP_URL = "https://runnellsmillie-debug.github.io/mini-app/"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
+
+# Render uchun kichik veb-server qismi
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot ishlamoqda!"
+
+def run_flask():
+    app.run(host='0.0.0.0', port=10000)
 
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
@@ -53,4 +65,9 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
+    # Flask serverini fon rejimida ishga tushiramiz
+    t = Thread(target=run_flask)
+    t.start()
+    
+    # Botni ishga tushiramiz
     asyncio.run(main())
