@@ -2,32 +2,38 @@ import asyncio
 import logging
 import json
 import os
+import threading
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
 from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton
 from flask import Flask
-from threading import Thread
 
-# 1. Tokenni Environment Variable'dan o'qiymiz
+# 1. Konfiguratsiya
 TOKEN = os.getenv("BOT_TOKEN") 
 WEB_APP_URL = "https://runnellsmillie-debug.github.io/mini-app/"
 
-# Logging'ni sozlash
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# 2. Logging'ni professional sozlash
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-bot = Bot(token=TOKEN)
-dp = Dispatcher()
-
-# Render uchun Flask (Port 10000)
+# 3. Flask serveri (Render "Web Service" sifatida ko'rishi uchun)
 app = Flask(__name__)
 
 @app.route('/')
-def home():
+def health_check():
     return "Bot is active!", 200
 
 def run_flask():
-    # Render 10000 portni kutadi
-    app.run(host='0.0.0.0', port=10000)
+    # Render avtomatik tayinlaydigan PORT ni olamiz
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
+
+# 4. Bot qismi
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
 
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
@@ -54,21 +60,22 @@ async def web_app_handler(message: types.Message):
         
         await message.answer(text)
     except Exception as e:
-        logging.error(f"Ma'lumotni qayta ishlashda xato: {e}")
-        await message.answer("Ma'lumot qabul qilindi, lekin formatda xatolik bor.")
+        logger.error(f"Ma'lumotni qayta ishlashda xato: {e}")
+        await message.answer("Ma'lumot formatida xatolik yuz berdi.")
 
 async def main():
-    logging.basicConfig(level=logging.INFO)
-    # ESKI SO'ROVLARNI O'CHIRIB TASHLASH (Conflict'ni yo'qotadi)
-    await bot.delete_webhook(drop_pending_updates=True) 
-    print("Bot ishga tushdi!")
+    # Eski so'rovlarni tozalash (Conflict xatosini yo'qotadi)
+    await bot.delete_webhook(drop_pending_updates=True)
+    logger.info("Bot polling ishga tushdi...")
     await dp.start_polling(bot)
-    
+
 if __name__ == "__main__":
-    # Flask serverini fon rejimida boshlaymiz
-    Thread(target=run_flask, daemon=True).start()
+    # Flask serverini fon rejimida (daemon) ishga tushiramiz
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
+    flask_thread.start()
+    
     # Botni ishga tushiramiz
-    asyncio.run(main())
-
-
-
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Bot to'xtatildi.")
