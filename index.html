@@ -364,57 +364,15 @@
         const CAT_COLORS = { "Oziq-ovqat":"#FF6B6B", "Uy_Xojalik":"#FBBF24", "Kiyim":"#8B5CF6", "Talim":"#2196F3", "Avto":"#607D8B", "Oyinchoq":"#34D399" };
         const CAT_ICONS = { "Oziq-ovqat":"🛒", "Uy_Xojalik":"🏠", "Kiyim":"👕", "Talim":"📚", "Avto":"🚗", "Oyinchoq":"🧸" };
 
-        const BANK_DB = {
-            "NBU (Milliy Bank)": {
-                icon: "🏛",
-                credits: [
-                    { id: "n1", name: "Iste'mol krediti", icon: "🛍️", rate: 24, maxDur: 36, maxAmt: 50000000 },
-                    { id: "n2", name: "Avtokredit", icon: "🚗", rate: 23, maxDur: 60, maxAmt: 400000000 },
-                    { id: "n3", name: "Ta'lim krediti", icon: "🎓", rate: 14, maxDur: 48, maxAmt: 30000000 }
-                ]
-            },
-            "Ipak Yuli Bank": {
-                icon: "🐫",
-                credits: [
-                    { id: "i1", name: "Avtokredit (BYD)", icon: "🚙", rate: 16, maxDur: 60, maxAmt: 350000000 },
-                    { id: "i2", name: "Mikroqarz", icon: "💸", rate: 28, maxDur: 24, maxAmt: 50000000 },
-                    { id: "i3", name: "Ipoteka", icon: "🏠", rate: 18, maxDur: 240, maxAmt: 500000000 }
-                ]
-            },
-            "SQB (O'zSQB)": {
-                icon: "🏢",
-                credits: [
-                    { id: "s1", name: "Iste'mol", icon: "🛍️", rate: 25, maxDur: 36, maxAmt: 50000000 },
-                    { id: "s2", name: "Avtokredit", icon: "🚗", rate: 24, maxDur: 48, maxAmt: 300000000 }
-                ]
-            },
-            "Kapitalbank": {
-                icon: "💳",
-                credits: [
-                    { id: "k1", name: "Mikroqarz", icon: "💸", rate: 27, maxDur: 36, maxAmt: 50000000 },
-                    { id: "k2", name: "Avtokredit", icon: "🚗", rate: 24, maxDur: 48, maxAmt: 500000000 }
-                ]
-            },
-            "TBC Bank": {
-                icon: "📱",
-                credits: [
-                    { id: "t1", name: "Mikroqarz (Onlayn)", icon: "📱", rate: 30, maxDur: 24, maxAmt: 50000000 }
-                ]
-            },
-            "Xalq Banki": {
-                icon: "👥",
-                credits: [
-                    { id: "x1", name: "Pensiya krediti", icon: "🧓", rate: 22, maxDur: 36, maxAmt: 20000000 },
-                    { id: "x2", name: "Ipoteka", icon: "🏠", rate: 17, maxDur: 240, maxAmt: 400000000 }
-                ]
-            }
-        };
-
         let CATS_DATA = { general: [], child_m: [], child_f: [], home: [] };
         const INC_SOURCES = [ { label: "Oylik maosh", icon: "💼" }, { label: "IMSOA foyda", icon: "💰" }, { label: "Qo'shimcha", icon: "🎁" } ];
 
+        // GLOBAL BANK DATABASE
+        let BANK_DB = {};
+        const GITHUB_RAW_URL = "https://raw.githubusercontent.com/runnellsmillie-debug/mini-app/main/banks.json";
+
         // ==========================================
-        // 2. STATE MANAGEMENT & PROBEL NUMBERS
+        // 2. STATE MANAGEMENT & DATA FETCHING
         // ==========================================
         let state = { profiles: [], txs: [], incs: [], debts: [], sched: [], plan: [], deps: [], credits: [] };
         let showArch = { plan: false, sched: false, debt: false, dep: false, credit: false };
@@ -447,13 +405,29 @@
         const formatM = n => new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
         const toast = (msg, err=false) => { const t = el("toast-msg"); if(t){ t.innerText=msg; t.style.background=err?"var(--danger)":"var(--success)"; t.style.display="block"; setTimeout(()=>t.style.display="none", 2500); } };
 
-        function init() {
+        async function loadBankData() {
+            try {
+                // Cache muammosini oldini olish uchun vaqt qo'shamiz
+                const response = await fetch(GITHUB_RAW_URL + "?nocache=" + new Date().getTime());
+                if(!response.ok) throw new Error("Tarmoq xatosi");
+                BANK_DB = await response.json();
+                localStorage.setItem("banks_db_v1", JSON.stringify(BANK_DB));
+                console.log("Banklar bazasi yuklandi!");
+            } catch (error) {
+                console.error("Xato:", error);
+                BANK_DB = JSON.parse(localStorage.getItem("banks_db_v1")) || {};
+            }
+        }
+
+        async function init() {
             const raw = localStorage.getItem("xarajat_pro_v8");
             if (raw) { try { state = JSON.parse(raw); } catch(e) {} }
             if (!state.profiles || !state.profiles.length) state.profiles = [ { id: "general", name: "Umumiy", icon: "🏠", age: null, role: "parent_m" }, { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", age: null, role: "home" } ];
             ['txs','incs','debts','sched','plan','deps','credits'].forEach(k => { if(!state[k]) state[k] = []; });
             
             buildDetailedCategories();
+            
+            await loadBankData(); // Banklarni yuklanishini kutamiz
             renderBankSelect();
 
             const t = new Date().toISOString().slice(0,10);
@@ -623,7 +597,13 @@
             }
             updateCreditAnalysis();
         };
-        window.updateBankData = () => { toast("Yangi kredit turlari yuklanmoqda...", false); setTimeout(() => { toast("Baza muvaffaqiyatli yangilandi va sinxronlandi!"); }, 1500); };
+        
+        window.updateBankData = async () => { 
+            toast("Banklar bazasi yangilanmoqda...", false); 
+            await loadBankData();
+            renderBankSelect();
+            toast("Baza muvaffaqiyatli yangilandi va sinxronlandi!"); 
+        };
 
         window.updateCreditAnalysis = () => {
             const a = getNum("credit-amount"), d = parseInt(val("credit-duration"))||0, r = parseFloat(val("credit-rate"))||0, tp = val("credit-type");
@@ -699,7 +679,6 @@
             const hasGrace = el("credit-grace-check").checked; const gd = hasGrace ? parseInt(val("credit-grace-dur")) : 0, gr = hasGrace ? parseFloat(val("credit-grace-rate")) : 0;
             if(!b || !tId || !a||!s||!d||!r||!pd) return toast("To'ldiring!", true);
 
-            // Checking bank limits
             if(crObj) {
                 if(a > crObj.maxAmt) return toast(`Maksimal summa ${formatM(crObj.maxAmt)}!`, true);
                 if(d > crObj.maxDur) return toast(`Maksimal muddat ${crObj.maxDur} oy!`, true);
@@ -714,7 +693,7 @@
 
         window.openCreditScheduleModal = id => {
             const cr = state.credits.find(x=>x.id==id); if(!cr) return;
-            setTxt("schedule-title", "Kredit Grafigi"); setTxt("schedule-info", `${cr.typeIcon} ${cr.name} (${formatM(cr.initAmt)})\nMuddat: ${cr.duration} oy | Stavka: ${cr.rate}% Yillik\nTuri: ${cr.type==='annuity'?'Annuitet':'Differensial'}${cr.graceDur>0?`\nImtiyoz: ${cr.graceDur} oy (${cr.graceRate}%)`:''}`);
+            setTxt("schedule-title", "Kredit Grafigi"); setTxt("schedule-info", `${cr.typeIcon||'💳'} ${cr.name} (${formatM(cr.initAmt)})\nMuddat: ${cr.duration} oy | Stavka: ${cr.rate}% Yillik\nTuri: ${cr.type==='annuity'?'Annuitet':'Differensial'}${cr.graceDur>0?`\nImtiyoz: ${cr.graceDur} oy (${cr.graceRate}%)`:''}`);
             let html = "<tr><th>Oy/Sana</th><th>Asosiy</th><th>Foiz</th><th>Jami</th><th>Status</th></tr>", totalPay = 0;
             cr.schedule.forEach(item => {
                 totalPay += item.total; let statHtml = item.status === 'paid' ? '<span class="status-paid">To\'landi</span>' : '<span class="status-unpaid">Kutilmoqda</span>';
