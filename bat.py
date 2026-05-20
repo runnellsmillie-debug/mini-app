@@ -9,7 +9,7 @@ from flask import Flask
 from threading import Thread
 
 # 1. Tokenni Environment Variable'dan o'qiymiz
-TOKEN = os.getenv("BOT_TOKEN") 
+TOKEN = os.getenv("8619700756:AAHFrcQYILDeM8_ELs5sFNguL9WfDZhL3VQ") 
 WEB_APP_URL = "https://runnellsmillie-debug.github.io/mini-app/"
 
 # Logging'ni sozlash
