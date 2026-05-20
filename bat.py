@@ -6,16 +6,22 @@ import threading
 import sqlite3
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart
-from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
 from flask import Flask
 
 # 1. Konfiguratsiya
 TOKEN = os.getenv("BOT_TOKEN") 
 WEB_APP_URL = "https://runnellsmillie-debug.github.io/mini-app/"
 
-# 2. Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# --- HOLATLAR (States) ---
+class Setup(StatesGroup):
+    waiting_for_name = State()
+    waiting_for_partner_phone = State()
 
 # --- BAZA QISMI ---
 def init_db():
@@ -29,10 +35,17 @@ def init_db():
                        joriy_budget_id INTEGER)''')
     
     cursor.execute('''CREATE TABLE IF NOT EXISTS budgets 
-                      (budget_id INTEGER PRIMARY KEY AUTOINCREMENT, balance REAL DEFAULT 0)''')
+                      (budget_id INTEGER PRIMARY KEY AUTOINCREMENT, balance REAL DEFAULT 0, name TEXT)''')
     
     cursor.execute('''CREATE TABLE IF NOT EXISTS invitations 
                       (from_user_id INTEGER, to_phone TEXT, budget_id INTEGER)''')
+    
+    # Eskidan qolgan bazaga "name" ustunini qo'shish (Xato bermasligi uchun)
+    try:
+        cursor.execute("ALTER TABLE budgets ADD COLUMN name TEXT")
+    except sqlite3.OperationalError:
+        pass 
+
     conn.commit()
     conn.close()
 
@@ -41,7 +54,7 @@ def register_user(user_id):
     cursor = conn.cursor()
     cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
     if not cursor.fetchone():
-        cursor.execute("INSERT INTO budgets (balance) VALUES (0)")
+        cursor.execute("INSERT INTO budgets (balance, name) VALUES (0, NULL)")
         shaxsiy_budget = cursor.lastrowid
         cursor.execute("INSERT INTO users VALUES (?, NULL, ?, NULL, ?)", (user_id, shaxsiy_budget, shaxsiy_budget))
         conn.commit()
@@ -62,104 +75,210 @@ def run_flask():
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Bosh menyu klaviaturasi
-def get_main_menu():
+# --- DINAMIK MENYU ---
+def get_main_keyboard(user_id):
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT ozi_yaratgan_budget_id, taklif_budget_id FROM users WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    
+    if not row:
+        conn.close()
+        return ReplyKeyboardRemove()
+        
+    own_id, taklif_id = row
+    
+    # O'zining hisobi nomi
+    cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (own_id,))
+    own_name_res = cursor.fetchone()
+    own_name = own_name_res[0] if own_name_res and own_name_res[0] else "Mening hisobim"
+    
+    # 1-qator: Hisob tugmalari
+    accounts_row = [KeyboardButton(text=f"👑 {own_name} (Admin)")]
+    
+    # Agar taklif bo'lsa, uni ham yoniga qo'shamiz
+    if taklif_id:
+        cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (taklif_id,))
+        taklif_name_res = cursor.fetchone()
+        if taklif_name_res and taklif_name_res[0]:
+            taklif_name = taklif_name_res[0]
+            accounts_row.append(KeyboardButton(text=f"🤝 {taklif_name} (Taklif)"))
+            
+    conn.close()
+    
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📱 Ilovani ochish")],
-            [KeyboardButton(text="👥 Yangi foydalanuvchi bog'lash"), KeyboardButton(text="📋 Guruh a'zolari")],
-            [KeyboardButton(text="🔄 Hisobni almashtirish")]
+            accounts_row, # Ikkita hisob bo'lsa bitta qatorda yarmidan bo'linadi
+            [KeyboardButton(text="👥 Yangi foydalanuvchi bog'lash"), KeyboardButton(text="📋 Guruh a'zolari")]
         ],
         resize_keyboard=True
     )
 
 @dp.message(CommandStart())
-async def cmd_start(message: types.Message):
+async def cmd_start(message: types.Message, state: FSMContext):
+    await state.clear()
     register_user(message.from_user.id)
-    await message.answer(
-        f"Salom {message.from_user.first_name}! O'zingiz va oilangiz uchun hisob-kitob botiga xush kelibsiz !!!",
-        reply_markup=get_main_menu()
-    )
-
-# Yangi foydalanuvchi bog'lash
-@dp.message(F.text == "👥 Yangi foydalanuvchi bog'lash")
-async def start_binding(message: types.Message):
+    
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT phone FROM users WHERE user_id = ?", (message.from_user.id,))
-    my_phone = cursor.fetchone()[0]
+    cursor.execute("SELECT phone, ozi_yaratgan_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
+    user_data = cursor.fetchone()
+    
+    phone, budget_id = user_data
+    
+    if not phone:
+        kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="📱 Raqamni yuborish", request_contact=True)]], resize_keyboard=True)
+        await message.answer("Assalomu alaykum! Xavfsizlik uchun va botdan foydalanishni boshlash uchun avval telefon raqamingizni tasdiqlang:", reply_markup=kb)
+        conn.close()
+        return
+        
+    cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (budget_id,))
+    budget_name = cursor.fetchone()[0]
     conn.close()
     
-    if not my_phone:
-        await message.answer("Ulanish uchun avval o'z telefon raqamingizni yuboring (Masalan: +998901234567):")
-    else:
-        await message.answer("Sizning hisobingizga ulanishi kerak bo'lgan oila a'zongizning telefon raqamini yuboring (+998XXXXXXXXX shaklida):")
+    if not budget_name:
+        await state.set_state(Setup.waiting_for_name)
+        await message.answer("Ajoyib! Endi bu hisobingizga nom bering (Masalan: Shaxsiy, Oilaviy byudjet, Mening pulim):", reply_markup=ReplyKeyboardRemove())
+        return
 
-# Nomer kiritilganda qayta ishlash
-@dp.message(F.text.regexp(r'^\+?\d{9,13}$'))
-async def handle_phone_input(message: types.Message):
+    await message.answer("Sizning hisob-kitob bo'limingiz:", reply_markup=get_main_keyboard(message.from_user.id))
+
+# Nomer qabul qilish
+@dp.message(F.contact)
+async def get_contact(message: types.Message, state: FSMContext):
+    phone = message.contact.phone_number.replace("+", "")
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET phone = ? WHERE user_id = ?", (phone, message.from_user.id))
+    
+    cursor.execute("SELECT ozi_yaratgan_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
+    budget_id = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (budget_id,))
+    budget_name = cursor.fetchone()[0]
+    conn.commit()
+    conn.close()
+    
+    if not budget_name:
+        await state.set_state(Setup.waiting_for_name)
+        await message.answer(f"✅ Raqam saqlandi (+{phone})!\n\nEndi hisobingizga nom bering (Masalan: Oilaviy, Shaxsiy):", reply_markup=ReplyKeyboardRemove())
+    else:
+        await message.answer("Asosiy menyu:", reply_markup=get_main_keyboard(message.from_user.id))
+
+# Hisobga nom berilganda
+@dp.message(Setup.waiting_for_name, F.text)
+async def save_budget_name(message: types.Message, state: FSMContext):
+    new_name = message.text[:20] # Ism juda uzun bo'lib ketmasligi uchun 20 ta harf limit
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT ozi_yaratgan_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
+    budget_id = cursor.fetchone()[0]
+    
+    cursor.execute("UPDATE budgets SET name = ? WHERE budget_id = ?", (new_name, budget_id))
+    conn.commit()
+    conn.close()
+    
+    await state.clear()
+    await message.answer(f"✅ Hisobingiz nomi '{new_name}' etib belgilandi!", reply_markup=get_main_keyboard(message.from_user.id))
+
+# --- ILOVANI OCHISH VA HISOBNI ALMASHTIRISH (Bitta qadamda) ---
+
+@dp.message(F.text.startswith("👑"))
+async def open_admin_app(message: types.Message):
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT ozi_yaratgan_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
+    own_id = cursor.fetchone()[0]
+    
+    # Avtomatik tarzda joriy hisobni Admin hisobiga o'tkazamiz
+    cursor.execute("UPDATE users SET joriy_budget_id = ? WHERE user_id = ?", (own_id, message.from_user.id))
+    conn.commit()
+    conn.close()
+    
+    web_app = WebAppInfo(url=WEB_APP_URL)
+    inline_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 Ilovaga kirish", web_app=web_app)]])
+    await message.answer(f"{message.text} faollashdi. Ilovani ochish uchun bosing:", reply_markup=inline_kb)
+
+@dp.message(F.text.startswith("🤝"))
+async def open_invited_app(message: types.Message):
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT taklif_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
+    taklif_id = cursor.fetchone()[0]
+    
+    if taklif_id:
+        # Avtomatik tarzda joriy hisobni Taklif qilingan hisobga o'tkazamiz
+        cursor.execute("UPDATE users SET joriy_budget_id = ? WHERE user_id = ?", (taklif_id, message.from_user.id))
+        conn.commit()
+        
+        web_app = WebAppInfo(url=WEB_APP_URL)
+        inline_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 Ilovaga kirish", web_app=web_app)]])
+        await message.answer(f"{message.text} faollashdi. Ilovani ochish uchun bosing:", reply_markup=inline_kb)
+    conn.close()
+
+# --- YANGI FOYDALANUVCHI BOG'LASH ---
+@dp.message(F.text == "👥 Yangi foydalanuvchi bog'lash")
+async def start_binding(message: types.Message, state: FSMContext):
+    await state.set_state(Setup.waiting_for_partner_phone)
+    await message.answer("Sizning hisobingizga ulanishi kerak bo'lgan insonning telefon raqamini yuboring (+998XXXXXXXXX shaklida):\n\n*(Bekor qilish uchun /start ni bosing)*")
+
+@dp.message(Setup.waiting_for_partner_phone, F.text.regexp(r'^\+?\d{9,13}$'))
+async def handle_partner_phone(message: types.Message, state: FSMContext):
     phone = message.text.replace("+", "")
     user_id = message.from_user.id
     
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
+    cursor.execute("SELECT phone, ozi_yaratgan_budget_id FROM users WHERE user_id = ?", (user_id,))
+    my_data = cursor.fetchone()
+    my_phone, my_budget = my_data
     
-    cursor.execute("SELECT phone FROM users WHERE user_id = ?", (user_id,))
-    my_phone = cursor.fetchone()[0]
-    
-    if not my_phone:
-        cursor.execute("UPDATE users SET phone = ? WHERE user_id = ?", (phone, user_id))
-        conn.commit()
-        conn.close()
-        await message.answer(f"✅ Nomeringiz saqlandi! Endi sherigingizni ulash uchun qaytadan '👥 Yangi foydalanuvchi bog'lash' tugmasini bosing.")
-        return
-
-    # O'ziga o'zi yuborayotganini tekshirish (Xatoni oldini olish)
     if phone == my_phone:
+        await message.answer("❌ O'z raqamingizni kiritdingiz! Boshqa shaxsning raqamini kiriting:")
         conn.close()
-        await message.answer("❌ O'z raqamingizni kiritdingiz! Iltimos, boshqa shaxsning raqamini kiriting.")
         return
 
     cursor.execute("SELECT user_id, taklif_budget_id FROM users WHERE phone = ?", (phone,))
     target = cursor.fetchone()
     
     if not target:
+        await message.answer("❌ Bu raqam egasi hali botdan ro'yxatdan o'tmagan. Avval u botga kirishi kerak.")
+        await state.clear()
         conn.close()
-        await message.answer("❌ Bu raqam egasi hali botdan ro'yxatdan o'tmagan. Avval u botga kirib /start bosishi va o'z raqamini kiritishi kerak.")
         return
         
     target_user_id, target_taklif = target
     if target_taklif is not None:
+        await message.answer("❌ Bu inson allaqachon boshqa birovning hisobiga ulangan!")
+        await state.clear()
         conn.close()
-        await message.answer("❌ Bu foydalanuvchida allaqachon taklif orqali bog'langan ikkinchi hisob bor!")
         return
 
-    cursor.execute("SELECT ozi_yaratgan_budget_id FROM users WHERE user_id = ?", (user_id,))
-    my_budget = cursor.fetchone()[0]
-    
     cursor.execute("DELETE FROM invitations WHERE to_phone = ? AND budget_id = ?", (phone, my_budget))
     cursor.execute("INSERT INTO invitations VALUES (?, ?, ?)", (user_id, phone, my_budget))
     conn.commit()
     conn.close()
     
-    inline_kb = types.InlineKeyboardMarkup(inline_keyboard=[
+    inline_kb = InlineKeyboardMarkup(inline_keyboard=[
         [
-            types.InlineKeyboardButton(text="✅ Ha, tasdiqlayman", callback_data=f"accept_{user_id}"),
-            types.InlineKeyboardButton(text="❌ Yo'q", callback_data=f"reject_{user_id}")
+            InlineKeyboardButton(text="✅ Ha", callback_data=f"accept_{user_id}"),
+            InlineKeyboardButton(text="❌ Yo'q", callback_data=f"reject_{user_id}")
         ]
     ])
     
     try:
         await bot.send_message(
             chat_id=target_user_id,
-            text=f"🔔 Taklifnoma!\n\nFoydalanuvchi (+{my_phone}) sizni o'zining moliya hisobiga qo'shmoqchi. Birgalikda yuritishni tasdiqlaysizmi?",
+            text=f"🔔 Taklifnoma!\n\nFoydalanuvchi (+{my_phone}) sizni o'zining hisobiga qo'shmoqchi. Rozimisiz?",
             reply_markup=inline_kb
         )
-        await message.answer(f"⏳ Taklif (+{phone}) raqamiga yuborildi. U tasdiqlashini kuting.")
-    except Exception as e:
-        await message.answer("❌ Sherikka xabar yuborishda xatolik yuz berdi.")
+        await message.answer(f"⏳ Taklif (+{phone}) raqamiga yuborildi.")
+    except Exception:
+        await message.answer("❌ Xatolik yuz berdi.")
+        
+    await state.clear()
 
-# Taklifni tasdiqlash (Tugmalar yo'qolishi bilan ishlaydi)
+# --- TAKLIFNI TASDIQLASH ---
 @dp.callback_query(F.data.startswith("accept_") | F.data.startswith("reject_"))
 async def handle_callback(callback: types.CallbackQuery):
     action, from_user_id = callback.data.split("_")
@@ -168,7 +287,6 @@ async def handle_callback(callback: types.CallbackQuery):
     
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    
     cursor.execute("SELECT phone FROM users WHERE user_id = ?", (target_user_id,))
     target_phone = cursor.fetchone()[0]
     
@@ -183,75 +301,50 @@ async def handle_callback(callback: types.CallbackQuery):
             cursor.execute("DELETE FROM invitations WHERE to_phone = ?", (target_phone,))
             conn.commit()
             
-            await callback.message.edit_text("✅ Siz taklifni qabul qildingiz! Endi sherigingiz bilan bitta hisob-kitobni yuritasiz.")
-            await bot.send_message(from_user_id, f"🎉 Tabriklaymiz! +{target_phone} raqam egasi taklifni qabul qildi va hisobingizga qo'shildi.")
+            await callback.message.edit_text("✅ Siz taklifni qabul qildingiz!")
+            await bot.send_message(from_user_id, f"🎉 +{target_phone} hisobingizga qo'shildi.")
+            
+            # Yangi qabul qilingan hisob menyuda ko'rinishi uchun klaviaturani yangilash
+            await bot.send_message(target_user_id, "Menyu yangilandi:", reply_markup=get_main_keyboard(target_user_id))
         else:
-            await callback.message.edit_text("❌ Bu taklif eskirgan yoki bekor qilingan.")
+            await callback.message.edit_text("❌ Bu taklif eskirgan.")
             
     elif action == "reject":
         await callback.message.edit_text("❌ Siz taklifni rad etdingiz.")
         cursor.execute("DELETE FROM invitations WHERE from_user_id = ? AND to_phone = ?", (from_user_id, target_phone))
         conn.commit()
-        await bot.send_message(from_user_id, f"❌ +{target_phone} raqam egasi taklifingizni rad etdi.")
+        await bot.send_message(from_user_id, f"❌ +{target_phone} taklifni rad etdi.")
         
     conn.close()
     await callback.answer()
 
-# Guruh a'zolarini ko'rish (YANGI QISM)
+# --- GURUH A'ZOLARI ---
 @dp.message(F.text == "📋 Guruh a'zolari")
 async def show_group_members(message: types.Message):
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    
     cursor.execute("SELECT joriy_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
     joriy = cursor.fetchone()[0]
     
     cursor.execute("SELECT phone, user_id FROM users WHERE ozi_yaratgan_budget_id = ? OR taklif_budget_id = ?", (joriy, joriy))
     members = cursor.fetchall()
+    
+    cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (joriy,))
+    b_name = cursor.fetchone()[0]
     conn.close()
     
     if not members:
-        await message.answer("Sizning hozirgi hisobingizda guruh a'zolari topilmadi.")
+        await message.answer("Hech kim topilmadi.")
         return
         
-    text = "👥 Hozirgi hisobingiz a'zolari:\n\n"
+    text = f"👥 '{b_name}' hisobi a'zolari:\n\n"
     for idx, (phone, uid) in enumerate(members, 1):
         me = " (Siz)" if uid == message.from_user.id else ""
         text += f"{idx}. +{phone}{me}\n"
         
     await message.answer(text)
 
-# Hisobni almashtirish
-@dp.message(F.text == "🔄 Hisobni almashtirish")
-async def switch_account(message: types.Message):
-    conn = sqlite3.connect('bot_data.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT ozi_yaratgan_budget_id, taklif_budget_id, joriy_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
-    ozi, taklif, joriy = cursor.fetchone()
-    
-    if not taklif:
-        await message.answer("Sizda ikkinchi (oilaviy) hisob mavjud emas. Buning uchun sherik bog'lashingiz kerak.")
-        conn.close()
-        return
-        
-    yangi_joriy = taklif if joriy == ozi else ozi
-    cursor.execute("UPDATE users SET joriy_budget_id = ? WHERE user_id = ?", (yangi_joriy, message.from_user.id))
-    conn.commit()
-    conn.close()
-    
-    turi = "Oilaviy (Umumiy)" if yangi_joriy == taklif else "Shaxsiy"
-    await message.answer(f"🔄 Hisob almashtirildi! Joriy rejim: **{turi}**")
-
-# Ilovani ochish
-@dp.message(F.text == "📱 Ilovani ochish")
-async def open_app_button(message: types.Message):
-    web_app = WebAppInfo(url=WEB_APP_URL)
-    inline_kb = types.InlineKeyboardMarkup(inline_keyboard=[
-        [types.InlineKeyboardButton(text="🚀 Ilovaga kirish", web_app=web_app)]
-    ])
-    await message.answer("Ilovani ochish uchun quyidagi tugmani bosing:", reply_markup=inline_kb)
-
-# Web App'dan kelgan ma'lumotni qayta ishlash
+# --- WEB APP QAYTA ISHLASH ---
 @dp.message(F.web_app_data)
 async def web_app_handler(message: types.Message):
     try:
@@ -270,12 +363,13 @@ async def web_app_handler(message: types.Message):
         else:
             cursor.execute("UPDATE budgets SET balance = balance + ? WHERE budget_id = ?", (amount, budget_id))
             
-        cursor.execute("SELECT balance FROM budgets WHERE budget_id = ?", (budget_id,))
-        new_balance = cursor.fetchone()[0]
+        cursor.execute("SELECT balance, name FROM budgets WHERE budget_id = ?", (budget_id,))
+        result = cursor.fetchone()
+        new_balance, b_name = result
         conn.commit()
         conn.close()
         
-        await message.answer(f"✅ Amal bajarildi.\n📊 Guruh/Hisob balansi: {new_balance} UZS")
+        await message.answer(f"✅ Amal '{b_name}' hisobida bajarildi.\n📊 Yangi balans: {new_balance} UZS")
     except Exception as e:
         logger.error(f"Xato: {e}")
         await message.answer("Ma'lumotni saqlashda xatolik yuz berdi.")
