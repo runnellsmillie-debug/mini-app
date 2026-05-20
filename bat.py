@@ -8,7 +8,7 @@ from flask import Flask
 from threading import Thread
 
 # 1. TEPADAGI COPY QILGAN TOKENINGIZNI SHU YERGA QO'YING
-TOKEN = "8619700756:AAHcqn_EZ4YxR0BNauMkddbJ22MsCHLtJko" 
+TOKEN = "8619700756:AAHFrcQYILDeM8_ELs5sFNguL9WfDZhL3VQ" 
 
 # 2. GITHUB'DAGI SAYTINGIZ MANZILI
 WEB_APP_URL = "https://runnellsmillie-debug.github.io/mini-app/"
