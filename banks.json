@@ -1,0 +1,109 @@
+{
+  "NBU (Milliy Bank)": {
+    "icon": "🏛",
+    "credits": [
+      { "id": "n1", "name": "Iste'mol krediti", "icon": "🛍️", "rate": 24, "maxDur": 36, "maxAmt": 50000000 },
+      { "id": "n2", "name": "Avtokredit", "icon": "🚗", "rate": 23, "maxDur": 60, "maxAmt": 400000000 },
+      { "id": "n3", "name": "Ta'lim krediti", "icon": "🎓", "rate": 14, "maxDur": 48, "maxAmt": 30000000 },
+      { "id": "n4", "name": "Ipoteka", "icon": "🏠", "rate": 18, "maxDur": 240, "maxAmt": 400000000 }
+    ]
+  },
+  "Ipak Yuli Bank": {
+    "icon": "🐫",
+    "credits": [
+      { "id": "iy1", "name": "Avtokredit (BYD)", "icon": "🚙", "rate": 16, "maxDur": 60, "maxAmt": 400000000 },
+      { "id": "iy2", "name": "Mikroqarz", "icon": "💸", "rate": 28, "maxDur": 24, "maxAmt": 50000000 },
+      { "id": "iy3", "name": "Ipoteka", "icon": "🏠", "rate": 18, "maxDur": 240, "maxAmt": 500000000 },
+      { "id": "iy4", "name": "Biznes kredit", "icon": "💼", "rate": 24, "maxDur": 36, "maxAmt": 1000000000 }
+    ]
+  },
+  "SQB (O'zSQB)": {
+    "icon": "🏢",
+    "credits": [
+      { "id": "s1", "name": "Iste'mol", "icon": "🛍️", "rate": 25, "maxDur": 36, "maxAmt": 50000000 },
+      { "id": "s2", "name": "Avtokredit", "icon": "🚗", "rate": 24, "maxDur": 48, "maxAmt": 300000000 },
+      { "id": "s3", "name": "Mikroqarz", "icon": "💸", "rate": 26, "maxDur": 24, "maxAmt": 50000000 }
+    ]
+  },
+  "Kapitalbank": {
+    "icon": "💳",
+    "credits": [
+      { "id": "k1", "name": "Mikroqarz", "icon": "💸", "rate": 27, "maxDur": 36, "maxAmt": 50000000 },
+      { "id": "k2", "name": "Avtokredit", "icon": "🚗", "rate": 24, "maxDur": 48, "maxAmt": 500000000 },
+      { "id": "k3", "name": "Iste'mol krediti", "icon": "🛍️", "rate": 26, "maxDur": 36, "maxAmt": 50000000 }
+    ]
+  },
+  "TBC Bank": {
+    "icon": "📱",
+    "credits": [
+      { "id": "tbc1", "name": "Mikroqarz (Onlayn)", "icon": "📱", "rate": 30, "maxDur": 36, "maxAmt": 50000000 },
+      { "id": "tbc2", "name": "Avtokredit", "icon": "🚗", "rate": 25, "maxDur": 48, "maxAmt": 300000000 }
+    ]
+  },
+  "Xalq Banki": {
+    "icon": "👥",
+    "credits": [
+      { "id": "x1", "name": "Pensiya krediti", "icon": "🧓", "rate": 22, "maxDur": 36, "maxAmt": 20000000 },
+      { "id": "x2", "name": "Ipoteka", "icon": "🏠", "rate": 17, "maxDur": 240, "maxAmt": 400000000 },
+      { "id": "x3", "name": "Mikroqarz", "icon": "💸", "rate": 26, "maxDur": 24, "maxAmt": 50000000 }
+    ]
+  },
+  "Hamkorbank": {
+    "icon": "🤝",
+    "credits": [
+      { "id": "h1", "name": "Biznes kredit", "icon": "💼", "rate": 25, "maxDur": 36, "maxAmt": 1000000000 },
+      { "id": "h2", "name": "Avtokredit", "icon": "🚙", "rate": 23, "maxDur": 48, "maxAmt": 400000000 },
+      { "id": "h3", "name": "Mikroqarz", "icon": "💸", "rate": 27, "maxDur": 24, "maxAmt": 50000000 }
+    ]
+  },
+  "Asakabank": {
+    "icon": "🏦",
+    "credits": [
+      { "id": "as1", "name": "Ipoteka", "icon": "🏡", "rate": 18, "maxDur": 240, "maxAmt": 500000000 },
+      { "id": "as2", "name": "Avtokredit", "icon": "🚗", "rate": 22, "maxDur": 60, "maxAmt": 350000000 }
+    ]
+  },
+  "Aloqabank": {
+    "icon": "📡",
+    "credits": [
+      { "id": "al1", "name": "Iste'mol krediti", "icon": "🛍️", "rate": 26, "maxDur": 36, "maxAmt": 50000000 },
+      { "id": "al2", "name": "Ipoteka", "icon": "🏠", "rate": 18, "maxDur": 240, "maxAmt": 500000000 },
+      { "id": "al3", "name": "Avtokredit", "icon": "🚗", "rate": 24, "maxDur": 48, "maxAmt": 300000000 }
+    ]
+  },
+  "Agrobank": {
+    "icon": "🌾",
+    "credits": [
+      { "id": "ag1", "name": "Fermer krediti", "icon": "🚜", "rate": 20, "maxDur": 60, "maxAmt": 1000000000 },
+      { "id": "ag2", "name": "Iste'mol krediti", "icon": "🛍️", "rate": 25, "maxDur": 36, "maxAmt": 50000000 },
+      { "id": "ag3", "name": "Avtokredit", "icon": "🚗", "rate": 24, "maxDur": 48, "maxAmt": 300000000 }
+    ]
+  },
+  "Orient Finance Bank": {
+    "icon": "💎",
+    "credits": [
+      { "id": "of1", "name": "Avtokredit", "icon": "🚗", "rate": 21, "maxDur": 48, "maxAmt": 500000000 },
+      { "id": "of2", "name": "Mikroqarz", "icon": "💸", "rate": 27, "maxDur": 24, "maxAmt": 50000000 }
+    ]
+  },
+  "Trastbank": {
+    "icon": "🛡️",
+    "credits": [
+      { "id": "tr1", "name": "Mikroqarz", "icon": "💸", "rate": 28, "maxDur": 24, "maxAmt": 50000000 },
+      { "id": "tr2", "name": "Avtokredit", "icon": "🚗", "rate": 23, "maxDur": 48, "maxAmt": 300000000 }
+    ]
+  },
+  "Davr Bank": {
+    "icon": "⏱️",
+    "credits": [
+      { "id": "dv1", "name": "Mikroqarz", "icon": "💸", "rate": 29, "maxDur": 18, "maxAmt": 50000000 }
+    ]
+  },
+  "Mikrokreditbank": {
+    "icon": "💰",
+    "credits": [
+      { "id": "mk1", "name": "Biznes mikroqarz", "icon": "💼", "rate": 24, "maxDur": 36, "maxAmt": 300000000 },
+      { "id": "mk2", "name": "Iste'mol", "icon": "🛍️", "rate": 26, "maxDur": 36, "maxAmt": 50000000 }
+    ]
+  }
+}
