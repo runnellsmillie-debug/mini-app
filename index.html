@@ -9,19 +9,19 @@
         :root {
             --bg-dark: #0f172a; --bg-card: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8;
             --primary: #3b82f6; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
-            --border-color: #334155; --border-focus: #3b82f6;
+            --border-color: #334155;
         }
 
-        body { margin: 0; background-color: var(--bg-dark); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, sans-serif; -webkit-user-select: none; user-select: none; padding: 15px; padding-bottom: 85px; max-width: 480px; margin: 0 auto; box-sizing: border-box; overflow-x: hidden; }
+        body { margin: 0; background-color: var(--bg-dark); color: var(--text-main); font-family: -apple-system, sans-serif; -webkit-user-select: none; user-select: none; padding: 15px; padding-bottom: 85px; max-width: 480px; margin: 0 auto; box-sizing: border-box; overflow-x: hidden; }
         
-        .top-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .top-header { display: flex; align-items: center; margin-bottom: 15px; min-height: 40px; }
         .menu-btn { background: transparent; border: none; color: var(--text-muted); padding: 5px 0; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .menu-btn span.icon { font-size: 22px; color: var(--primary); }
         
         .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; backdrop-filter: blur(3px); }
         .sidebar-menu { position: fixed; top: 0; left: -280px; width: 270px; height: 100%; background: var(--bg-dark); z-index: 2001; transition: 0.3s ease; padding: 25px 20px; box-sizing: border-box; border-right: 1px solid var(--border-color); overflow-y: auto; }
         .sidebar-menu.open { left: 0; }
-        .sidebar-item { display: flex; align-items: center; gap: 15px; padding: 14px 16px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 15px; border: 1px solid transparent; transition: 0.2s; }
+        .sidebar-item { display: flex; align-items: center; gap: 15px; padding: 14px 16px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; color: var(--text-muted); font-weight: bold; font-size: 15px; border: 1px solid transparent; }
         .sidebar-item.active { background: rgba(59, 130, 246, 0.1); color: var(--primary); border-color: rgba(59, 130, 246, 0.3); }
         .sidebar-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid var(--border-color); }
         
@@ -33,13 +33,9 @@
         .balance-card-main { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid var(--border-color); border-radius: 20px; padding: 20px 15px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .widget-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 15px; margin-bottom: 15px; }
         
-        .toggle-header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: bold; color: var(--primary); cursor: pointer; padding-bottom: 5px; }
-        .toggle-header span.chevron { font-size: 12px; transition: transform 0.3s; }
-        .toggle-header.open span.chevron { transform: rotate(180deg); }
-
         .input-text { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-dark); color: var(--text-main); font-size: 14px; box-sizing: border-box; outline: none; margin-bottom: 8px; transition: 0.2s; }
         .input-text:focus { border-color: var(--primary); }
-        .btn-primary { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; font-weight: bold; border-radius: 12px; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        .btn-primary { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; font-weight: bold; border-radius: 12px; font-size: 15px; cursor: pointer; transition: 0.2s; margin-bottom: 8px; }
         .btn-primary:active { transform: scale(0.98); }
         .btn-success { background: var(--success); }
         
@@ -56,8 +52,7 @@
         
         .num-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
         .num-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; font-size: 20px; font-weight:bold; border-radius: 10px; padding: 12px 0; cursor: pointer; outline: none; }
-        .num-btn:active { background: rgba(255, 255, 255, 0.15); }
-
+        
         .list-item { display: flex; align-items: center; background: var(--bg-card); padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; border: 1px solid var(--border-color); }
         .delete-btn { background: none; border: none; color: var(--danger); font-weight: bold; cursor: pointer; font-size: 16px; padding: 5px; margin-left: auto; }
         
@@ -66,7 +61,6 @@
         
         .tags-wrapper { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
         .smart-tag { background: var(--bg-card); color: #fff; border: 1px solid var(--primary); padding: 6px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.1s; }
-        .smart-tag:active { background: var(--primary); transform: scale(0.95); }
         
         #toast-msg { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 20px; z-index: 9999; font-weight: bold; font-size: 14px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
         .hidden { display: none !important; }
@@ -79,28 +73,19 @@
         .balance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .balance-card { background: var(--bg-card); padding: 12px; border-radius: 12px; text-align: center; }
         
-        .arch-toggle-btn { margin-top:10px; text-align:center; color:var(--text-muted); font-size:12px; cursor:pointer; padding:8px; border:1px dashed var(--border-color); border-radius:8px; background: rgba(0,0,0,0.1); transition: 0.2s; }
-        .arch-toggle-btn:active { background: rgba(0,0,0,0.3); }
-
-        .archive-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; margin-top: 10px; width: 100%; font-size: 11px; }
-        .archive-info-grid div span { color: var(--text-muted); display: block; margin-bottom: 3px; }
-        .archive-info-grid div b { font-size: 12px; color: #fff; }
-        
         .bank-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top:10px; }
         .bank-table th { background: var(--bg-card); color: var(--text-muted); padding: 8px; text-align: right; border-bottom: 1px solid var(--border-color); }
         .bank-table th:first-child { text-align: left; }
         .bank-table td { padding: 8px; text-align: right; border-bottom: 1px dashed var(--border-color); }
         .bank-table td:first-child { text-align: left; }
-        .status-paid { color: var(--success); font-weight:bold; }
-        .status-unpaid { color: var(--warning); }
         
         .credit-analysis-box { background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary); padding: 12px; border-radius: 10px; margin-bottom: 12px; }
         .analysis-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
         .analysis-row b { color: #fff; }
 
-        /* YAngi qo'shilgan Bank bo'limi uchun dizaynlar */
-        .main-menu-btn { width: 100%; padding: 16px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 14px; font-size: 16px; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 10px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .main-menu-btn span.icon { font-size: 24px; }
+        /* XIZMATLAR MENYUSI UCHUN */
+        .main-menu-btn { width: 100%; padding: 18px 16px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 14px; font-size: 16px; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 15px; cursor: pointer; margin-bottom: 12px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .main-menu-btn span.icon { font-size: 26px; }
         .main-menu-btn:active { transform: scale(0.98); background: rgba(59, 130, 246, 0.1); border-color: var(--primary); }
     </style>
 </head>
@@ -108,59 +93,22 @@
 
     <div id="toast-msg"></div>
 
-    <div id="modal-confirm" class="modal-layer" onclick="closeModalOutside(event, 'modal-confirm')">
-        <div class="modal-box">
-            <h3 style="margin-top:0; color:var(--danger);">Xavfsizlik Tasdig'i</h3>
-            <div id="confirm-msg" style="color:var(--text-muted); font-size:13px; margin-bottom:15px; line-height:1.4;">Haqiqatan ham yopmoqchimisiz? Tasdiqlash uchun barcha harflarni katta qilib <b>YOPISH</b> deb yozing.</div>
-            <input type="text" id="confirm-code" class="input-text" placeholder="YOPISH" autocomplete="off" />
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <button onclick="closeModal('modal-confirm')" class="btn-primary" style="background:var(--border-color);">Bekor</button>
-                <button onclick="executeConfirm()" class="btn-primary" style="background:var(--danger);">Tasdiqlash</button>
-            </div>
-        </div>
-    </div>
-    <div id="modal-profile" class="modal-layer" onclick="closeModalOutside(event, 'modal-profile')">
-        <div class="modal-box">
-            <h3 style="margin-top:0; margin-bottom:15px; color:var(--primary);">Yangi profil</h3>
-            <input type="text" id="prof-name" class="input-text" placeholder="Ism" />
-            <div style="display:flex; gap:10px; margin-bottom:10px;"><input type="number" id="prof-age" class="input-text" placeholder="Yoshi" style="flex:1; margin:0;" /><select id="prof-role" class="input-text" style="flex:2; margin:0;"><option value="child_m">O'g'il farzand</option><option value="child_f">Qiz farzand</option><option value="parent_m">Ota (Erkak)</option><option value="parent_f">Ona (Ayol)</option></select></div>
-            <input type="text" id="prof-emoji" class="input-text" placeholder="Emoji (Ixtiyoriy)" />
-            <div style="display:flex; gap:10px; margin-top:10px;"><button onclick="closeModal('modal-profile')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="saveNewProfile()" class="btn-primary btn-success">Saqlash</button></div>
-        </div>
-    </div>
-    <div id="modal-buy" class="modal-layer" onclick="closeModalOutside(event, 'modal-buy')"><div class="modal-box"><h3 style="margin-top:0; margin-bottom:10px; color:var(--success);">Tasdiqlash</h3><div id="buy-item-name" style="color:var(--text-muted); font-size:14px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="buy-price" class="input-text" placeholder="Haqiqiy narxi" oninput="formatSpace(this)" /><div style="display:flex; gap:10px; margin-top:10px;"><button onclick="closeModal('modal-buy')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmBuyItem()" class="btn-primary btn-success">Xarid</button></div></div></div>
-    <div id="modal-dep-topup" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-topup')"><div class="modal-box"><h3 style="margin-top:0; color:var(--primary);">Pul qo'shish</h3><div id="topup-name" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="topup-amount" class="input-text" placeholder="Summa..." oninput="formatSpace(this)" /><div style="display:flex; gap:10px; margin-top:10px;"><button onclick="closeModal('modal-dep-topup')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmTopup()" class="btn-primary btn-success">Qo'shish</button></div></div></div>
-    <div id="modal-dep-interest" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-interest')"><div class="modal-box"><h3 style="margin-top:0; color:var(--success);">Foiz hisoblash</h3><div id="interest-info" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="interest-amount" class="input-text" placeholder="Hisoblangan summa..." oninput="formatSpace(this)" /><div style="display:flex; gap:10px; margin-top:10px;"><button onclick="closeModal('modal-dep-interest')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmInterest()" class="btn-primary btn-success">Tasdiqlash</button></div></div></div>
-    <div id="modal-principal-pay" class="modal-layer" onclick="closeModalOutside(event, 'modal-principal-pay')">
-        <div class="modal-box">
-            <h3 style="margin-top:0; color:var(--primary);">Tanidan Kamaytirish</h3>
-            <div id="principal-pay-info" style="color:var(--text-muted); font-size:12px; margin-bottom:15px; line-height:1.4;">...</div>
-            <input type="text" inputmode="numeric" id="principal-pay-amount" class="input-text" placeholder="Summani kiriting..." oninput="formatSpace(this)" />
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <button onclick="closeModal('modal-principal-pay')" class="btn-primary" style="background:var(--border-color);">Bekor</button>
-                <button onclick="confirmPrincipalPay()" class="btn-primary btn-success">To'lash</button>
-            </div>
-        </div>
-    </div>
-    <div id="modal-schedule" class="modal-layer" onclick="closeModalOutside(event, 'modal-schedule')">
-        <div class="modal-box" style="max-height: 85vh; display: flex; flex-direction: column; width:95%; max-width:400px; padding:15px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="margin:0; color:var(--primary); font-size:16px;" id="schedule-title">Bank Grafigi</h3>
-                <button onclick="closeModal('modal-schedule')" style="background:none; border:none; color:var(--text-muted); font-size:22px; cursor:pointer;">✕</button>
-            </div>
-            <div id="schedule-info" style="color:var(--text-muted); font-size:12px; margin-bottom:10px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; line-height:1.4;">...</div>
-            <div style="overflow-y: auto; flex:1; padding-right:2px; margin-bottom:5px;">
-                <table class="bank-table" id="schedule-table"></table>
-            </div>
-            <div id="schedule-footer" style="text-align:right; font-weight:bold; color:var(--warning); margin-top:10px; font-size:14px; border-top:1px dashed var(--border-color); padding-top:10px;"></div>
-        </div>
-    </div>
-
+    <div id="modal-confirm" class="modal-layer" onclick="closeModalOutside(event, 'modal-confirm')"><div class="modal-box"><h3 style="margin-top:0; color:var(--danger);">Tasdiqlash</h3><div id="confirm-msg" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">YOPISH deb yozing.</div><input type="text" id="confirm-code" class="input-text" placeholder="YOPISH" autocomplete="off" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-confirm')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="executeConfirm()" class="btn-primary" style="background:var(--danger);">Tasdiqlash</button></div></div></div>
+    <div id="modal-profile" class="modal-layer" onclick="closeModalOutside(event, 'modal-profile')"><div class="modal-box"><h3 style="margin-top:0; color:var(--primary);">Yangi profil</h3><input type="text" id="prof-name" class="input-text" placeholder="Ism" /><div style="display:flex; gap:10px; margin-bottom:10px;"><input type="number" id="prof-age" class="input-text" placeholder="Yoshi" style="flex:1; margin:0;" /><select id="prof-role" class="input-text" style="flex:2; margin:0;"><option value="child_m">O'g'il</option><option value="child_f">Qiz</option><option value="parent_m">Ota</option><option value="parent_f">Ona</option></select></div><input type="text" id="prof-emoji" class="input-text" placeholder="Emoji" /><div style="display:flex; gap:10px; margin-top:10px;"><button onclick="closeModal('modal-profile')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="saveNewProfile()" class="btn-primary btn-success">Saqlash</button></div></div></div>
+    <div id="modal-buy" class="modal-layer" onclick="closeModalOutside(event, 'modal-buy')"><div class="modal-box"><h3 style="margin-top:0; color:var(--success);">Tasdiqlash</h3><div id="buy-item-name" style="color:var(--text-muted); font-size:14px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="buy-price" class="input-text" placeholder="Narxi" oninput="formatSpace(this)" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-buy')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmBuyItem()" class="btn-primary btn-success">Olish</button></div></div></div>
+    <div id="modal-dep-topup" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-topup')"><div class="modal-box"><h3 style="margin-top:0; color:var(--primary);">Pul qo'shish</h3><div id="topup-name" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="topup-amount" class="input-text" placeholder="Summa..." oninput="formatSpace(this)" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-dep-topup')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmTopup()" class="btn-primary btn-success">Qo'shish</button></div></div></div>
+    <div id="modal-dep-interest" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-interest')"><div class="modal-box"><h3 style="margin-top:0; color:var(--success);">Foiz hisoblash</h3><div id="interest-info" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="interest-amount" class="input-text" placeholder="Hisoblangan summa..." oninput="formatSpace(this)" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-dep-interest')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmInterest()" class="btn-primary btn-success">Tasdiqlash</button></div></div></div>
+    <div id="modal-principal-pay" class="modal-layer" onclick="closeModalOutside(event, 'modal-principal-pay')"><div class="modal-box"><h3 style="margin-top:0; color:var(--primary);">Tanidan Kamaytirish</h3><div id="principal-pay-info" style="color:var(--text-muted); font-size:12px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="principal-pay-amount" class="input-text" placeholder="Summa..." oninput="formatSpace(this)" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-principal-pay')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmPrincipalPay()" class="btn-primary btn-success">To'lash</button></div></div></div>
+    <div id="modal-schedule" class="modal-layer" onclick="closeModalOutside(event, 'modal-schedule')"><div class="modal-box" style="width:95%; max-width:400px; padding:15px;"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h3 style="margin:0; color:var(--primary);" id="schedule-title">Grafik</h3><button onclick="closeModal('modal-schedule')" style="background:none; border:none; color:var(--text-muted); font-size:22px;">✕</button></div><div id="schedule-info" style="color:var(--text-muted); font-size:12px; margin-bottom:10px; border-bottom:1px dashed var(--border-color); padding-bottom:10px;">...</div><div style="max-height:60vh; overflow-y:auto;"><table class="bank-table" id="schedule-table"></table></div><div id="schedule-footer" style="text-align:right; font-weight:bold; color:var(--warning); margin-top:10px;"></div></div></div>
 
     <div class="top-header">
         <button class="menu-btn" id="main-menu-btn" onclick="toggleSidebar()"><span class="icon">☰</span> <span id="current-profile-name" style="font-size:16px;">Umumiy</span></button>
-        <button class="menu-btn hidden" id="back-btn" onclick="closeBankSubView()"><span class="icon" style="font-size:22px; color:var(--primary);">⬅</span> <span id="sub-view-title" style="font-size:16px; font-weight:bold;">Kredit</span></button>
+        <button class="menu-btn hidden" id="back-btn" onclick="closeBankSubView()" style="width:100%; display:flex; align-items:center;">
+            <span class="icon" style="font-size:22px; color:var(--primary);">⬅</span> 
+            <span id="sub-view-title" style="display:flex; align-items:center; gap:8px;"></span>
+        </button>
     </div>
+    
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div id="sidebar-menu" class="sidebar-menu">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px dashed var(--border-color);"><h3 style="margin:0; color:var(--primary);">Profillar</h3><button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text-muted); font-size:22px;">✕</button></div>
@@ -172,34 +120,7 @@
             <div style="color: var(--text-muted); font-size: 11px; font-weight:bold; letter-spacing:1px; margin-bottom:6px;">JAMI MAVJUD MABLAG'</div>
             <div id="main-total-balance" style="font-size: 32px; font-weight: bold; color: #fff;">0 so'm</div>
         </div>
-
-        <div class="widget-box" id="sched-section">
-            <div class="toggle-header" id="sched-header" onclick="toggleWidget('sched-setup-panel', 'sched-header')"><span>📅 Rejali to'lovlar (<span id="sched-prof-label"></span>)</span> <span class="chevron">▼</span></div>
-            <div id="sched-setup-panel" class="hidden" style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border-color);">
-                <input type="text" id="sched-name" class="input-text" placeholder="Nomi (Mas: Bog'cha)" />
-                <div style="display:flex; gap:8px; margin-bottom:8px;"><select id="sched-cat" class="input-text" style="flex:1; margin:0;"><option value="Oila/Bolalar">Oila</option><option value="Uy/Kommunal">Uy/Kommunal</option><option value="Majburiyatlar">Kredit</option><option value="Boshqa">Boshqa</option></select><input type="number" id="sched-day" placeholder="Sana" class="input-text" style="width:70px; margin:0;" /></div>
-                <input type="text" inputmode="numeric" id="sched-amount" placeholder="Summa (To'liq)" class="input-text" oninput="formatSpace(this)" />
-                <button onclick="addScheduled()" class="btn-primary btn-success" style="margin-bottom:10px;">➕ Qo'shish</button>
-                <div id="sched-edit-list"></div>
-            </div>
-            <div id="sched-list-container" style="margin-top:12px;"></div>
-        </div>
-
-        <div class="widget-box" id="plan-section">
-            <div class="toggle-header open" id="plan-header" onclick="toggleWidget('plan-setup-panel', 'plan-header')"><span>🛒 Bozorlik / Xarid Rejasi</span> <span class="chevron">▼</span></div>
-            <div id="plan-setup-panel" style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border-color);">
-                <div style="display:flex; gap:8px; margin-bottom:10px;"><select id="smart-plan-cat" class="input-text" onchange="updateSmartTags()" style="flex:1; margin:0;"></select><select id="smart-plan-subcat" class="input-text" onchange="renderSmartTags()" style="flex:1; margin:0;"></select></div>
-                <div id="smart-tags-container" class="tags-wrapper"></div>
-                <hr style="border:none; border-top:1px dashed var(--border-color); margin:10px 0;">
-                <div style="display:flex; gap:8px; margin-bottom:8px;"><input type="text" id="plan-name" class="input-text" placeholder="Nima? (Mas: 🍅 Pomidor)" style="flex:2; margin:0;" /><input type="text" id="plan-qty" class="input-text" placeholder="Hajmi/Soni" style="flex:1; margin:0;" /></div>
-                <div style="display:flex; gap:8px; margin-bottom:10px;"><select id="plan-market" class="input-text" style="flex:1; margin:0;"><option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Makro">Makro</option><option value="Uzum">Uzum</option><option value="Do'kon">Do'kon</option></select><input type="text" inputmode="numeric" id="plan-price" class="input-text" placeholder="Taxminiy narx" style="flex:1; margin:0;" oninput="formatSpace(this)" /></div>
-                <button onclick="addPlannedItemManual()" class="btn-primary btn-success">➕ Ro'yxatga Saqlash</button>
-            </div>
-            <div style="display:flex; gap:8px; margin: 12px 0;"><select id="filter-market" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;"><option value="all">Manzil: Barcha</option><option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Uzum">Uzum</option></select><select id="filter-cat" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;"><option value="all">Toifa: Barcha</option><option value="Oziq-ovqat">Oziq-ovqat</option><option value="Uy_Xojalik">Xo'jalik</option><option value="Kiyim">Kiyim</option></select></div>
-            <div id="planned-list-container"></div>
-        </div>
-
-        <button onclick="saveAndExit()" class="btn-primary btn-success" style="margin-top:10px; padding:14px; font-size:15px; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">✅ Saqlash va Chiqish (<span id="session-count">0</span>)</button>
+        <button onclick="saveAndExit()" class="btn-primary btn-success" style="padding:14px; font-size:15px; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">✅ Saqlash va Chiqish (<span id="session-count">0</span>)</button>
     </div>
 
     <div id="tab-add" class="tab-content hidden">
@@ -207,15 +128,11 @@
             <button id="mode-exp" class="mode-btn" style="background:var(--danger); border-color:var(--danger);" onclick="setAddMode('expense')">▼ Chiqim (Xarajat)</button>
             <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">▲ Kirim (Foyda)</button>
         </div>
-        
         <div id="num-display" class="num-display">0</div>
         <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-bottom: 10px; height: 16px;" id="stay-hint"></div>
-        
         <div id="cats-header-container"></div>
         <div id="cats-container"></div>
-        
         <input type="text" id="add-desc" class="input-text" placeholder="Izoh yozing (ixtiyoriy)..." style="margin-top:5px; margin-bottom:10px;" />
-        
         <div class="num-grid">
             <button class="num-btn" onclick="pressNum('1')">1</button><button class="num-btn" onclick="pressNum('2')">2</button><button class="num-btn" onclick="pressNum('3')">3</button>
             <button class="num-btn" onclick="pressNum('4')">4</button><button class="num-btn" onclick="pressNum('5')">5</button><button class="num-btn" onclick="pressNum('6')">6</button>
@@ -227,9 +144,35 @@
     <div id="tab-other" class="tab-content hidden">
         
         <div id="bank-main-menu">
+            <button class="main-menu-btn" onclick="openBankSubView('plan')"><span class="icon">🛒</span> Bozorlik ro'yxati</button>
+            <button class="main-menu-btn" onclick="openBankSubView('sched')"><span class="icon">📅</span> Rejali to'lovlar</button>
             <button class="main-menu-btn" onclick="openBankSubView('credit')"><span class="icon">💳</span> Kreditlar bo'limi</button>
             <button class="main-menu-btn" onclick="openBankSubView('dep')"><span class="icon">🏦</span> Omonatlar bo'limi</button>
             <button class="main-menu-btn" onclick="openBankSubView('debt')"><span class="icon">🤝</span> Qarzlar bo'limi</button>
+        </div>
+
+        <div id="bank-sub-plan" class="hidden">
+            <div class="widget-box">
+                <div style="display:flex; gap:8px; margin-bottom:10px;"><select id="smart-plan-cat" class="input-text" onchange="updateSmartTags()" style="flex:1; margin:0;"></select><select id="smart-plan-subcat" class="input-text" onchange="renderSmartTags()" style="flex:1; margin:0;"></select></div>
+                <div id="smart-tags-container" class="tags-wrapper"></div>
+                <hr style="border:none; border-top:1px dashed var(--border-color); margin:10px 0;">
+                <div style="display:flex; gap:8px; margin-bottom:8px;"><input type="text" id="plan-name" class="input-text" placeholder="Nima? (Mas: 🍅 Pomidor)" style="flex:2; margin:0;" /><input type="text" id="plan-qty" class="input-text" placeholder="Soni" style="flex:1; margin:0;" /></div>
+                <div style="display:flex; gap:8px; margin-bottom:10px;"><select id="plan-market" class="input-text" style="flex:1; margin:0;"><option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Makro">Makro</option><option value="Uzum">Uzum</option><option value="Do'kon">Do'kon</option></select><input type="text" inputmode="numeric" id="plan-price" class="input-text" placeholder="Taxminiy narx" style="flex:1; margin:0;" oninput="formatSpace(this)" /></div>
+                <button onclick="addPlannedItemManual()" class="btn-primary btn-success">➕ Ro'yxatga Saqlash</button>
+            </div>
+            <div style="display:flex; gap:8px; margin: 12px 0;"><select id="filter-market" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;"><option value="all">Manzil: Barcha</option><option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option></select><select id="filter-cat" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;"><option value="all">Toifa: Barcha</option><option value="Oziq-ovqat">Oziq-ovqat</option><option value="Uy_Xojalik">Xo'jalik</option><option value="Kiyim">Kiyim</option></select></div>
+            <div id="planned-list-container"></div>
+        </div>
+
+        <div id="bank-sub-sched" class="hidden">
+            <div class="widget-box">
+                <input type="text" id="sched-name" class="input-text" placeholder="Nomi (Mas: Bog'cha to'lovi)" />
+                <div style="display:flex; gap:8px; margin-bottom:8px;"><select id="sched-cat" class="input-text" style="flex:1; margin:0;"><option value="Oila/Bolalar">Oila</option><option value="Uy/Kommunal">Uy/Kommunal</option><option value="Majburiyatlar">Kredit</option><option value="Boshqa">Boshqa</option></select><input type="number" id="sched-day" placeholder="Sana" class="input-text" style="width:70px; margin:0;" /></div>
+                <input type="text" inputmode="numeric" id="sched-amount" placeholder="Summa (To'liq)" class="input-text" oninput="formatSpace(this)" />
+                <button onclick="addScheduled()" class="btn-primary btn-success" style="margin-bottom:10px;">➕ Qo'shish</button>
+                <div id="sched-edit-list"></div>
+            </div>
+            <div id="sched-list-container" style="margin-top:12px;"></div>
         </div>
 
         <div id="bank-sub-credit" class="hidden">
@@ -239,13 +182,9 @@
                 <button id="cr-tab-calc" class="mode-btn" onclick="switchCrTab('calc')">Kalkulyator</button>
             </div>
 
-            <div id="cr-view-aktiv">
-                <div id="credits-list-active"></div>
-            </div>
+            <div id="cr-view-aktiv"><div id="credits-list-active"></div></div>
 
-            <div id="cr-view-arxiv" class="hidden">
-                <div id="credits-list-archived"></div>
-            </div>
+            <div id="cr-view-arxiv" class="hidden"><div id="credits-list-archived"></div></div>
 
             <div id="cr-view-calc" class="hidden">
                 <div class="widget-box">
@@ -253,70 +192,54 @@
                         <b style="color:var(--primary);">➕ Yangi Kredit Olish</b>
                         <button onclick="updateBankData()" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">🔄 Yangilash</button>
                     </div>
-                    
-                    <div style="display:flex; gap:8px; margin-bottom:8px;">
-                        <select id="credit-bank" class="input-text" style="flex:1; margin:0;" onchange="updateCreditTypes()"></select>
-                        <select id="credit-type-name" class="input-text" style="flex:1; margin:0;" onchange="onCreditTypeChange()"></select>
-                    </div>
-
+                    <div style="display:flex; gap:8px; margin-bottom:8px;"><select id="credit-bank" class="input-text" style="flex:1; margin:0;" onchange="updateCreditTypes()"></select><select id="credit-type-name" class="input-text" style="flex:1; margin:0;" onchange="onCreditTypeChange()"></select></div>
                     <input type="text" inputmode="numeric" id="credit-amount" class="input-text" placeholder="Olingan jami summa..." oninput="formatSpace(this); updateCreditAnalysis();" />
-                    
-                    <div style="display:flex; gap:8px; margin-bottom:8px;">
-                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Olingan sana:</div><input type="date" id="credit-date" class="input-text" style="margin:0;" /></div>
-                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">To'lov kuni (1-31):</div><input type="number" id="credit-payday" class="input-text" placeholder="Mas: 15" style="margin:0;" /></div>
-                    </div>
-                    <div style="display:flex; gap:8px; margin-bottom:8px;">
-                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat (oy):</div><input type="number" id="credit-duration" class="input-text" placeholder="Mas: 36" style="margin:0;" oninput="updateCreditAnalysis()" /></div>
-                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Yillik foiz (%):</div><input type="number" id="credit-rate" class="input-text" placeholder="Mas: 24" style="margin:0;" oninput="updateCreditAnalysis()" /></div>
-                    </div>
-                    <div style="margin-bottom:8px;">
-                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">To'lov turi:</div>
-                        <select id="credit-type" class="input-text" style="margin:0;" onchange="updateCreditAnalysis()"><option value="annuity">Annuitet (Bir xil oylik to'lov)</option><option value="differentiated">Differensial (Kamayib boruvchi)</option></select>
-                    </div>
-
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; background:var(--bg-dark); padding:10px; border-radius:10px; border:1px solid var(--border-color);">
-                        <input type="checkbox" id="credit-grace-check" style="width:20px; height:20px;" onchange="toggleGraceFields(); updateCreditAnalysis();" />
-                        <label for="credit-grace-check" style="font-size:13px; color:var(--text-main);">Imtiyozli davri bormi?</label>
-                    </div>
-                    <div id="grace-fields" class="hidden" style="gap:8px; margin-bottom:12px;">
-                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Imtiyoz muddati (oy):</div><input type="number" id="credit-grace-dur" class="input-text" style="margin:0;" value="0" oninput="updateCreditAnalysis()"/></div>
-                        <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Imtiyoz foizi (%):</div><input type="number" id="credit-grace-rate" class="input-text" style="margin:0;" value="0" oninput="updateCreditAnalysis()"/></div>
-                    </div>
-
-                    <div id="credit-analysis-box" class="credit-analysis-box">
-                        <div style='font-size:11px; color:var(--text-muted); text-align:center;'>Tahlil uchun bank va summani kiriting...</div>
-                    </div>
-
-                    <button onclick="saveCredit()" class="btn-primary btn-success">Kreditni Saqlash & Grafik Tuzish</button>
+                    <div style="display:flex; gap:8px; margin-bottom:8px;"><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Olingan sana:</div><input type="date" id="credit-date" class="input-text" style="margin:0;" /></div><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">To'lov kuni (1-31):</div><input type="number" id="credit-payday" class="input-text" placeholder="Mas: 15" style="margin:0;" /></div></div>
+                    <div style="display:flex; gap:8px; margin-bottom:8px;"><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat (oy):</div><input type="number" id="credit-duration" class="input-text" placeholder="Mas: 36" style="margin:0;" oninput="updateCreditAnalysis()" /></div><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Yillik foiz (%):</div><input type="number" id="credit-rate" class="input-text" placeholder="Mas: 24" style="margin:0;" oninput="updateCreditAnalysis()" /></div></div>
+                    <div style="margin-bottom:8px;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">To'lov turi:</div><select id="credit-type" class="input-text" style="margin:0;" onchange="updateCreditAnalysis()"><option value="annuity">Annuitet (Bir xil oylik to'lov)</option><option value="differentiated">Differensial (Kamayib boruvchi)</option></select></div>
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; background:var(--bg-dark); padding:10px; border-radius:10px; border:1px solid var(--border-color);"><input type="checkbox" id="credit-grace-check" style="width:20px; height:20px;" onchange="toggleGraceFields(); updateCreditAnalysis();" /><label for="credit-grace-check" style="font-size:13px; color:var(--text-main);">Imtiyozli davri bormi?</label></div>
+                    <div id="grace-fields" class="hidden" style="gap:8px; margin-bottom:12px;"><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Imtiyoz muddati (oy):</div><input type="number" id="credit-grace-dur" class="input-text" style="margin:0;" value="0" oninput="updateCreditAnalysis()"/></div><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Imtiyoz foizi (%):</div><input type="number" id="credit-grace-rate" class="input-text" style="margin:0;" value="0" oninput="updateCreditAnalysis()"/></div></div>
+                    <div id="credit-analysis-box" class="credit-analysis-box"><div style='font-size:11px; color:var(--text-muted); text-align:center;'>Tahlil uchun bank va summani kiriting...</div></div>
+                    <button onclick="saveCredit()" class="btn-primary btn-success">Kreditni Saqlash</button>
                 </div>
             </div>
         </div>
 
         <div id="bank-sub-dep" class="hidden">
-            <div class="widget-box">
-                <div class="toggle-header" id="dep-header" onclick="toggleWidget('dep-form', 'dep-header')"><span>➕ Yangi Omonat Ochish</span> <span class="chevron">▼</span></div>
-                <div id="dep-form" class="hidden" style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border-color);">
-                    <input type="text" id="dep-name" class="input-text" placeholder="Omonat nomi (Mas: Ipoteka Bank)" />
+            <div class="mode-selector" style="margin-bottom: 15px;">
+                <button id="dep-tab-aktiv" class="mode-btn" onclick="switchDepTab('aktiv')">Aktiv</button>
+                <button id="dep-tab-arxiv" class="mode-btn" onclick="switchDepTab('arxiv')">Arxiv</button>
+                <button id="dep-tab-calc" class="mode-btn" onclick="switchDepTab('calc')">Kalkulyator</button>
+            </div>
+
+            <div id="dep-view-aktiv"><div id="deposits-list-active"></div></div>
+
+            <div id="dep-view-arxiv" class="hidden"><div id="deposits-list-archived"></div></div>
+
+            <div id="dep-view-calc" class="hidden">
+                <div class="widget-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <b style="color:var(--primary);">➕ Yangi Omonat Ochish</b>
+                        <button onclick="updateBankData()" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">🔄 Yangilash</button>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-bottom:8px;"><select id="dep-bank" class="input-text" style="flex:1; margin:0;" onchange="updateDepTypes()"></select><select id="dep-type-name" class="input-text" style="flex:1; margin:0;" onchange="onDepTypeChange()"></select></div>
+                    <input type="text" id="dep-custom-name" class="input-text hidden" placeholder="Omonat nomi (Mas: Ipoteka Bank)" />
                     <input type="text" inputmode="numeric" id="dep-amount" class="input-text" placeholder="Boshlang'ich summa..." oninput="formatSpace(this)" />
                     <div style="display:flex; gap:8px; margin-bottom:8px;"><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Ochilgan sana:</div><input type="date" id="dep-date" class="input-text" style="margin:0;" /></div><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat (oy):</div><input type="number" id="dep-duration" class="input-text" placeholder="Mas: 12" style="margin:0;" /></div></div>
                     <div style="display:flex; gap:8px; margin-bottom:8px;"><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Foiz stavka (%):</div><input type="number" id="dep-rate" class="input-text" placeholder="Mas: 22" style="margin:0;" /></div><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Stavka turi:</div><select id="dep-ratetype" class="input-text" style="margin:0;"><option value="annual">Yillik</option><option value="monthly">Oylik</option></select></div></div>
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; background:var(--bg-dark); padding:10px; border-radius:10px; border:1px solid var(--border-color);"><input type="checkbox" id="dep-cap" style="width:20px; height:20px;" /><label for="dep-cap" style="font-size:13px; color:var(--text-main);">Kapitalizatsiya (Foiz ustiga qo'shilsinmi?)</label></div>
-                    <button onclick="saveDeposit()" class="btn-primary btn-success">Saqlash</button>
+                    <button onclick="saveDeposit()" class="btn-primary btn-success">Omonatni Saqlash</button>
                 </div>
             </div>
-            <div id="deposits-list"></div>
         </div>
 
         <div id="bank-sub-debt" class="hidden">
             <div class="widget-box">
-                <div class="toggle-header" id="debt-header" onclick="toggleWidget('debt-form', 'debt-header')"><span>➕ Yangi Qarz Qo'shish</span> <span class="chevron">▼</span></div>
-                <div id="debt-form" class="hidden" style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--border-color);">
-                    <input type="text" id="debt-name" class="input-text" placeholder="Kimga / Kimdan" />
-                    <input type="text" inputmode="numeric" id="debt-amount" class="input-text" placeholder="Summa..." oninput="formatSpace(this)" />
-                    <div style="display:flex; gap:8px; margin-bottom:8px;"><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Sana:</div><input type="date" id="debt-start" class="input-text" style="margin:0;" /></div><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat:</div><input type="date" id="debt-due" class="input-text" style="margin:0;" /></div></div>
-                    <div class="mode-selector" style="margin-top:5px;"><button id="debt-type-take" class="mode-btn" style="background:var(--success); border-color:var(--success);" onclick="setDebtType('take')">Menga qaytaradi</button><button id="debt-type-give" class="mode-btn" onclick="setDebtType('give')">Men qaytaraman</button></div>
-                    <button onclick="saveDebt()" class="btn-primary">Qarzni Saqlash</button>
-                </div>
+                <input type="text" id="debt-name" class="input-text" placeholder="Kimga / Kimdan" />
+                <input type="text" inputmode="numeric" id="debt-amount" class="input-text" placeholder="Summa..." oninput="formatSpace(this)" />
+                <div style="display:flex; gap:8px; margin-bottom:8px;"><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Sana:</div><input type="date" id="debt-start" class="input-text" style="margin:0;" /></div><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat:</div><input type="date" id="debt-due" class="input-text" style="margin:0;" /></div></div>
+                <div class="mode-selector" style="margin-top:5px;"><button id="debt-type-take" class="mode-btn" style="background:var(--success); border-color:var(--success);" onclick="setDebtType('take')">Menga qaytaradi</button><button id="debt-type-give" class="mode-btn" onclick="setDebtType('give')">Men qaytaraman</button></div>
+                <button onclick="saveDebt()" class="btn-primary">Qarzni Saqlash</button>
             </div>
             <div id="debts-list"></div>
         </div>
@@ -339,7 +262,7 @@
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><i>🏠</i> Asosiy</div>
         <div class="nav-item" id="nav-add" onclick="switchTab('add')"><i>➕</i> Kiritish</div>
-        <div class="nav-item" id="nav-other" onclick="switchTab('other')"><i>🏦</i> Bank</div>
+        <div class="nav-item" id="nav-other" onclick="switchTab('other')"><i>💼</i> Xizmatlar</div>
         <div class="nav-item" id="nav-report" onclick="switchTab('report')"><i>📊</i> Hisobot</div>
     </div>
 
@@ -355,18 +278,15 @@
         let CATS_DATA = { general: [], child_m: [], child_f: [], home: [] };
         const INC_SOURCES = [ { label: "Oylik maosh", icon: "💼" }, { label: "IMSOA foyda", icon: "💰" }, { label: "Qo'shimcha", icon: "🎁" } ];
 
-        // GLOBAL EXTERNAL DATABASE URLS
         const GITHUB_BANKS_URL = "https://raw.githubusercontent.com/runnellsmillie-debug/mini-app/main/banks.json";
         const GITHUB_PRODUCTS_URL = "https://raw.githubusercontent.com/runnellsmillie-debug/mini-app/main/products.json";
+        const GITHUB_DEPS_URL = "https://raw.githubusercontent.com/runnellsmillie-debug/mini-app/main/deposits.json";
+        
         let BANK_DB = {};
         let PRODUCT_DB = {};
+        let DEP_DB = {};
 
-        // ==========================================
-        // 2. STATE MANAGEMENT & DATA FETCHING
-        // ==========================================
         let state = { profiles: [], txs: [], incs: [], debts: [], sched: [], plan: [], deps: [], credits: [] };
-        let showArch = { plan: false, sched: false, debt: false, dep: false }; // credit endi alohida tabda
-
         let curProf = "general", curTab = "home", addMode = "expense";
         let amtStr = "", actMainCat = null, actSubCat = null;
         let debtType = "take", buyPlanId = null, curDepId = null, curCreditId = null;
@@ -389,42 +309,36 @@
             if(input.id.startsWith('credit')) updateCreditAnalysis();
         };
         window.getNum = (id) => parseFloat(val(id).replace(/\s+/g, '')) || 0;
-
-        window.toggleWidget = (panelId, headerId) => { const p = el(panelId), h = el(headerId); if(p && h) { p.classList.toggle('hidden'); h.classList.toggle('open'); } };
-        window.toggleArch = (type) => { showArch[type] = !showArch[type]; render(); };
         const formatM = n => new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
         const toast = (msg, err=false) => { const t = el("toast-msg"); if(t){ t.innerText=msg; t.style.background=err?"var(--danger)":"var(--success)"; t.style.display="block"; setTimeout(()=>t.style.display="none", 2500); } };
 
-        // Ma'lumotlarni tashqaridan tortib olish
         async function loadExternalData() {
             try {
                 const bRes = await fetch(GITHUB_BANKS_URL + "?nocache=" + Date.now());
                 if(bRes.ok) { BANK_DB = await bRes.json(); localStorage.setItem("banks_db_v1", JSON.stringify(BANK_DB)); }
                 
                 const pRes = await fetch(GITHUB_PRODUCTS_URL + "?nocache=" + Date.now());
-                if(pRes.ok) { 
-                    PRODUCT_DB = await pRes.json(); localStorage.setItem("products_db_v1", JSON.stringify(PRODUCT_DB));
-                    buildAdapter();
-                }
+                if(pRes.ok) { PRODUCT_DB = await pRes.json(); localStorage.setItem("products_db_v1", JSON.stringify(PRODUCT_DB)); buildAdapter(); }
+                
+                const dRes = await fetch(GITHUB_DEPS_URL + "?nocache=" + Date.now());
+                if(dRes.ok) { DEP_DB = await dRes.json(); localStorage.setItem("deps_db_v1", JSON.stringify(DEP_DB)); }
+                
             } catch (error) {
-                console.error("Xato:", error);
                 BANK_DB = JSON.parse(localStorage.getItem("banks_db_v1")) || {};
                 PRODUCT_DB = JSON.parse(localStorage.getItem("products_db_v1")) || {};
+                DEP_DB = JSON.parse(localStorage.getItem("deps_db_v1")) || {};
                 buildAdapter();
             }
             renderBankSelect();
+            renderDepBankSelect();
         }
         
         function buildAdapter() {
             PLAN_TAGS = {};
             if(Object.keys(PRODUCT_DB).length > 0) {
-                // Yangi formatdagi bazani eski PLAN_TAGS ga ulaymiz
-                for(let cat in PRODUCT_DB) {
-                    PLAN_TAGS[cat] = PRODUCT_DB[cat];
-                }
+                for(let cat in PRODUCT_DB) { PLAN_TAGS[cat] = PRODUCT_DB[cat]; }
             }
-            buildDetailedCategories();
-            updatePlanCats();
+            buildDetailedCategories(); updatePlanCats();
         }
 
         async function init() {
@@ -464,7 +378,7 @@
         }
 
         // ==========================================
-        // 3. UI, MODALS, TASDIQLASH
+        // 3. UI & TAB ALMASHTIRISH (Xizmatlar Ichki Menyusi)
         // ==========================================
         window.openModal = id => { el(id).style.display = "flex"; }; window.closeModal = id => { el(id).style.display = "none"; }; window.closeModalOutside = (e, id) => { if(e.target.id === id) closeModal(id); };
         window.toggleSidebar = () => { const m = el("sidebar-menu"), o = el("sidebar-overlay"); if (m.classList.contains("open")) { m.classList.remove("open"); o.style.display="none"; } else { m.classList.add("open"); o.style.display="block"; } };
@@ -487,63 +401,53 @@
                 if(e) { if(t===id) e.classList.remove('hidden'); else e.classList.add('hidden'); } 
             }); 
             
-            // Tab almashganda bankning ichki menyusini yopish
-            if(id !== 'other' && el('back-btn') && !el('back-btn').classList.contains('hidden')) {
-                closeBankSubView();
-            }
-
-            if(id === 'add') checkAccess(); 
-            if(id === 'home') updatePlanCats(); 
-            render(); 
+            if(id !== 'other' && el('back-btn') && !el('back-btn').classList.contains('hidden')) { closeBankSubView(); }
+            if(id === 'add') checkAccess(); if(id === 'home') updatePlanCats(); render(); 
         };
 
         window.initCloseAction = (actionFunc) => { confirmAction = actionFunc; setVal("confirm-code", ""); openModal("modal-confirm"); };
         window.executeConfirm = () => { if(val("confirm-code").trim() !== "YOPISH") return toast("Xato: YOPISH deb yozing!", true); if(confirmAction) confirmAction(); closeModal("modal-confirm"); confirmAction = null; };
 
-        // ==========================================
-        // YAngi: BANK ICHKI MENYULARI UCHUN NAVIGATSIYA
-        // ==========================================
+        // XIZMATLAR ICHKI MENYUSI LOGIKASI
         window.openBankSubView = (type) => {
             el('bank-main-menu').classList.add('hidden');
-            ['credit', 'dep', 'debt'].forEach(s => {
-                 if(el('bank-sub-'+s)) el('bank-sub-'+s).classList.add('hidden');
-            });
+            ['plan', 'sched', 'credit', 'dep', 'debt'].forEach(s => { if(el('bank-sub-'+s)) el('bank-sub-'+s).classList.add('hidden'); });
             el('bank-sub-'+type).classList.remove('hidden');
 
             el('main-menu-btn').classList.add('hidden');
             el('back-btn').classList.remove('hidden');
 
-            let titles = { 'credit': 'Kredit', 'dep': 'Omonat', 'debt': 'Qarz' };
-            setTxt('sub-view-title', titles[type]);
+            let titles = { 
+                'plan': '<span style="font-size:24px;">🛒</span> <span style="font-size:20px;">Bozorlik</span>',
+                'sched': '<span style="font-size:24px;">📅</span> <span style="font-size:20px;">Rejali to\'lovlar</span>',
+                'credit': '<span style="font-size:28px;">💳</span> <span style="font-size:22px;">Kreditlar</span>', 
+                'dep': '<span style="font-size:28px;">🏦</span> <span style="font-size:22px;">Omonatlar</span>', 
+                'debt': '<span style="font-size:24px;">🤝</span> <span style="font-size:20px;">Qarzlar</span>' 
+            };
+            setHtml('sub-view-title', titles[type]);
 
             if(type === 'credit') switchCrTab('aktiv');
+            if(type === 'dep') switchDepTab('aktiv');
         };
 
         window.closeBankSubView = () => {
-            ['credit', 'dep', 'debt'].forEach(s => {
-                 if(el('bank-sub-'+s)) el('bank-sub-'+s).classList.add('hidden');
-            });
+            ['plan', 'sched', 'credit', 'dep', 'debt'].forEach(s => { if(el('bank-sub-'+s)) el('bank-sub-'+s).classList.add('hidden'); });
             el('bank-main-menu').classList.remove('hidden');
-
             el('back-btn').classList.add('hidden');
             el('main-menu-btn').classList.remove('hidden');
         };
 
         window.switchCrTab = (tab) => {
             ['aktiv', 'arxiv', 'calc'].forEach(t => {
-                let btn = el('cr-tab-' + t);
-                let view = el('cr-view-' + t);
-                if(btn && view) {
-                    if(t === tab) {
-                        btn.style.background = 'var(--primary)';
-                        btn.style.borderColor = 'var(--primary)';
-                        view.classList.remove('hidden');
-                    } else {
-                        btn.style.background = 'var(--bg-card)';
-                        btn.style.borderColor = 'var(--border-color)';
-                        view.classList.add('hidden');
-                    }
-                }
+                let btn = el('cr-tab-' + t); let view = el('cr-view-' + t);
+                if(btn && view) { if(t === tab) { btn.style.background = 'var(--primary)'; btn.style.borderColor = 'var(--primary)'; view.classList.remove('hidden'); } else { btn.style.background = 'var(--bg-card)'; btn.style.borderColor = 'var(--border-color)'; view.classList.add('hidden'); } }
+            });
+        };
+
+        window.switchDepTab = (tab) => {
+            ['aktiv', 'arxiv', 'calc'].forEach(t => {
+                let btn = el('dep-tab-' + t); let view = el('dep-view-' + t);
+                if(btn && view) { if(t === tab) { btn.style.background = 'var(--primary)'; btn.style.borderColor = 'var(--primary)'; view.classList.remove('hidden'); } else { btn.style.background = 'var(--bg-card)'; btn.style.borderColor = 'var(--border-color)'; view.classList.add('hidden'); } }
             });
         };
 
@@ -565,15 +469,14 @@
             if(fc && fc!=="all") p = p.filter(x=>x.cat===fc); if(fm && fm!=="all") p = p.filter(x=>x.market===fm);
             let active = p.filter(x => !x.archived), arch = p.filter(x => x.archived);
             let h = active.map(x => { const sk = x.skip === t; return `<div class="plan-item ${sk?'skipped':''}"><div class="custom-checkbox ${!sk?'checked':''}" onclick="toggleSkipPlan(${x.id})"></div><div style="flex:1;"><div style="font-weight:bold; color:var(--primary); font-size:14px; text-decoration:${sk?'line-through':'none'};">${x.text}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">📍 ${x.market} | 🏷️ ${x.cat.replace(/_/g,' ')}</div></div><button onclick="openBuyModal(${x.id})" class="btn-primary btn-success" style="width:auto; padding:8px 12px; font-size:12px;" ${sk?'disabled':''}>Olish</button></div>`; }).join("");
-            let archHtml = showArch.plan && arch.length ? `<div style="margin-top:10px; opacity:0.8;">` + arch.map(x => `<div class="plan-item" style="border-color:var(--border-color); filter: grayscale(100%);"><div style="flex:1;"><div style="font-weight:bold; color:var(--text-muted); font-size:14px; text-decoration:line-through;">${x.text}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">✅ ${x.buyDate||''} | ${formatM(x.buyPrice||0)}</div></div><button onclick="permDelPlan(${x.id})" style="background:transparent; border:none; color:var(--danger); font-size:16px; padding:4px; cursor:pointer;">🗑️</button></div>`).join("") + `</div>` : "";
-            setHtml("planned-list-container", (h || "<div style='color:var(--text-muted); font-size:12px; text-align:center;'>Ro'yxat bo'sh.</div>") + `<div class="arch-toggle-btn" onclick="toggleArch('plan')">📂 Arxiv ${showArch.plan?'(Yashirish)':'(Ko\'rish)'} (${arch.length})</div>` + archHtml);
+            setHtml("planned-list-container", (h || "<div style='color:var(--text-muted); font-size:12px; text-align:center;'>Ro'yxat bo'sh.</div>"));
         }
 
         const getWD = (y,m) => { let d=new Date(y,m,0).getDate(), w=0; for(let i=1;i<=d;i++) { let day=new Date(y,m-1,i).getDay(); if(day!==0&&day!==6) w++; } return w; };
         window.addScheduled = () => {
             const n = val("sched-name").trim(), d = parseInt(val("sched-day")), a = getNum("sched-amount"), c = val("sched-cat");
             if(!n||!d||d<1||d>31||!a) return toast("Xato!", true); const tm = new Date().getFullYear() + "-" + String(new Date().getMonth()+1).padStart(2,'0');
-            state.sched.push({ id: Date.now(), label: n, day: d, amt: a, cat: c, tMonth: tm, miss: 0, prof: curProf, archived: false, paidTotal: 0 }); setVal("sched-name",""); setVal("sched-day",""); el("sched-amount").value=""; toggleWidget("sched-setup-panel", "sched-header"); save(); toast("Qo'shildi!");
+            state.sched.push({ id: Date.now(), label: n, day: d, amt: a, cat: c, tMonth: tm, miss: 0, prof: curProf, archived: false, paidTotal: 0 }); setVal("sched-name",""); setVal("sched-day",""); el("sched-amount").value=""; save(); toast("Qo'shildi!");
         };
         window.delSched = id => { initCloseAction(() => { const s=state.sched.find(x=>x.id==id); if(s) { s.archived=true; s.closeDate = new Date().toISOString().slice(0,10); save(); toast("Arxivlandi!"); } }); };
         window.permDelSched = id => { state.sched=state.sched.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
@@ -585,10 +488,9 @@
         };
 
         function renderSchedSet() {
-            let p = state.sched.filter(s=>s.prof===curProf || curProf==="general"), active = p.filter(s=>!s.archived), arch = p.filter(s=>s.archived);
+            let p = state.sched.filter(s=>s.prof===curProf || curProf==="general"), active = p.filter(s=>!s.archived);
             let h = active.map(s => `<div class="list-item"><span><b>${s.label}</b> (${s.day}-sana)</span><button onclick="delSched(${s.id})" class="delete-btn">✕</button></div>`).join("");
-            let archHtml = showArch.sched && arch.length ? `<div style="margin-top:10px; opacity:0.8;">` + arch.map(s => `<div class="list-item" style="border-color:var(--border-color); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%;"><span style="text-decoration:line-through; color:var(--text-muted);"><b>${s.label}</b></span><button onclick="permDelSched(${s.id})" class="delete-btn" style="padding:0;">🗑️</button></div><div class="archive-info-grid"><div><span>Yopildi:</span><b>${s.closeDate||''}</b></div><div><span>To'langan:</span><b style="color:var(--danger);">${formatM(s.paidTotal||0)}</b></div></div></div>`).join("") + `</div>` : "";
-            setHtml("sched-edit-list", h + `<div class="arch-toggle-btn" onclick="toggleArch('sched')">📂 Arxiv ${showArch.sched?'(Yashirish)':'(Ko\'rish)'} (${arch.length})</div>` + archHtml);
+            setHtml("sched-edit-list", h);
         }
 
         // ==========================================
@@ -636,7 +538,7 @@
         window.delItem = (type, id) => { if(type==='tx') state.txs = state.txs.filter(x=>x.id!=id); else state.incs = state.incs.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
 
         // ==========================================
-        // 7. OTHER TAB LOGIC (Bank)
+        // 7. XIZMATLAR (Bank: Kredit, Omonat, Qarz)
         // ==========================================
 
         window.renderBankSelect = () => {
@@ -659,60 +561,89 @@
                     el("credit-duration").placeholder = `Maks: ${cr.maxDur} oy`;
                     el("credit-rate").value = cr.rate;
                 }
-            } else {
-                el("credit-amount").placeholder = "Olingan jami summa...";
-                el("credit-duration").placeholder = "Mas: 36";
-                el("credit-rate").value = "";
-            }
+            } else { el("credit-amount").placeholder = "Olingan jami summa..."; el("credit-duration").placeholder = "Mas: 36"; el("credit-rate").value = ""; }
             updateCreditAnalysis();
         };
-        
-        window.updateBankData = async () => { 
-            toast("Banklar bazasi yangilanmoqda...", false); 
-            await loadExternalData();
-            toast("Baza muvaffaqiyatli yangilandi!"); 
+
+        // YAngi OMONAT UCHUN SELECT
+        window.renderDepBankSelect = () => {
+            const bEl = el("dep-bank"); if(!bEl) return;
+            bEl.innerHTML = '<option value="">Bankni tanlang...</option>' + Object.keys(DEP_DB).map(b => `<option value="${b}">${DEP_DB[b].icon||'🏦'} ${b}</option>`).join("");
+            bEl.innerHTML += '<option value="Boshqa">🔄 Boshqa joyga</option>';
+            updateDepTypes();
         };
+        window.updateDepTypes = () => {
+            const b = val("dep-bank"), tEl = el("dep-type-name"); if(!tEl) return;
+            if(b === "Boshqa") { tEl.classList.add('hidden'); el('dep-custom-name').classList.remove('hidden'); onDepTypeChange(); return; }
+            tEl.classList.remove('hidden'); el('dep-custom-name').classList.add('hidden');
+            if(!b || !DEP_DB[b]) { tEl.innerHTML = '<option value="">Omonat turini tanlang...</option>'; return; }
+            tEl.innerHTML = '<option value="">Omonat turini tanlang...</option>' + DEP_DB[b].deposits.map(c => `<option value="${c.id}">${c.name} (${c.rate}%)</option>`).join("");
+            onDepTypeChange();
+        };
+        window.onDepTypeChange = () => {
+            const b = val("dep-bank"), tId = val("dep-type-name");
+            if(b && b !== "Boshqa" && tId && DEP_DB[b]) {
+                const dp = DEP_DB[b].deposits.find(x => x.id === tId);
+                if(dp) {
+                    el("dep-rate").value = dp.rate;
+                    el("dep-duration").value = dp.duration;
+                    el("dep-amount").placeholder = `Min: ${new Intl.NumberFormat('ru-RU').format(dp.minAmt)}`;
+                    el("dep-ratetype").value = dp.rateType || 'annual';
+                    el("dep-cap").checked = dp.cap || false;
+                }
+            } else {
+                el("dep-rate").value = ""; el("dep-duration").value = ""; el("dep-amount").placeholder = "Boshlang'ich summa...";
+            }
+        };
+        
+        window.updateBankData = async () => { toast("Ma'lumotlar yangilanmoqda...", false); await loadExternalData(); toast("Muvaffaqiyatli yangilandi!"); };
 
         window.updateCreditAnalysis = () => {
             const a = getNum("credit-amount"), d = parseInt(val("credit-duration"))||0, r = parseFloat(val("credit-rate"))||0, tp = val("credit-type");
             const hg = el("credit-grace-check").checked, gd = hg ? (parseInt(val("credit-grace-dur"))||0) : 0, gr = hg ? (parseFloat(val("credit-grace-rate"))||0) : 0;
             const box = el("credit-analysis-box");
             if(!a || !d || !r) { box.innerHTML = "<div style='font-size:11px; color:var(--text-muted); text-align:center;'>Tahlil uchun summa, muddat va foizni kiriting...</div>"; return; }
-            
             let dummy = generateCreditSchedule(a, new Date().toISOString().slice(0,10), 1, d, r, tp, gd, gr);
             if(dummy.length === 0) return;
             let total = dummy.reduce((s,i)=>s+i.total, 0), firstPay = dummy[0].total, lastPay = dummy[dummy.length-1].total;
             let payTxt = tp === 'annuity' ? formatM(firstPay) : `${formatM(firstPay)} dan ${formatM(lastPay)} gacha`;
-
-            box.innerHTML = `
-                <div class="analysis-row"><span style="color:var(--text-muted);">Olinayotgan summa:</span> <b>${formatM(a)}</b></div>
-                <div class="analysis-row"><span style="color:var(--text-muted);">Muddat:</span> <b>${d} oy (${r}% yillik)</b></div>
-                <div class="analysis-row"><span style="color:var(--text-muted);">Oylik to'lov:</span> <b style="color:var(--danger);">${payTxt}</b></div>
-                <div class="analysis-row"><span style="color:var(--text-muted);">Jami qaytariladi:</span> <b style="color:var(--warning);">${formatM(total)}</b></div>
-                <div class="analysis-row"><span style="color:var(--text-muted);">Sof ustama:</span> <b>${formatM(total - a)}</b></div>
-            `;
+            box.innerHTML = `<div class="analysis-row"><span style="color:var(--text-muted);">Olinayotgan summa:</span> <b>${formatM(a)}</b></div><div class="analysis-row"><span style="color:var(--text-muted);">Muddat:</span> <b>${d} oy (${r}% yillik)</b></div><div class="analysis-row"><span style="color:var(--text-muted);">Oylik to'lov:</span> <b style="color:var(--danger);">${payTxt}</b></div><div class="analysis-row"><span style="color:var(--text-muted);">Jami qaytariladi:</span> <b style="color:var(--warning);">${formatM(total)}</b></div><div class="analysis-row"><span style="color:var(--text-muted);">Sof ustama:</span> <b>${formatM(total - a)}</b></div>`;
         };
 
         // QARZ
         window.setDebtType = t => { debtType = t; el("debt-type-take").style.background = t==="take"?"var(--success)":"var(--bg-card)"; el("debt-type-give").style.background = t==="give"?"var(--danger)":"var(--bg-card)"; el("debt-type-take").style.borderColor = t==="take"?"var(--success)":"var(--border-color)"; el("debt-type-give").style.borderColor = t==="give"?"var(--danger)":"var(--border-color)"; };
-        window.saveDebt = () => { const n=val("debt-name").trim(), a=getNum("debt-amount"), s=val("debt-start"), e=val("debt-due"); if(!n||!a) return toast("Kam!", true); state.debts.unshift({id:Date.now(), name:n, amount:a, type:debtType, start:s, due:e, archived:false}); if(debtType==="take") state.txs.unshift({id:Date.now()+1, amount:a, desc:`Qarz berildi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:tgUser, prof:"general"}); else state.incs.unshift({id:Date.now()+1, amount:a, desc:`Qarz olindi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:tgUser, prof:"general"}); setVal("debt-name",""); el("debt-amount").value=""; toggleWidget('debt-form', 'debt-header'); save(); toast("Saqlandi!"); };
+        window.saveDebt = () => { const n=val("debt-name").trim(), a=getNum("debt-amount"), s=val("debt-start"), e=val("debt-due"); if(!n||!a) return toast("Kam!", true); state.debts.unshift({id:Date.now(), name:n, amount:a, type:debtType, start:s, due:e, archived:false}); if(debtType==="take") state.txs.unshift({id:Date.now()+1, amount:a, desc:`Qarz berildi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:tgUser, prof:"general"}); else state.incs.unshift({id:Date.now()+1, amount:a, desc:`Qarz olindi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:tgUser, prof:"general"}); setVal("debt-name",""); el("debt-amount").value=""; save(); toast("Saqlandi!"); };
         window.closeDebt = id => { initCloseAction(() => { const d=state.debts.find(x=>x.id==id); if(!d) return; const t=new Date().toISOString().slice(0,10); if(d.type==="take") state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz qaytdi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:tgUser, prof:"general"}); else state.txs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz to'landi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:tgUser, prof:"general"}); d.archived = true; d.closeDate = t; save(); toast("Uzildi!"); }); };
         window.permDelDebt = id => { state.debts=state.debts.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
         
         // OMONAT
-        window.saveDeposit = () => { const n=val("dep-name").trim(), a=getNum("dep-amount"), s=val("dep-date"), d=parseInt(val("dep-duration")), r=parseFloat(val("dep-rate")), rt=val("dep-ratetype"), cap=el("dep-cap").checked; if(!n||!a||!s||!d||!r) return toast("To'ldiring!", true); state.deps.push({id:Date.now(), name:n, amount:a, start:s, duration:d, rate:r, rateType:rt, cap:cap, archived:false, topups:0, profits:0, initAmt:a}); state.txs.unshift({id:Date.now()+1, amount:a, desc:`Omonat: ${n}`, cat:"Bank", date:s, time:"00:00", user:tgUser, prof:"general"}); setVal("dep-name",""); el("dep-amount").value=""; setVal("dep-duration",""); setVal("dep-rate",""); toggleWidget('dep-form', 'dep-header'); save(); toast("Ochildi!"); };
+        window.saveDeposit = () => { 
+            const b = val("dep-bank"); const tId = val("dep-type-name");
+            const bankObj = DEP_DB[b]; const dpObj = bankObj ? bankObj.deposits.find(x => x.id === tId) : null;
+            const n = (b === "Boshqa") ? val("dep-custom-name").trim() : ((bankObj && dpObj) ? `${b} - ${dpObj.name}` : "Nomsiz Omonat");
+            
+            const a=getNum("dep-amount"), s=val("dep-date"), d=parseInt(val("dep-duration")), r=parseFloat(val("dep-rate")), rt=val("dep-ratetype"), cap=el("dep-cap").checked; 
+            
+            if(!b || (b !== "Boshqa" && !tId) || !a||!s||!d||!r) return toast("To'ldiring!", true); 
+            if(dpObj && a < dpObj.minAmt) return toast(`Minimal summa: ${formatM(dpObj.minAmt)}`, true);
+            
+            state.deps.push({id:Date.now(), name:n, bankIcon: bankObj?.icon, amount:a, start:s, duration:d, rate:r, rateType:rt, cap:cap, archived:false, topups:0, profits:0, initAmt:a}); 
+            state.txs.unshift({id:Date.now()+1, amount:a, desc:`Omonat: ${n}`, cat:"Bank", date:s, time:"00:00", user:tgUser, prof:"general"}); 
+            
+            setVal("dep-bank",""); setVal("dep-type-name",""); setVal("dep-custom-name",""); el("dep-amount").value=""; setVal("dep-duration",""); setVal("dep-rate",""); switchDepTab('aktiv'); save(); toast("Ochildi!"); 
+        };
         window.openTopupModal = id => { curDepId = id; setTxt("topup-name", state.deps.find(x=>x.id==id).name); el("topup-amount").value=""; openModal('modal-dep-topup'); };
         window.confirmTopup = () => { const a = getNum("topup-amount"); if(!a||a<=0) return toast("Xato", true); const dep = state.deps.find(x=>x.id==curDepId); if(!dep) return; dep.amount += a; dep.topups = (dep.topups||0) + a; state.txs.unshift({id:Date.now(), amount:a, desc:`Omonat qo'shildi: ${dep.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); closeModal('modal-dep-topup'); save(); toast("Qo'shildi!"); };
         window.openIntModal = id => { curDepId = id; const d=state.deps.find(x=>x.id==id); let est = d.rateType === 'annual' ? (d.amount * (d.rate/100) / 12) : (d.amount * (d.rate/100)); setTxt("interest-info", `${d.name} (${d.rate}% ${d.rateType==='annual'?'Yil':'Oy'}).\nKapitalizatsiya: ${d.cap?'HA':'YO\'Q'}`); el("interest-amount").value = new Intl.NumberFormat('ru-RU').format(Math.round(est)).replace(/,/g, ' '); openModal('modal-dep-interest'); };
         window.confirmInterest = () => { const a=getNum("interest-amount"); if(!a||a<=0) return toast("Xato!", true); const d=state.deps.find(x=>x.id==curDepId); if(!d) return; d.profits = (d.profits||0) + a; if(d.cap) { d.amount += a; } else { state.incs.unshift({id:Date.now(), amount:a, desc:`Foiz: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); } closeModal('modal-dep-interest'); save(); toast("Hisoblandi!"); };
         window.openDepScheduleModal = id => {
-            const d = state.deps.find(x=>x.id==id); if(!d) return; setTxt("schedule-title", "Omonat Grafigi"); setTxt("schedule-info", `🏦 ${d.name}\nBoshlang'ich: ${formatM(d.amount)}\nShart: ${d.rate}% ${d.rateType==='annual'?'Yillik':'Oylik'} (${d.cap?'Kapitalizatsiya':'Oddiy'})`);
+            const d = state.deps.find(x=>x.id==id); if(!d) return; setTxt("schedule-title", "Omonat Grafigi"); setTxt("schedule-info", `${d.bankIcon||'🏦'} ${d.name}\nBoshlang'ich: ${formatM(d.amount)}\nShart: ${d.rate}% ${d.rateType==='annual'?'Yillik':'Oylik'} (${d.cap?'Kapitalizatsiya':'Oddiy'})`);
             let html = "<tr><th>Oy</th><th>Tushum</th><th>Jami Qoldiq</th></tr>", currentBal = d.amount, mRate = d.rateType === 'annual' ? (d.rate/100)/12 : (d.rate/100), startDate = new Date(d.start), totalProfit = 0;
             for(let i=1; i<=d.duration; i++) { startDate.setMonth(startDate.getMonth() + 1); let monthStr = startDate.toISOString().slice(0,10); let interest = d.cap ? (currentBal * mRate) : (d.amount * mRate); totalProfit += interest; if(d.cap) currentBal += interest; html += `<tr><td><b>${i}</b><br><span style="font-size:9px;color:var(--text-muted)">${monthStr}</span></td><td style="color:var(--success)">+${formatM(interest)}</td><td>${formatM(currentBal)}</td></tr>`; }
             setHtml("schedule-table", html); setTxt("schedule-footer", `Kutilayotgan Jami foyda: ${formatM(totalProfit)}`); openModal("modal-schedule");
         };
-        window.closeDep = id => { initCloseAction(() => { const d=state.deps.find(x=>x.id==id); if(!d) return; state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Omonat qaytdi: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); d.archived = true; d.closeDate = new Date().toISOString().slice(0,10); save(); toast("Yopildi!"); }); };
-        window.permDelDep = id => { state.deps=state.deps.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
+        window.closeDep = id => { initCloseAction(() => { const d=state.deps.find(x=>x.id==id); if(!d) return; state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Omonat qaytdi: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:tgUser, prof:"general"}); d.archived = true; d.closeDate = new Date().toISOString().slice(0,10); save(); switchDepTab('arxiv'); toast("Yopildi!"); }); };
+        window.permDelDep = id => { state.deps=state.deps.filter(x=>x.id!=id); save(); switchDepTab('arxiv'); toast("O'chirildi!"); };
 
         // KREDIT LOGIKASI
         window.toggleGraceFields = () => { const elF = el("grace-fields"); if(el("credit-grace-check").checked) { elF.classList.remove("hidden"); elF.style.display="flex"; } else { elF.classList.add("hidden"); elF.style.display="none"; } };
@@ -811,7 +742,7 @@
                 cr.archived = true; cr.closedDate = new Date().toISOString().slice(0,10); save(); switchCrTab('arxiv'); toast("Yopildi!");
             });
         };
-        window.permDelCredit = id => { state.credits = state.credits.filter(x=>x.id!=id); save(); toast("O'chirildi!"); };
+        window.permDelCredit = id => { state.credits = state.credits.filter(x=>x.id!=id); save(); switchCrTab('arxiv'); toast("O'chirildi!"); };
 
 
         // ==========================================
@@ -819,57 +750,62 @@
         // ==========================================
         function render() {
             const tInc = state.incs.reduce((s,i)=>s+i.amount, 0), tExp = state.txs.reduce((s,t)=>s+t.amount, 0);
-            setTxt("main-total-balance", formatM(tInc - tExp)); setTxt("sched-prof-label", state.profiles.find(x=>x.id===curProf)?.name || "Umumiy");
+            setTxt("main-total-balance", formatM(tInc - tExp)); 
 
             const d = new Date(), tM = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0');
             let sHtml = ""; state.sched.filter(s => !s.archived && (s.prof === curProf || curProf === "general")).forEach(s => {
                 const actAmt = s.miss > 0 ? Math.max(0, Math.round(s.amt - ((s.amt / getWD(parseInt(s.tMonth.split('-')[0]), parseInt(s.tMonth.split('-')[1]))) * s.miss))) : s.amt;
                 const sm = parseInt(s.tMonth.replace("-","")), cm = parseInt(tM.replace("-","")); let isDue = false, st = "";
                 if(sm < cm) { isDue = true; st = "O'tib ketgan!"; } else if(sm === cm) { if(d.getDate() >= s.day) { isDue = true; st = "Vaqti keldi!"; } else if(s.day - d.getDate() <= 3) { isDue = true; st = `${s.day - d.getDate()} kun qoldi`; } }
-                if(isDue) sHtml += `<div class="scheduled-item" style="background:var(--bg-card); padding:15px; border-radius:14px; margin-bottom:10px; border:1px solid var(--border-color);"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>⚠️ <b style="font-size:14px;">${s.label}</b> <span style="font-size:11px; color:var(--danger);">(${st})</span></span></div><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;"><span style="font-size:12px;">Dam/Qoldirilgan kun:</span><input type="number" placeholder="Kun" onchange="updMiss(${s.id}, this.value)" value="${s.miss||''}" style="width:70px; padding:6px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-dark); color:#fff; text-align:center;"></div><div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-weight:bold; font-size:16px; color:#fff;">${formatM(actAmt)}</span><button onclick="paySched(${s.id})" class="btn-primary btn-success" style="width:auto; padding:8px 16px; font-size:13px;">✅ To'lash</button></div></div>`;
+                if(isDue) sHtml += `<div class="plan-item"><div style="flex:1;"><span>⚠️ <b style="font-size:14px;">${s.label}</b> <span style="font-size:11px; color:var(--danger);">(${st})</span></span><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Qoldirilgan kun: <input type="number" onchange="updMiss(${s.id}, this.value)" value="${s.miss||''}" style="width:40px; padding:2px; background:var(--bg-dark); color:#fff; border:1px solid var(--border-color); text-align:center;"></div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:14px; color:#fff;">${formatM(actAmt)}</div><button onclick="paySched(${s.id})" class="btn-primary btn-success" style="width:auto; padding:6px 10px; font-size:11px; margin-top:4px; margin-bottom:0;">To'lash</button></div></div>`;
             }); setHtml("sched-list-container", sHtml || "<div style='text-align:center; color:var(--text-muted); font-size:13px; padding:10px;'>Majburiy to'lovlar yo'q.</div>"); renderSchedSet();
 
-            if(curTab === "home") renderPlanned();
+            if(curTab === "home") { /* Home is mostly static now */ }
             if(curTab === "add") renderAddCats();
             
-            // BANK TAB RENDER
             if(curTab === "other") {
                 const todayStr = new Date().toISOString().slice(0,10); const today = new Date();
                 
                 // DEBTS RENDER
-                let activeDebts = state.debts.filter(x=>!x.archived), archDebts = state.debts.filter(x=>x.archived);
+                let activeDebts = state.debts.filter(x=>!x.archived);
                 let hDebts = activeDebts.map(x => {
                     let dueStr = ""; if(x.due) { const days = Math.ceil((new Date(x.due) - today) / 86400000); dueStr = days < 0 ? `<span style="color:var(--danger);">(${Math.abs(days)} kun o'tib ketdi)</span>` : `<span>(${days} kun qoldi)</span>`; }
-                    return `<div class="list-item" style="border-left: 5px solid ${x.type==='take'?'var(--success)':'var(--danger)'}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:6px;"><div><div style="font-size:15px; font-weight:bold;">${x.name}</div><div style="font-size:11px; color:var(--text-muted);">${x.type==='take'?'Olaman':'Beraman'} | Sana: ${x.start||''}</div><div style="font-size:11px; color:var(--warning); font-weight:bold; margin-top:2px;">Muddat: ${x.due||'Yo\'q'}</div></div><div style="font-weight:bold; font-size:15px;">${formatM(x.amount)}</div></div><button onclick="closeDebt(${x.id})" class="btn-primary btn-success" style="padding:10px; font-size:13px;">✅ Qarz uzildi</button></div>`;
+                    return `<div class="list-item" style="border-left: 5px solid ${x.type==='take'?'var(--success)':'var(--danger)'}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:6px;"><div><div style="font-size:15px; font-weight:bold;">${x.name}</div><div style="font-size:11px; color:var(--text-muted);">${x.type==='take'?'Olaman':'Beraman'} | Sana: ${x.start||''}</div><div style="font-size:11px; color:var(--warning); font-weight:bold; margin-top:2px;">Muddat: ${x.due||'Yo\'q'}</div></div><div style="font-weight:bold; font-size:15px;">${formatM(x.amount)}</div></div><button onclick="closeDebt(${x.id})" class="btn-primary btn-success" style="padding:10px; font-size:13px; margin-bottom:0;">✅ Qarz uzildi</button></div>`;
                 }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Qarzlar yo'q.</div>";
-                let archHtmlDebts = showArch.debt && archDebts.length>0 ? `<div style="margin-top:10px; opacity:0.8;">` + archDebts.map(x => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; text-decoration:line-through; color:var(--text-muted);">${x.name}</div><div style="font-size:11px; color:var(--text-muted);">Yopildi: ${x.closeDate||''}</div></div><div style="font-weight:bold; font-size:15px; color:var(--text-muted);">${formatM(x.amount)}</div></div><button onclick="permDelDebt(${x.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%;">🗑️ Butunlay o'chirish</button></div>`).join("") + `</div>` : "";
-                setHtml("debts-list", hDebts + `<div class="arch-toggle-btn" onclick="toggleArch('debt')">📂 Uzilgan qarzlar arxivi ${showArch.debt?'(Yashirish)':'(Ko\'rish)'} (${archDebts.length})</div>` + archHtmlDebts);
+                setHtml("debts-list", hDebts);
 
-                // DEPOSITS RENDER
+                // DEPOSITS RENDER (YANGI OMONATLAR 3 QISMI)
                 let activeDeps = state.deps.filter(x=>!x.archived), archDeps = state.deps.filter(x=>x.archived);
-                let hDeps = activeDeps.map(dep => { let endD = new Date(dep.start); endD.setMonth(endD.getMonth() + dep.duration); return `<div class="list-item" style="border-left: 5px solid var(--success); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:var(--success);">${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${dep.rate}% (${dep.rateType==='annual'?'Yillik':'Oylik'})</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px;">${formatM(dep.amount)}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="openTopupModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 2px; font-size:11px;">+ Qo'shish</button><button onclick="openIntModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 2px; font-size:11px;">💸 Foiz</button><button onclick="openDepScheduleModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 2px; font-size:11px;">📊 Grafik</button></div><button onclick="closeDep(${dep.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px;">Omonatni Yopish</button></div>`; }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Omonatlar yo'q.</div>";
-                let archHtmlDeps = showArch.dep && archDeps.length>0 ? `<div style="margin-top:10px; opacity:0.8;">` + archDeps.map(dep => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Yopildi: ${dep.closeDate||''}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${formatM(dep.amount)}</div></div></div><div class="archive-info-grid"><div><span>Asosiy:</span><b>${formatM(dep.initAmt||0)}</b></div><div><span>Qo'shilgan:</span><b style="color:var(--primary);">${formatM(dep.topups||0)}</b></div><div><span>Sof Foyda:</span><b style="color:var(--success);">${formatM(dep.profits||0)}</b></div><div><span>Yechildi:</span><b>${formatM(dep.amount)}</b></div></div><button onclick="permDelDep(${dep.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%;">🗑️ Butunlay o'chirish</button></div>`).join("") + `</div>` : "";
-                setHtml("deposits-list", hDeps + `<div class="arch-toggle-btn" onclick="toggleArch('dep')">📂 Yopilgan omonatlar arxivi ${showArch.dep?'(Yashirish)':'(Ko\'rish)'} (${archDeps.length})</div>` + archHtmlDeps);
-
-                // CREDITS RENDER (Yangi formatda)
-                let activeCredits = state.credits.filter(x=>!x.archived), archCredits = state.credits.filter(x=>x.archived);
+                let hDepsAct = activeDeps.map(dep => { 
+                    return `<div class="list-item" style="border-left: 5px solid var(--success); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:var(--success);">${dep.bankIcon||'🏦'} ${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${dep.rate}% (${dep.rateType==='annual'?'Yillik':'Oylik'})</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px;">${formatM(dep.amount)}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="openTopupModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 2px; font-size:11px; margin-bottom:0;">+ Qo'sh</button><button onclick="openIntModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 2px; font-size:11px; margin-bottom:0;">💸 Foiz</button><button onclick="openDepScheduleModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 2px; font-size:11px; margin-bottom:0;">📊 Grafik</button></div><button onclick="closeDep(${dep.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px; margin-bottom:0;">Omonatni Yopish</button></div>`; 
+                }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Aktiv omonatlar yo'q.</div>";
                 
+                let hDepsArch = archDeps.map(dep => { 
+                    return `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${dep.bankIcon||'🏦'} ${dep.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Yopildi: ${dep.closeDate||''}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${formatM(dep.amount)}</div></div></div><div class="archive-info-grid"><div><span>Asosiy:</span><b>${formatM(dep.initAmt||0)}</b></div><div><span>Qo'shilgan:</span><b style="color:var(--primary);">${formatM(dep.topups||0)}</b></div><div><span>Sof Foyda:</span><b style="color:var(--success);">${formatM(dep.profits||0)}</b></div><div><span>Yechildi:</span><b>${formatM(dep.amount)}</b></div></div><button onclick="permDelDep(${dep.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%; margin-bottom:0;">🗑️ Butunlay o'chirish</button></div>`; 
+                }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Arxivlangan omonatlar yo'q.</div>";
+                
+                setHtml("deposits-list-active", hDepsAct);
+                setHtml("deposits-list-archived", hDepsArch);
+
+                // CREDITS RENDER (3 QISM)
+                let activeCredits = state.credits.filter(x=>!x.archived), archCredits = state.credits.filter(x=>x.archived);
                 let hCredits = activeCredits.map(cr => {
                     let overdue = false; let nextUnpaid = cr.schedule.find(x => x.status === 'unpaid');
                     if (nextUnpaid && nextUnpaid.date < todayStr) overdue = true;
                     let borderCol = overdue ? "var(--danger)" : "#ec4899"; let bgCol = overdue ? "rgba(239, 68, 68, 0.1)" : "var(--bg-card)";
                     let currentBal = cr.initAmt - cr.schedule.filter(x => x.status === 'paid').reduce((s, x) => s + x.principal, 0) - (cr.extraPrincipalPaid || 0);
-                    
-                    return `<div class="list-item" style="border-left: 5px solid ${borderCol}; background:${bgCol}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:${borderCol};">${cr.bankIcon||'🏦'} ${cr.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${cr.rate}% | ${cr.type==='annuity'?'Annuitet':'Differensial'}</div>${overdue?`<div style="font-size:10px; color:var(--danger); font-weight:bold; margin-top:4px;">⚠️ To'lov vaqti o'tgan!</div>`:''}</div><div style="text-align:right;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:3px;">Qolgan qarz:</div><div style="font-weight:bold; font-size:16px; color:${borderCol};">${formatM(currentBal)}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="payNextMonthCredit(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 4px; font-size:11px;">💸 Oylik</button><button onclick="openPrincipalPayModal(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 4px; font-size:11px;">📉 Tanidan</button><button onclick="openCreditScheduleModal(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 4px; font-size:11px;">📊 Grafik</button></div><button onclick="closeCredit(${cr.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px;">Kreditni Yopish (To'liq)</button></div>`;
+                    return `<div class="list-item" style="border-left: 5px solid ${borderCol}; background:${bgCol}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:${borderCol};">${cr.bankIcon||'🏦'} ${cr.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${cr.rate}% | ${cr.type==='annuity'?'Annuitet':'Differensial'}</div>${overdue?`<div style="font-size:10px; color:var(--danger); font-weight:bold; margin-top:4px;">⚠️ To'lov vaqti o'tgan!</div>`:''}</div><div style="text-align:right;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:3px;">Qolgan qarz:</div><div style="font-weight:bold; font-size:16px; color:${borderCol};">${formatM(currentBal)}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="payNextMonthCredit(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 4px; font-size:11px; margin-bottom:0;">💸 Oylik</button><button onclick="openPrincipalPayModal(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 4px; font-size:11px; margin-bottom:0;">📉 Tanidan</button><button onclick="openCreditScheduleModal(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 4px; font-size:11px; margin-bottom:0;">📊 Grafik</button></div><button onclick="closeCredit(${cr.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px; margin-bottom:0;">Kreditni Yopish (To'liq)</button></div>`;
                 }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Aktiv kreditlar yo'q.</div>";
                 
                 let archHtmlCredits = archCredits.map(cr => {
                     let totalPaidNow = cr.schedule.filter(x => x.status === 'paid').reduce((s, x) => s + x.total, 0) + (cr.extraPrincipalPaid || 0);
-                    return `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${cr.bankIcon||'🏦'} ${cr.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Yopildi: ${cr.closedDate||''}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${formatM(cr.initAmt)}</div></div></div><div class="archive-info-grid"><div><span>Kredit turi:</span><b>${cr.type==='annuity'?'Annuitet':'Differensial'}</b></div><div><span>Jami to'langan:</span><b style="color:var(--danger);">${formatM(totalPaidNow)}</b></div><div><span>Ortiqcha (Ustama):</span><b style="color:var(--warning);">${formatM(totalPaidNow - cr.initAmt)}</b></div></div><button onclick="permDelCredit(${cr.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%;">🗑️ Butunlay o'chirish</button></div>`;
+                    return `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${cr.bankIcon||'🏦'} ${cr.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Yopildi: ${cr.closedDate||''}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${formatM(cr.initAmt)}</div></div></div><div class="archive-info-grid"><div><span>Kredit turi:</span><b>${cr.type==='annuity'?'Annuitet':'Differensial'}</b></div><div><span>Jami to'langan:</span><b style="color:var(--danger);">${formatM(totalPaidNow)}</b></div><div><span>Ortiqcha (Ustama):</span><b style="color:var(--warning);">${formatM(totalPaidNow - cr.initAmt)}</b></div></div><button onclick="permDelCredit(${cr.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%; margin-bottom:0;">🗑️ Butunlay o'chirish</button></div>`;
                 }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Arxivlangan kreditlar yo'q.</div>";
                 
                 setHtml("credits-list-active", hCredits);
                 setHtml("credits-list-archived", archHtmlCredits);
+                
+                if(el('bank-sub-plan') && !el('bank-sub-plan').classList.contains('hidden')) renderPlanned();
             }
             if(curTab === "report") renderReport();
         }
