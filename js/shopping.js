@@ -1,5 +1,5 @@
 // ==========================================
-// SHOPPING.JS - Bozorlik ro'yxati mantiqi
+// SHOPPING.JS - Bozorlik ro'yxati mantiqi (Aqlli tizim)
 // ==========================================
 
 // --- TABLARNI BOSHQARISH ---
@@ -19,7 +19,6 @@ window.switchPlanTab = (tab) => {
             } 
         }
     });
-    // Boshqa tabga o'tganda ma'lumotlarni yangilab ko'rsatish
     if(tab !== 'add') window.renderPlanned();
 };
 
@@ -51,17 +50,43 @@ window.renderSmartTags = () => {
     } else cont.innerHTML = "<span style='color:var(--text-muted); font-size:12px;'>Yo'q.</span>"; 
 };
 
-// --- QO'SHISH AMALLARI ---
+// --- QO'SHISH VA AVTO-NARX (YANGI) ---
+window.getHistoricalPrice = (name) => {
+    // Tarixdan narxi bor bo'lgan va nomi mos kelgan eng so'nggi mahsulotni topish
+    const pastItems = window.state.plan.filter(x => x.archived && x.text.toLowerCase().includes(name.toLowerCase()) && (x.buyPrice || x.price));
+    if(pastItems.length > 0) {
+        // Eng oxirgi olinganini olish (ID bo'yicha eng kattasi)
+        pastItems.sort((a,b) => b.id - a.id);
+        return pastItems[0].buyPrice || pastItems[0].price;
+    }
+    return 0;
+};
+
 window.quickAddPlan = t => { 
-    const ni = window.el("plan-name"), qi = window.el("plan-qty"); ni.value = t; qi.value = ""; 
+    const ni = window.el("plan-name"), qi = window.el("plan-qty"), pi = window.el("plan-price"); 
+    ni.value = t; qi.value = ""; 
+    
+    // Avtomatik narx qidirish
+    let autoPrice = window.getHistoricalPrice(t);
+    if(autoPrice > 0) {
+        pi.value = new Intl.NumberFormat('ru-RU').format(autoPrice).replace(/,/g, ' ');
+    } else {
+        pi.value = "";
+    }
+
     ni.style.borderColor = "var(--success)"; setTimeout(() => ni.style.borderColor = "var(--border-color)", 600); 
-    qi.focus(); window.toast("Hajmini yozing"); 
+    qi.focus(); window.toast(autoPrice > 0 ? "Narx tarixdan olindi!" : "Hajmini yozing"); 
 };
 
 window.addPlannedItemManual = () => { 
-    const n = window.val("plan-name").trim(), q = window.val("plan-qty").trim(), c = window.val("smart-plan-cat"), m = window.val("plan-market"), p = window.getNum("plan-price"); 
+    const n = window.val("plan-name").trim(), q = window.val("plan-qty").trim(), c = window.val("smart-plan-cat"), m = window.val("plan-market"); 
+    let p = window.getNum("plan-price"); 
+    
     if(!n) return window.toast("Nomi kerak!", true); 
-    // Yangi qo'shilgan element default holatda skip: false va archived: false bo'ladi
+    
+    // Agar narx kiritilmagan bo'lsa, tarixdan yana bir marta izlab ko'ramiz
+    if(!p || p === 0) p = window.getHistoricalPrice(n);
+
     window.state.plan.push({ id: Date.now(), text: q ? `${n} (${q})` : n, cat: c, market: m, price: p, prof: window.curProf, skip: false, archived: false }); 
     window.setVal("plan-name",""); window.setVal("plan-qty",""); window.el("plan-price").value=""; 
     window.save(); 
@@ -98,83 +123,129 @@ window.confirmBuyItem = () => {
     const p = window.getNum("buy-price"); if(!p || p<=0) return window.toast("Narx xato!", true); 
     const i = window.state.plan.find(x=>x.id==window.buyPlanId); if(!i) return; 
     const d = new Date(); 
-    // Asosiy byudjetdan pul yechiladi
     window.state.txs.unshift({ id: Date.now(), amount: p, desc: i.text, cat: i.cat, subCat: i.market, date: d.toISOString().slice(0,10), time: d.toLocaleTimeString("uz-UZ", {hour:'2-digit', minute:'2-digit'}), user: window.tgUser, prof: i.prof }); 
-    // Arxivlanadi
     i.archived = true; i.skip = false; i.buyPrice = p; i.buyDate = d.toISOString().slice(0,10); 
     window.closeModal("modal-buy"); window.save(); window.renderPlanned(); window.toast("Xarid qilindi ✅"); 
 };
 
-// --- EKRANGA CHIQARISH (RENDER) ---
+// --- TARIY OYNALARINI OCHIB-YOPISH ---
+window.toggleHistoryDate = (dateId) => {
+    const el = window.el('hist-' + dateId);
+    const arrow = window.el('hist-arrow-' + dateId);
+    if(el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+        if(arrow) arrow.innerText = '▼';
+    } else {
+        el.classList.add('hidden');
+        if(arrow) arrow.innerText = '▶';
+    }
+};
+
+// --- ASOSIY EKRANGA CHIQARISH (RENDER) ---
 window.renderPlanned = function() {
     const allUserPlans = window.state.plan.filter(x => x.prof === window.curProf || window.curProf === "general" || (window.curProf === "home_profile" && x.prof === "home_profile"));
-    
-    // 3 xil holat uchun filtrlash
-    const active = allUserPlans.filter(x => !x.archived && !x.skip);
-    const skipped = allUserPlans.filter(x => !x.archived && x.skip);
-    const history = allUserPlans.filter(x => x.archived).sort((a,b) => b.id - a.id); // Tarix yangilari tepada
-
-    // --- 1. FAOL RO'YXATNI CHIZISH ---
     const fc = window.val("filter-cat"), fm = window.val("filter-market");
-    let filteredActive = active;
-    if(fc && fc!=="all") filteredActive = filteredActive.filter(x=>x.cat===fc); 
-    if(fm && fm!=="all") filteredActive = filteredActive.filter(x=>x.market===fm);
 
-    let activeGroups = filteredActive.reduce((acc, item) => {
-        if(!acc[item.cat]) acc[item.cat] = [];
-        acc[item.cat].push(item);
-        return acc;
-    }, {});
+    // Yordamchi funksiya: Guruhlash va yig'indi hisoblash
+    const renderGroupedList = (items, isSkippedMode = false) => {
+        let filtered = items;
+        if(fc && fc!=="all") filtered = filtered.filter(x=>x.cat===fc); 
+        if(fm && fm!=="all") filtered = filtered.filter(x=>x.market===fm);
 
-    let htmlActive = "";
-    for(let cat in activeGroups) {
-        htmlActive += `<div style="margin-bottom:15px; background:var(--bg-dark); padding:10px; border-radius:12px; border:1px solid var(--border-color); box-shadow:0 4px 6px rgba(0,0,0,0.1);">
-            <div style="color:var(--primary); font-weight:bold; margin-bottom:8px; font-size:14px; border-bottom:1px dashed var(--border-color); padding-bottom:5px;">
-                ${window.CAT_ICONS[cat] || '📦'} ${cat.replace(/_/g, ' ')}
-            </div>
-            ${activeGroups[cat].map(x => `
-                <div class="plan-item" style="border:none; border-bottom:1px solid var(--border-color); border-radius:0; padding:8px 0; margin-bottom:0; background:transparent;">
-                    <div style="flex:1;">
-                        <div style="font-weight:bold; color:var(--text-main); font-size:14px;">${x.text}</div>
-                        <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">📍 ${x.market} | 💰 ${window.formatM(x.price)}</div>
-                    </div>
-                    <div style="display:flex; gap:5px; flex-direction:column;">
-                        <button onclick="openBuyModal(${x.id})" class="btn-primary btn-success" style="width:auto; padding:5px 15px; font-size:12px; margin:0;">Olish</button>
-                        <button onclick="skipPlanItem(${x.id})" class="btn-primary" style="width:auto; padding:4px 15px; font-size:11px; margin:0; background:var(--bg-card); border:1px solid var(--warning); color:var(--warning);">⏳ Kechiktirish</button>
-                    </div>
+        let groups = {}; let grandTotal = 0;
+        filtered.forEach(item => {
+            if(!groups[item.cat]) groups[item.cat] = { list: [], total: 0 };
+            groups[item.cat].list.push(item);
+            groups[item.cat].total += (item.price || 0);
+            grandTotal += (item.price || 0);
+        });
+
+        if(Object.keys(groups).length === 0) return { html: "", grandTotal: 0 };
+
+        let html = "";
+        for(let cat in groups) {
+            html += `<div style="margin-bottom:15px; background:var(--bg-dark); padding:10px; border-radius:12px; border:1px solid var(--border-color); box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--border-color); padding-bottom:5px; margin-bottom:8px;">
+                    <span style="color:var(--primary); font-weight:bold; font-size:14px;">${window.CAT_ICONS[cat] || '📦'} ${cat.replace(/_/g, ' ')}</span>
+                    <span style="color:var(--warning); font-size:13px; font-weight:bold;">${window.formatM(groups[cat].total)}</span>
                 </div>
-            `).join('')}
+                ${groups[cat].list.map(x => `
+                    <div class="plan-item" style="border:none; border-bottom:1px solid var(--border-color); border-radius:0; padding:8px 0; margin-bottom:0; background:transparent;">
+                        <div style="flex:1;">
+                            <div style="font-weight:bold; color:var(--text-main); font-size:14px;">${x.text}</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">📍 ${x.market} | 💰 ${window.formatM(x.price || 0)}</div>
+                        </div>
+                        <div style="display:flex; gap:5px; flex-direction:column;">
+                            ${isSkippedMode ? 
+                                `<button onclick="unskipPlanItem(${x.id})" class="btn-primary" style="width:auto; padding:5px 15px; font-size:11px; margin:0; background:transparent; border:1px dashed var(--success); color:var(--success);">⤴️ Qaytarish</button>` 
+                                : 
+                                `<button onclick="openBuyModal(${x.id})" class="btn-primary btn-success" style="width:auto; padding:5px 15px; font-size:12px; margin:0;">Olish</button>
+                                 <button onclick="skipPlanItem(${x.id})" class="btn-primary" style="width:auto; padding:4px 15px; font-size:11px; margin:0; background:var(--bg-card); border:1px solid var(--warning); color:var(--warning);">⏳ Kechiktirish</button>`
+                            }
+                        </div>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+        return { html, grandTotal };
+    };
+
+    // --- 1. FAOL RO'YXAT (Aktiv) ---
+    const activeData = renderGroupedList(allUserPlans.filter(x => !x.archived && !x.skip));
+    let finalActiveHtml = "";
+    if(activeData.grandTotal > 0) {
+        finalActiveHtml += `<div style="background:rgba(59, 130, 246, 0.1); border:1px solid var(--primary); padding:12px; border-radius:12px; text-align:center; margin-bottom:15px;">
+            <div style="font-size:11px; color:var(--text-muted);">JAMI KUTILAYOTGAN XARAJAT</div>
+            <div style="font-size:20px; font-weight:bold; color:var(--primary);">${window.formatM(activeData.grandTotal)}</div>
         </div>`;
     }
-    window.setHtml("planned-list-active", htmlActive || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:15px;'>Bozorlik ro'yxati bo'sh.</div>");
+    window.setHtml("planned-list-active", finalActiveHtml + (activeData.html || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:15px;'>Bozorlik ro'yxati bo'sh.</div>"));
 
-    // --- 2. KECHIKTIRILGANLARNI CHIZISH ---
-    let htmlSkipped = skipped.map(x => `
-        <div class="list-item" style="border-left: 5px solid var(--warning); flex-direction:column; align-items:flex-start;">
-            <div style="display:flex; justify-content:space-between; width:100%;">
-                <div>
-                    <div style="font-size:15px; font-weight:bold; color:var(--warning);">${x.text}</div>
-                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">📍 ${x.market} | 🏷️ ${x.cat.replace(/_/g,' ')}</div>
-                </div>
-                <div style="font-weight:bold; font-size:15px; color:var(--text-muted); text-decoration:line-through;">${window.formatM(x.price)}</div>
-            </div>
-            <button onclick="unskipPlanItem(${x.id})" class="btn-primary" style="width:100%; background:transparent; border:1px dashed var(--success); color:var(--success); padding:8px; font-size:12px; margin-top:10px; margin-bottom:0;">⤴️ Faol ro'yxatga qaytarish</button>
-        </div>
-    `).join("");
-    window.setHtml("planned-list-skipped", htmlSkipped || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:15px;'>Kechiktirilgan mahsulotlar yo'q.</div>");
+    // --- 2. KECHIKTIRILGANLAR (Skip) - Endi u ham guruhlanadi ---
+    const skipData = renderGroupedList(allUserPlans.filter(x => !x.archived && x.skip), true);
+    let finalSkipHtml = "";
+    if(skipData.grandTotal > 0) {
+        finalSkipHtml += `<div style="background:rgba(245, 158, 11, 0.1); border:1px solid var(--warning); padding:10px; border-radius:12px; text-align:center; margin-bottom:15px;">
+            <div style="font-size:11px; color:var(--text-muted);">KECHIKTIRILGAN JAMI SUMMA</div>
+            <div style="font-size:18px; font-weight:bold; color:var(--warning);">${window.formatM(skipData.grandTotal)}</div>
+        </div>`;
+    }
+    window.setHtml("planned-list-skipped", finalSkipHtml + (skipData.html || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:15px;'>Kechiktirilgan mahsulotlar yo'q.</div>"));
 
-    // --- 3. XARID TARIXINI CHIZISH ---
-    let htmlHistory = history.map(x => `
-        <div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);">
-            <div style="display:flex; justify-content:space-between; width:100%;">
-                <div>
-                    <div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${x.text}</div>
-                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Olingan: ${x.buyDate || ''} | 📍 ${x.market}</div>
-                </div>
-                <div style="font-weight:bold; font-size:15px; color:var(--text-muted);">${window.formatM(x.buyPrice || x.price)}</div>
+    // --- 3. XARID TARIXI (Sana bo'yicha guruhlash) ---
+    const historyItems = allUserPlans.filter(x => x.archived).sort((a,b) => b.id - a.id);
+    let historyGroups = {};
+    historyItems.forEach(item => {
+        let dateKey = item.buyDate || 'Noma\'lum sana';
+        if(!historyGroups[dateKey]) historyGroups[dateKey] = { list: [], total: 0 };
+        historyGroups[dateKey].list.push(item);
+        historyGroups[dateKey].total += (item.buyPrice || item.price || 0);
+    });
+
+    let htmlHistory = "";
+    for(let date in historyGroups) {
+        let safeDateId = window.slugify(date);
+        htmlHistory += `<div style="margin-bottom:10px; background:var(--bg-card); border-radius:12px; border:1px solid var(--border-color); overflow:hidden;">
+            <div onclick="toggleHistoryDate('${safeDateId}')" style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; cursor:pointer; background:rgba(255,255,255,0.02);">
+                <div style="font-weight:bold; font-size:14px; color:var(--text-main);">📅 ${date} <span id="hist-arrow-${safeDateId}" style="font-size:10px; margin-left:8px; color:var(--text-muted);">▶</span></div>
+                <div style="font-weight:bold; color:var(--danger);">${window.formatM(historyGroups[date].total)}</div>
             </div>
-            <button onclick="permDelPlan(${x.id})" class="btn-primary" style="width:100%; background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; margin-bottom:0;">🗑️ Butunlay o'chirish</button>
-        </div>
-    `).join("");
+            
+            <div id="hist-${safeDateId}" class="hidden" style="padding:0 15px 10px 15px; border-top:1px dashed var(--border-color);">
+                ${historyGroups[date].list.map(x => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <div>
+                            <div style="font-size:13px; color:var(--text-main);">${x.text}</div>
+                            <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">🏷️ ${x.cat.replace(/_/g,' ')} | 📍 ${x.market}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:13px; font-weight:bold; color:var(--text-muted);">${window.formatM(x.buyPrice || x.price)}</div>
+                            <button onclick="permDelPlan(${x.id})" style="background:none; border:none; color:var(--danger); font-size:14px; padding:2px 0 0 0; cursor:pointer;">🗑️</button>
+                        </div>
+                    </div>
+                `).join("")}
+            </div>
+        </div>`;
+    }
     window.setHtml("planned-list-history", htmlHistory || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:15px;'>Tarix bo'sh.</div>");
 };
