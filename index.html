@@ -14,35 +14,22 @@
 
     <div id="toast-msg"></div>
 
-    <div id="modal-confirm" class="modal-layer" onclick="closeModalOutside(event, 'modal-confirm')">
-        <div class="modal-box">
-            <h3 style="margin-top:0; color:var(--danger);">Tasdiqlash</h3>
-            <div id="confirm-msg" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">YOPISH deb yozing.</div>
-            <input type="text" id="confirm-code" class="input-text" placeholder="YOPISH" autocomplete="off" />
-            <div style="display:flex; gap:10px;">
-                <button onclick="closeModal('modal-confirm')" class="btn-primary" style="background:var(--border-color);">Bekor</button>
-                <button onclick="executeConfirmOld()" class="btn-primary" style="background:var(--danger);">Tasdiqlash</button>
-            </div>
-        </div>
-    </div>
+    <div id="modal-confirm" class="modal-layer" onclick="closeModalOutside(event, 'modal-confirm')"><div class="modal-box"><h3 style="margin-top:0; color:var(--danger);">Tasdiqlash</h3><div id="confirm-msg" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">YOPISH deb yozing.</div><input type="text" id="confirm-code" class="input-text" placeholder="YOPISH" autocomplete="off" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-confirm')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="executeConfirmOld()" class="btn-primary" style="background:var(--danger);">Tasdiqlash</button></div></div></div>
     
-    <div id="modal-yn-confirm" class="modal-layer" onclick="closeModalOutside(event, 'modal-yn-confirm')">
-        <div class="modal-box">
-            <h3 style="margin-top:0; color:var(--warning);">Diqqat!</h3>
-            <div id="yn-confirm-text" style="color:var(--text-main); font-size:14px; margin-bottom:20px; line-height:1.5;">Tasdiqlaysizmi?</div>
-            <div style="display:flex; gap:10px;">
-                <button onclick="closeModal('modal-yn-confirm')" class="btn-primary" style="background:var(--border-color);">Yo'q</button>
-                <button onclick="executeConfirmYN()" class="btn-primary btn-success">Ha</button>
-            </div>
-        </div>
-    </div>
+    <div id="modal-yn-confirm" class="modal-layer" onclick="closeModalOutside(event, 'modal-yn-confirm')"><div class="modal-box"><h3 style="margin-top:0; color:var(--warning);">Diqqat!</h3><div id="yn-confirm-text" style="color:var(--text-main); font-size:14px; margin-bottom:20px; line-height:1.5;">Tasdiqlaysizmi?</div><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-yn-confirm')" class="btn-primary" style="background:var(--border-color);">Yo'q</button><button onclick="executeConfirmYN()" class="btn-primary btn-success">Ha</button></div></div></div>
 
     <div id="modal-profile" class="modal-layer" onclick="closeModalOutside(event, 'modal-profile')"><div class="modal-box"><h3 style="margin-top:0; color:var(--primary);">Yangi profil</h3><input type="text" id="prof-name" class="input-text" placeholder="Ism" /><div style="display:flex; gap:10px; margin-bottom:10px;"><input type="number" id="prof-age" class="input-text" placeholder="Yoshi" style="flex:1; margin:0;" /><select id="prof-role" class="input-text" style="flex:2; margin:0;"><option value="child_m">O'g'il</option><option value="child_f">Qiz</option><option value="parent_m">Ota</option><option value="parent_f">Ona</option></select></div><input type="text" id="prof-emoji" class="input-text" placeholder="Emoji" /><div style="display:flex; gap:10px; margin-top:10px;"><button onclick="closeModal('modal-profile')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="saveNewProfile()" class="btn-primary btn-success">Saqlash</button></div></div></div>
+    
     <div id="modal-buy" class="modal-layer" onclick="closeModalOutside(event, 'modal-buy')"><div class="modal-box"><h3 style="margin-top:0; color:var(--success);">Tasdiqlash</h3><div id="buy-item-name" style="color:var(--text-muted); font-size:14px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="buy-price" class="input-text" placeholder="Narxi" oninput="formatSpace(this)" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-buy')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmBuyItem()" class="btn-primary btn-success">Olish</button></div></div></div>
+    
     <div id="modal-dep-topup" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-topup')"><div class="modal-box"><h3 style="margin-top:0; color:var(--primary);">Pul qo'shish</h3><div id="topup-name" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="topup-amount" class="input-text" placeholder="Summa..." oninput="formatSpace(this)" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-dep-topup')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmTopup()" class="btn-primary btn-success">Qo'shish</button></div></div></div>
+    
     <div id="modal-dep-interest" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-interest')"><div class="modal-box"><h3 style="margin-top:0; color:var(--success);">Foiz hisoblash</h3><div id="interest-info" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="interest-amount" class="input-text" placeholder="Hisoblangan summa..." oninput="formatSpace(this)" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-dep-interest')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmInterest()" class="btn-primary btn-success">Tasdiqlash</button></div></div></div>
+    
     <div id="modal-principal-pay" class="modal-layer" onclick="closeModalOutside(event, 'modal-principal-pay')"><div class="modal-box"><h3 style="margin-top:0; color:var(--primary);">Tanidan Kamaytirish</h3><div id="principal-pay-info" style="color:var(--text-muted); font-size:12px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="principal-pay-amount" class="input-text" placeholder="Summa..." oninput="formatSpace(this)" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-principal-pay')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmPrincipalPay()" class="btn-primary btn-success">To'lash</button></div></div></div>
+    
     <div id="modal-schedule" class="modal-layer" onclick="closeModalOutside(event, 'modal-schedule')"><div class="modal-box" style="width:95%; max-width:400px; padding:15px;"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h3 style="margin:0; color:var(--primary);" id="schedule-title">Grafik</h3><button onclick="closeModal('modal-schedule')" style="background:none; border:none; color:var(--text-muted); font-size:22px;">✕</button></div><div id="schedule-info" style="color:var(--text-muted); font-size:12px; margin-bottom:10px; border-bottom:1px dashed var(--border-color); padding-bottom:10px;">...</div><div style="max-height:60vh; overflow-y:auto;"><table class="bank-table" id="schedule-table"></table></div><div id="schedule-footer" style="text-align:right; font-weight:bold; color:var(--warning); margin-top:10px;"></div></div></div>
+
 
     <div class="top-header">
         <button class="menu-btn" id="main-menu-btn-top" onclick="toggleSidebar()"><span class="icon">☰</span> <span id="current-profile-name" style="font-size:16px;">Umumiy</span></button>
@@ -58,6 +45,7 @@
         <div id="sidebar-profiles-list"></div>
     </div>
 
+
     <div id="tab-home" class="tab-content">
         <div class="balance-card-main">
             <div style="color: var(--text-muted); font-size: 11px; font-weight:bold; letter-spacing:1px; margin-bottom:6px;">JAMI MAVJUD MABLAG'</div>
@@ -65,6 +53,7 @@
         </div>
         <button onclick="saveAndExit()" class="btn-primary btn-success" style="padding:14px; font-size:15px; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">✅ Saqlash va Chiqish (<span id="session-count">0</span>)</button>
     </div>
+
 
     <div id="tab-add" class="tab-content hidden">
         <div class="mode-selector">
@@ -84,7 +73,9 @@
         </div>
     </div>
 
+
     <div id="tab-other" class="tab-content hidden">
+        
         <div id="bank-main-menu">
             <div class="main-menu-btn" data-id="plan" onclick="openBankSubView('plan')"><span class="icon">🛒</span> <span class="text">Bozorlik ro'yxati</span> <span class="drag-handle">≡</span></div>
             <div class="main-menu-btn" data-id="sched" onclick="openBankSubView('sched')"><span class="icon">📅</span> <span class="text">Rejali to'lovlar</span> <span class="drag-handle">≡</span></div>
@@ -94,16 +85,38 @@
         </div>
 
         <div id="bank-sub-plan" class="hidden">
-            <div class="widget-box">
-                <div style="display:flex; gap:8px; margin-bottom:10px;"><select id="smart-plan-cat" class="input-text" onchange="updateSmartTags()" style="flex:1; margin:0;"></select><select id="smart-plan-subcat" class="input-text" onchange="renderSmartTags()" style="flex:1; margin:0;"></select></div>
-                <div id="smart-tags-container" class="tags-wrapper"></div>
-                <hr style="border:none; border-top:1px dashed var(--border-color); margin:10px 0;">
-                <div style="display:flex; gap:8px; margin-bottom:8px;"><input type="text" id="plan-name" class="input-text" placeholder="Nima? (Mas: 🍅 Pomidor)" style="flex:2; margin:0;" /><input type="text" id="plan-qty" class="input-text" placeholder="Soni" style="flex:1; margin:0;" /></div>
-                <div style="display:flex; gap:8px; margin-bottom:10px;"><select id="plan-market" class="input-text" style="flex:1; margin:0;"><option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Makro">Makro</option><option value="Uzum">Uzum</option><option value="Do'kon">Do'kon</option></select><input type="text" inputmode="numeric" id="plan-price" class="input-text" placeholder="Taxminiy narx" style="flex:1; margin:0;" oninput="formatSpace(this)" /></div>
-                <button onclick="addPlannedItemManual()" class="btn-primary btn-success">➕ Ro'yxatga Saqlash</button>
+            
+            <div class="mode-selector" style="margin-bottom: 15px; overflow-x: auto; white-space: nowrap; flex-wrap: nowrap; padding-bottom: 8px;">
+                <button id="plan-tab-add" class="mode-btn" onclick="switchPlanTab('add')" style="background:var(--primary); border-color:var(--primary);">➕ Qo'shish</button>
+                <button id="plan-tab-active" class="mode-btn" onclick="switchPlanTab('active')">🛒 Faol</button>
+                <button id="plan-tab-skip" class="mode-btn" onclick="switchPlanTab('skip')">⏳ Keyinroq</button>
+                <button id="plan-tab-history" class="mode-btn" onclick="switchPlanTab('history')">✅ Tarix</button>
             </div>
-            <div style="display:flex; gap:8px; margin: 12px 0;"><select id="filter-market" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;"><option value="all">Manzil: Barcha</option><option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option></select><select id="filter-cat" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;"><option value="all">Toifa: Barcha</option><option value="Oziq-ovqat">Oziq-ovqat</option><option value="Uy_Xojalik">Xo'jalik</option><option value="Kiyim">Kiyim</option></select></div>
-            <div id="planned-list-container"></div>
+
+            <div id="plan-view-add">
+                <div class="widget-box">
+                    <div style="display:flex; gap:8px; margin-bottom:10px;"><select id="smart-plan-cat" class="input-text" onchange="updateSmartTags()" style="flex:1; margin:0;"></select><select id="smart-plan-subcat" class="input-text" onchange="renderSmartTags()" style="flex:1; margin:0;"></select></div>
+                    <div id="smart-tags-container" class="tags-wrapper"></div>
+                    <hr style="border:none; border-top:1px dashed var(--border-color); margin:10px 0;">
+                    <div style="display:flex; gap:8px; margin-bottom:8px;"><input type="text" id="plan-name" class="input-text" placeholder="Nima? (Mas: 🍅 Pomidor)" style="flex:2; margin:0;" /><input type="text" id="plan-qty" class="input-text" placeholder="Soni/Vazni" style="flex:1; margin:0;" /></div>
+                    <div style="display:flex; gap:8px; margin-bottom:10px;"><select id="plan-market" class="input-text" style="flex:1; margin:0;"><option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Makro">Makro</option><option value="Uzum">Uzum</option><option value="Do'kon">Do'kon</option></select><input type="text" inputmode="numeric" id="plan-price" class="input-text" placeholder="Taxminiy narx" style="flex:1; margin:0;" oninput="formatSpace(this)" /></div>
+                    <button onclick="addPlannedItemManual()" class="btn-primary btn-success">➕ Ro'yxatga Saqlash</button>
+                </div>
+            </div>
+
+            <div id="plan-view-active" class="hidden">
+                <div style="display:flex; gap:8px; margin-bottom: 12px;"><select id="filter-market" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;"><option value="all">Manzil: Barcha</option><option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option></select><select id="filter-cat" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;"><option value="all">Toifa: Barcha</option><option value="Oziq-ovqat">Oziq-ovqat</option><option value="Uy_Xojalik">Xo'jalik</option><option value="Kiyim">Kiyim</option></select></div>
+                <div id="planned-list-active"></div>
+            </div>
+
+            <div id="plan-view-skip" class="hidden">
+                <div id="planned-list-skipped"></div>
+            </div>
+
+            <div id="plan-view-history" class="hidden">
+                <div id="planned-list-history"></div>
+            </div>
+
         </div>
 
         <div id="bank-sub-sched" class="hidden">
@@ -118,6 +131,7 @@
         </div>
 
         <div id="bank-sub-credit" class="hidden">
+            
             <div class="mode-selector" style="margin-bottom: 15px;">
                 <button id="cr-tab-aktiv" class="mode-btn" onclick="switchCrTab('aktiv')">Aktiv</button>
                 <button id="cr-tab-arxiv" class="mode-btn" onclick="switchCrTab('arxiv')">Arxiv</button>
@@ -125,6 +139,7 @@
             </div>
 
             <div id="cr-view-aktiv"><div id="credits-list-active"></div></div>
+            
             <div id="cr-view-arxiv" class="hidden"><div id="credits-list-archived"></div></div>
 
             <div id="cr-view-calc" class="hidden">
@@ -143,7 +158,6 @@
                     <input type="text" inputmode="numeric" id="credit-amount" class="input-text" placeholder="Jami summa (Mas: Avto narxi)" oninput="formatSpace(this); validateCreditLimits(); updateCreditAnalysis();" />
                     
                     <input type="text" inputmode="numeric" id="credit-initial-fee" class="input-text hidden" placeholder="Boshlang'ich to'lov (Summa)" oninput="formatSpace(this); updateCreditAnalysis();" />
-                    
                     <div id="insurance-fields" class="hidden" style="margin-bottom:8px; background:var(--bg-dark); padding:10px; border-radius:10px; border:1px solid var(--border-color);">
                         <div style="font-size:12px; font-weight:bold; color:var(--primary); margin-bottom:6px;">🛡 Sug'urta (Majburiy)</div>
                         <input type="text" inputmode="numeric" id="credit-insurance-fee" class="input-text" style="margin:0;" placeholder="Sug'urta summasi (Qo'shiladi)" oninput="formatSpace(this); updateCreditAnalysis();" />
@@ -197,6 +211,7 @@
             </div>
             <div id="dep-view-aktiv"><div id="deposits-list-active"></div></div>
             <div id="dep-view-arxiv" class="hidden"><div id="deposits-list-archived"></div></div>
+            
             <div id="dep-view-calc" class="hidden">
                 <div class="widget-box">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -226,6 +241,7 @@
         </div>
     </div>
 
+
     <div id="tab-report" class="tab-content hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <span id="report-title-text" style="font-size: 18px; font-weight: bold;">📊 Hisobot</span>
@@ -240,6 +256,7 @@
         <div id="rep-history-list" style="background: var(--bg-card); padding: 12px; border-radius: 14px; border: 1px solid var(--border-color);"></div>
     </div>
 
+
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><i>🏠</i> Asosiy</div>
         <div class="nav-item" id="nav-add" onclick="switchTab('add')"><i>➕</i> Kiritish</div>
@@ -247,12 +264,12 @@
         <div class="nav-item" id="nav-report" onclick="switchTab('report')"><i>📊</i> Hisobot</div>
     </div>
 
+
     <script src="js/config.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/credit.js"></script>
     <script src="js/deposit.js"></script>
-    <script src="js/shopping.js"></script>
-    <script src="js/services.js"></script>
+    <script src="js/shopping.js"></script> <script src="js/services.js"></script>
     <script src="js/app.js"></script>
 
 </body>
