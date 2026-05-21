@@ -1,0 +1,111 @@
+// ==========================================
+// CONFIG.JS - Ma'lumotlar, Konstanta va Yordamchilar
+// ==========================================
+
+window.PLAN_TAGS = {};
+window.SUBCAT_ICONS = { "Sabzavot_Kokat":"🥬", "Gosht_Tuxum":"🥩", "Meva_Poliz":"🍎", "Baqqollik":"🍚", "Sut_Non":"🥛", "Ichimlik":"🥤", "Tozalik":"🧼", "Kommunal":"🧾", "Bolalar":"🧸", "Kattalar":"👔", "Kanselyariya":"📓", "Yoqilgi":"⛽", "Ehtiyot_qism":"⚙️" };
+window.CAT_COLORS = { "Oziq-ovqat":"#FF6B6B", "Uy_Xojalik":"#FBBF24", "Kiyim":"#8B5CF6", "Talim":"#2196F3", "Avto":"#607D8B", "Oyinchoq":"#34D399" };
+window.CAT_ICONS = { "Oziq-ovqat":"🛒", "Uy_Xojalik":"🏠", "Kiyim":"👕", "Talim":"📚", "Avto":"🚗", "Oyinchoq":"🧸", "Oziq_ovqat":"🛒", "Kiyim":"👕", "Uy_Xojalik":"🏠", "Avto":"🚗" };
+
+window.CATS_DATA = { general: [], child_m: [], child_f: [], home: [] };
+window.INC_SOURCES = [ { label: "Oylik maosh", icon: "💼" }, { label: "IMSOA foyda", icon: "💰" }, { label: "Qo'shimcha", icon: "🎁" } ];
+
+window.GITHUB_BANKS_URL = "https://raw.githubusercontent.com/runnellsmillie-debug/mini-app/main/banks.json";
+window.GITHUB_PRODUCTS_URL = "https://raw.githubusercontent.com/runnellsmillie-debug/mini-app/main/products.json";
+window.GITHUB_DEPS_URL = "https://raw.githubusercontent.com/runnellsmillie-debug/mini-app/main/deposits.json";
+
+window.BANK_DB = {};
+window.PRODUCT_DB = {};
+window.DEP_DB = {};
+
+window.state = { profiles: [], txs: [], incs: [], debts: [], sched: [], plan: [], deps: [], credits: [] };
+window.curProf = "general";
+window.curTab = "home";
+window.addMode = "expense";
+window.amtStr = "";
+window.actMainCat = null; 
+window.actSubCat = null;
+window.debtType = "take";
+window.buyPlanId = null;
+window.curDepId = null; 
+window.curCreditId = null;
+window.sessionData = []; 
+window.tgUser = "Siz";
+window.confirmActionOld = null;
+window.confirmActionYN = null; 
+window.tempSchedule = null;
+
+try { if (window.Telegram?.WebApp?.initDataUnsafe?.user) window.tgUser = window.Telegram.WebApp.initDataUnsafe.user.first_name; } catch(e) {}
+
+// DOM Yordamchilari
+window.el = id => document.getElementById(id);
+window.val = id => window.el(id) ? window.el(id).value : "";
+window.setTxt = (id, t) => { if(window.el(id)) window.el(id).innerText = t; };
+window.setHtml = (id, h) => { if(window.el(id)) window.el(id).innerHTML = h; };
+window.setVal = (id, v) => { if(window.el(id)) window.el(id).value = v; };
+window.show = id => { if(window.el(id)) window.el(id).classList.remove('hidden'); };
+window.hide = id => { if(window.el(id)) window.el(id).classList.add('hidden'); };
+
+window.formatSpace = (input) => { 
+    let v = input.value.replace(/\s+/g, ''); if(v === '') return; 
+    v = v.replace(/[^\d.]/g, ''); let p = v.split('.'); 
+    p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, " "); input.value = p.join('.'); 
+};
+window.getNum = (id) => parseFloat(window.val(id).replace(/\s+/g, '')) || 0;
+window.formatM = n => new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
+window.toast = (msg, err=false) => { 
+    const t = window.el("toast-msg"); 
+    if(t){ t.innerText=msg; t.style.background=err?"var(--danger)":"var(--success)"; t.style.display="block"; setTimeout(()=>t.style.display="none", 2500); } 
+};
+
+// LocalStorage'dan saqlash/o'qish
+window.save = function() { localStorage.setItem("xarajat_pro_v8", JSON.stringify(window.state)); if(window.render) window.render(); }
+window.slugify = text => text.replace(/[^a-zA-Z0-9]/g, '_');
+
+// Tashqi bazani yuklash
+window.loadExternalData = async function() {
+    try {
+        const bRes = await fetch(window.GITHUB_BANKS_URL + "?nocache=" + Date.now());
+        if(bRes.ok) { window.BANK_DB = await bRes.json(); localStorage.setItem("banks_db_v1", JSON.stringify(window.BANK_DB)); }
+        
+        const pRes = await fetch(window.GITHUB_PRODUCTS_URL + "?nocache=" + Date.now());
+        if(pRes.ok) { window.PRODUCT_DB = await pRes.json(); localStorage.setItem("products_db_v1", JSON.stringify(window.PRODUCT_DB)); window.buildAdapter(); }
+        
+        const dRes = await fetch(window.GITHUB_DEPS_URL + "?nocache=" + Date.now());
+        if(dRes.ok) { window.DEP_DB = await dRes.json(); localStorage.setItem("deps_db_v1", JSON.stringify(window.DEP_DB)); }
+    } catch (error) {
+        window.BANK_DB = JSON.parse(localStorage.getItem("banks_db_v1")) || {};
+        window.PRODUCT_DB = JSON.parse(localStorage.getItem("products_db_v1")) || {};
+        window.DEP_DB = JSON.parse(localStorage.getItem("deps_db_v1")) || {};
+        window.buildAdapter();
+    }
+    if(window.renderBankSelect) window.renderBankSelect();
+    if(window.renderDepBankSelect) window.renderDepBankSelect();
+};
+
+window.buildAdapter = function() {
+    window.PLAN_TAGS = {};
+    if(Object.keys(window.PRODUCT_DB).length > 0) {
+        for(let cat in window.PRODUCT_DB) { window.PLAN_TAGS[cat] = window.PRODUCT_DB[cat]; }
+    }
+    window.buildDetailedCategories(); 
+    if(window.updatePlanCats) window.updatePlanCats();
+};
+
+window.buildDetailedCategories = function() {
+    let gen = [];
+    Object.keys(window.PLAN_TAGS).forEach(catName => {
+        let catLabel = catName.replace(/_/g, ' ');
+        let catItem = { id: 'c_'+window.slugify(catName), label: catLabel, icon: window.CAT_ICONS[catName]||"📦", color: window.CAT_COLORS[catName]||"#3b82f6", subs: [] };
+        Object.keys(window.PLAN_TAGS[catName]).forEach(subName => {
+            let subLabel = subName.replace(/_/g, '/');
+            let items = window.PLAN_TAGS[catName][subName].map(i => {
+                let iconMatch = i.match(/^(\p{Emoji})/u); return { id: 'i_'+Math.random(), label: i.replace(/^(\p{Emoji})\s*/u, '').trim(), icon: iconMatch?iconMatch[1]:"▪️" };
+            });
+            catItem.subs.push({ id: 's_'+window.slugify(subName), label: subLabel, icon: window.SUBCAT_ICONS[subName]||"📁", items: items });
+        });
+        gen.push(catItem);
+    });
+    gen.push({ id: "boshqa", label: "Boshqa Chiqim", icon: "💸", color: "#94A3B8", subs: [] });
+    window.CATS_DATA.general = gen; window.CATS_DATA.home = gen; window.CATS_DATA.child_m = gen; window.CATS_DATA.child_f = gen;
+};
