@@ -1,71 +1,22 @@
 {
-  "Oziq_ovqat": {
-    "Sabzavot_Kokat": {
-      "Ildizmevalar": ["🥔 Kartoshka", "🥕 Sabzi", "🍠 Lavlagi", "🧅 Piyoz", "🧄 Sarimsoq", "🥔 Turp"],
-      "Yashil_Kokatlar": ["🥬 Ismaloq", "🌿 Kashnich", "🌿 Ukrop", "🌿 Selderey", "🥗 Salat bargi"],
-      "Poliz_Ekinlari": ["🍅 Pomidor", "🥒 Bodring", "🫑 Bulg'or qalampiri", "🍆 Baqlajon", "🎃 Qovoq", "🌶 Achchiq qalampir"],
-      "Piyozdoshlar": ["🧅 Qizil piyoz", "🧅 Ko'k piyoz", "🧄 Sarimsoq"]
-    },
-    "Gosht_Baliq_Tuxum": {
-      "Gosht": ["🥩 Mol go'shti", "🍖 Qo'y go'shti", "🥩 Qiyma", "🥩 Jigar"],
-      "Parranda": ["🍗 Tovuq", "🍗 Kurka", "🥚 Tovuq tuxumi", "🥚 Bedana tuxumi"],
-      "Baliq_Dengiz": ["🐟 Baliq", "🦐 Krevetka", "🦀 Qisqichbaqa", "🐟 Konservalangan baliq"]
-    },
-    "Sut_Non": {
-      "Sut_Mahsulotlari": ["🥛 Sut", "🥣 Qatiq", "🥛 Qaymoq", "🍦 Tvorog", "🍶 Smetana"],
-      "Pishloqlar": ["🧀 Sariq pishloq", "🧀 Brinza", "🧀 Qaymoqli pishloq"],
-      "Non_Mahsulotlari": ["🍞 Non", "🥯 Kulcha", "🥖 Baget", "🥐 Bulka", "🍪 Pechenye"]
-    },
-    "Baqqollik": {
-      "Don_Mahsulotlari": ["🍚 Guruch", "🌾 Grechka", "🫘 Mosh", "🫘 No'xat", "🌾 Yasmiq"],
-      "Xamir_Konserva": ["🍝 Makaron", "🌾 Un", "🥫 Tomat pastasi", "🥫 Yashil no'xat", "🥫 Makkajo'xori"],
-      "Yog_Ziravor": ["🌻 O'simlik yog'i", "🧈 Sariyog'", "🧂 Tuz", "🌶 Murch", "🌿 Zira", "🌿 Lavr yaprog'i"],
-      "Shirinlik": ["🍬 Shakar", "🍯 Asal", "🍮 Murabbo", "🍫 Shokolad"]
-    },
-    "Ichimlik": {
-      "Issiq": ["🫖 Qora choy", "🍵 Ko'k choy", "☕ Qahva", "🍫 Kakao"],
-      "Gazli_Gazsiz": ["💧 Mineral suv", "🥤 Kola", "🥤 Fanta", "🥤 Sprite", "🥤 Gazli suv"],
-      "Sok_Tabiiy": ["🧃 Olma soki", "🧃 Apelsin soki", "🍹 Kompot", "🥛 Ayron"]
-    }
+  "Oziq-ovqat": {
+    "Sabzavot_Kokat": ["🍅 Pomidor", "🥒 Bodring", "🥔 Kartoshka", "🧅 Piyoz", "🥕 Sabzi", "🥬 Ko'katlar", "🌶 Qalampir", "🧄 Sarimsoq"],
+    "Gosht_Tuxum": ["🥩 Mol go'shti", "🍖 Qo'y go'shti", "🍗 Tovuq", "🥚 Tuxum", "🐟 Baliq", "🥩 Qiyma"],
+    "Meva_Poliz": ["🍎 Olma", "🍇 Uzum", "🍉 Tarvuz", "🍈 Qovun", "🍌 Banan", "🍒 Gilos", "🍑 Shaftoli"],
+    "Baqqollik": ["🍚 Guruch", "🍝 Makaron", "🧂 Tuz", "🍬 Shakar", "🌻 Yog'", "🥫 Tomat", "🫘 Mosh"],
+    "Sut_Non": ["🍞 Non", "🥛 Sut", "🧀 Pishloq", "🧈 Sariyog'", "🥣 Qatiq", "🥛 Qaymoq"],
+    "Ichimlik": ["🥤 Choy", "🫖 Qora choy", "☕ Ko'k choy", "🧃 Sharbat", "💧 Mineral suv", "🥤 Kola/Fanta"]
   },
   "Uy_Xojalik": {
-    "Tozalik": {
-      "Idish_Yuvish": ["🧴 Idish yuvish geli", "🧽 Gubka", "🧽 Simli cho'tka"],
-      "Kir_Yuvish": ["🧹 Kir yuvish kukuni", "🧴 Kir yuvish geli", "💧 Konditsioner", "✨ Oqartiruvchi"],
-      "Uy_Tozalash": ["🧼 Pol yuvish vositasi", "🧴 Oyna tozalagich", "☣️ Dezinfeksiya vositasi", "🧹 Supurgi"]
-    },
-    "Gigiyena": {
-      "Hamom": ["🧼 Sovun", "🧴 Shampun", "🧴 Dush geli", "🧴 Soch uchun balzam"],
-      "Tish_Yuz": ["🦷 Tish pastasi", "🪥 Tish cho'tkasi", "🧴 Yuz kremi", "🧴 Tana uchun losyon"],
-      "Qogoz": ["🧻 Tualet qog'ozi", "🧻 Salfetka", "🧻 Qog'oz sochiq"]
-    },
-    "Kommunal": {
-      "Energiya": ["⚡ Elektr toki", "🔥 Tabiiy gaz", "💧 Sovuq suv", "🌡 Issiq suv"],
-      "Aloqa": ["🌐 Internet", "📱 Mobil aloqa", "☎️ Uy telefoni"],
-      "Xizmat": ["🗑 Chiqindi to'lovi", "🏢 Uy-joy shirkat to'lovi"]
-    }
+    "Tozalik": ["🧼 Sovun", "🧴 Idish yuvish geli", "🧻 Salfetka", "🧹 Kir yuvish kukuni", "🧽 Gubka", "🗑 Tish pastasi"],
+    "Kommunal": ["⚡ Elektr toki", "💧 Sovuq suv", "🔥 Tabiiy gaz", "🗑 Chiqindi", "🌐 Internet (Uzonline)"]
   },
   "Kiyim": {
-    "Kattalar": {
-      "Erkaklar": ["👔 Ko'ylak", "👖 Shim", "👞 Poyabzal", "🧥 Kostyum", "🧦 Paypoq"],
-      "Ayollar": ["👗 Ko'ylak", "👚 Bluzka", "👠 Tufli", "🧣 Sharf", "👜 Sumka"]
-    },
-    "Bolalar": {
-      "Kiyimlar": ["👕 Mayka", "👖 Bolalar shimi", "🧥 Kurtka", "🧦 Bolalar paypog'i"],
-      "Poyabzal": ["👟 Krossovka", "👡 Sandal", "👢 Rezina etik"],
-      "Bosh_Kiyim": ["🧢 Bosh kiyim", "👒 Panama", "🧣 Qishki sharf"]
-    }
+    "Kattalar": ["👔 Ko'ylak", "👖 Shim", "👞 Poyabzal", "🧥 Kurtka", "🧦 Paypoq", "👗 Ayollar kiyimi"],
+    "Bolalar": ["👕 Mayka", "👟 Krossovka", "🧢 Bosh kiyim", "👖 Bolalar shimi", "🧸 Qishki kiyim"]
   },
   "Avto": {
-    "Yoqilgi": {
-      "Benzin": ["⛽ Benzin AI-80", "⛽ Benzin AI-92", "⛽ Benzin AI-95"],
-      "Gaz": ["⛽ Metan", "⛽ Propan"],
-      "Elektr": ["⚡ Zaryad (BYD/Jetour/EV)"]
-    },
-    "Texnik_Xizmat": {
-      "Moy_Filtr": ["⚙️ Motor moyi", "⚙️ Transmissiya moyi", "💨 Havo filtri"],
-      "Ehtiyot_Qism": ["🛞 Balon", "🪛 Kolodka", "🔋 Akkumulyator", "💡 Fara"],
-      "Xizmat": ["🧹 Avtomoyka", "🛠 Usta xizmati", "📋 Diagnostika", "🛡 Sug'urta"]
-    }
+    "Yoqilgi": ["⛽ Benzin (AI-80)", "⛽ Benzin (AI-92)", "⛽ Metan gaz", "⛽ Propan", "⚡ Zaryad (Byd/Jetour)"],
+    "Ehtiyot_qism": ["⚙️ Motor moyi", "🛞 Balon", "🪛 Kolodka", "🧹 Avtomoyka", "🛠 Usta xizmati"]
   }
 }
