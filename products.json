@@ -1,0 +1,22 @@
+{
+  "Oziq-ovqat": {
+    "Sabzavot_Kokat": ["🍅 Pomidor", "🥒 Bodring", "🥔 Kartoshka", "🧅 Piyoz", "🥕 Sabzi", "🥬 Ko'katlar", "🌶 Qalampir", "🧄 Sarimsoq"],
+    "Gosht_Tuxum": ["🥩 Mol go'shti", "🍖 Qo'y go'shti", "🍗 Tovuq", "🥚 Tuxum", "🐟 Baliq", "🥩 Qiyma"],
+    "Meva_Poliz": ["🍎 Olma", "🍇 Uzum", "🍉 Tarvuz", "🍈 Qovun", "🍌 Banan", "🍒 Gilos", "🍑 Shaftoli"],
+    "Baqqollik": ["🍚 Guruch", "🍝 Makaron", "🧂 Tuz", "🍬 Shakar", "🌻 Yog'", "🥫 Tomat", "🫘 Mosh"],
+    "Sut_Non": ["🍞 Non", "🥛 Sut", "🧀 Pishloq", "🧈 Sariyog'", "🥣 Qatiq", "🥛 Qaymoq"],
+    "Ichimlik": ["🥤 Choy", "🫖 Qora choy", "☕ Ko'k choy", "🧃 Sharbat", "💧 Mineral suv", "🥤 Kola/Fanta"]
+  },
+  "Uy_Xojalik": {
+    "Tozalik": ["🧼 Sovun", "🧴 Idish yuvish geli", "🧻 Salfetka", "🧹 Kir yuvish kukuni", "🧽 Gubka", "🗑 Tish pastasi"],
+    "Kommunal": ["⚡ Elektr toki", "💧 Sovuq suv", "🔥 Tabiiy gaz", "🗑 Chiqindi", "🌐 Internet (Uzonline)"]
+  },
+  "Kiyim": {
+    "Kattalar": ["👔 Ko'ylak", "👖 Shim", "👞 Poyabzal", "🧥 Kurtka", "🧦 Paypoq", "👗 Ayollar kiyimi"],
+    "Bolalar": ["👕 Mayka", "👟 Krossovka", "🧢 Bosh kiyim", "👖 Bolalar shimi", "🧸 Qishki kiyim"]
+  },
+  "Avto": {
+    "Yoqilgi": ["⛽ Benzin (AI-80)", "⛽ Benzin (AI-92)", "⛽ Metan gaz", "⛽ Propan", "⚡ Zaryad (Byd/Jetour)"],
+    "Ehtiyot_qism": ["⚙️ Motor moyi", "🛞 Balon", "🪛 Kolodka", "🧹 Avtomoyka", "🛠 Usta xizmati"]
+  }
+}
