@@ -1,484 +1,500 @@
 // ==========================================
-// SERVICES.JS - Bozorlik, Rejali to'lovlar va Qarzlar
+// MARKET TABS — Bozorlik bo'limi 4 ta tab
 // ==========================================
 
-// ── Yordamchi: animatsiyali toast (tashqi window.toast o'zgarmaydi) ──────────
+// ── Tab tizimini inject qilish ────────────────────────────────────────────────
 
-const _fx = {
-  ripple(btn) {
-    const r = document.createElement("span");
-    r.className = "_svc-ripple";
-    const rect = btn.getBoundingClientRect();
-    r.style.cssText = `width:${Math.max(rect.width, rect.height)}px;
-      height:${Math.max(rect.width, rect.height)}px;
-      left:${rect.width / 2}px; top:${rect.height / 2}px;`;
-    btn.appendChild(r);
-    setTimeout(() => r.remove(), 600);
-  },
-};
-
-// Inject UI styles once
-(function injectStyles() {
-  if (document.getElementById("_svc-styles")) return;
+(function injectMarketTabStyles() {
+  if (document.getElementById("_mkt-tab-styles")) return;
   const s = document.createElement("style");
-  s.id = "_svc-styles";
+  s.id = "_mkt-tab-styles";
   s.textContent = `
-/* ── Reset helpers ────────────────────────────────── */
-.svc-section { margin-bottom: 24px; }
-
-/* ── Smart Tags ───────────────────────────────────── */
-#smart-tags-container {
-  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;
-}
-.smart-tag {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 6px 14px; border-radius: 20px; font-size: 12px;
-  font-weight: 600; cursor: pointer; user-select: none;
+/* ── Tab wrapper ─────────────────────────────────── */
+.mkt-tabs-wrapper {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
   background: var(--bg-card, #1e1e2e);
-  border: 1.5px solid var(--border-color, #333);
-  color: var(--text, #e0e0e0);
-  transition: background .18s, border-color .18s, transform .12s;
-  position: relative; overflow: hidden;
-}
-.smart-tag:hover  { background: var(--primary, #7c5cff); border-color: var(--primary, #7c5cff); color: #fff; transform: translateY(-1px); }
-.smart-tag:active { transform: scale(.95); }
-
-/* ── Plan items ───────────────────────────────────── */
-.plan-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 16px; border-radius: 14px;
-  background: var(--bg-card, #1e1e2e);
+  border-radius: 16px;
   border: 1.5px solid var(--border-color, #2a2a3e);
-  margin-bottom: 10px;
-  transition: opacity .2s, background .2s;
-  animation: _svc-slide-in .25s ease both;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
-.plan-item.skipped { opacity: .45; }
-.plan-item:hover   { background: var(--bg-hover, #252538); }
+.mkt-tabs-wrapper::-webkit-scrollbar { display: none; }
 
-@keyframes _svc-slide-in {
-  from { opacity: 0; transform: translateY(8px); }
+/* ── Har bir tab tugmasi ─────────────────────────── */
+.mkt-tab-btn {
+  flex: 1;
+  min-width: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted, #888);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  cursor: pointer;
+  transition: background .2s, color .2s, transform .12s, box-shadow .2s;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.mkt-tab-btn .mkt-tab-icon {
+  font-size: 18px;
+  line-height: 1;
+  transition: transform .2s;
+}
+.mkt-tab-btn:hover {
+  background: var(--bg-hover, #252538);
+  color: var(--text, #e0e0e0);
+}
+.mkt-tab-btn:hover .mkt-tab-icon { transform: scale(1.15) translateY(-1px); }
+.mkt-tab-btn:active { transform: scale(.93); }
+
+/* ── Faol tab ────────────────────────────────────── */
+.mkt-tab-btn.active {
+  background: var(--primary, #7c5cff);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(124,92,255,.35);
+}
+.mkt-tab-btn.active .mkt-tab-icon { transform: scale(1.1); }
+
+/* Tab-1: Ro'yxat tuzish — yashil */
+.mkt-tab-btn[data-tab="compose"].active {
+  background: linear-gradient(135deg, #4caf7d, #36896a);
+  box-shadow: 0 4px 16px rgba(76,175,125,.35);
+}
+/* Tab-2: Bozorlik ro'yxati — asosiy rang */
+.mkt-tab-btn[data-tab="list"].active {
+  background: linear-gradient(135deg, #7c5cff, #5a3fdb);
+  box-shadow: 0 4px 16px rgba(124,92,255,.35);
+}
+/* Tab-3: O'tkazib yuborilganlar — sariq */
+.mkt-tab-btn[data-tab="skipped"].active {
+  background: linear-gradient(135deg, #f0a500, #d4880a);
+  box-shadow: 0 4px 16px rgba(240,165,0,.35);
+}
+/* Tab-4: Xarid qilinganlar — ko'k */
+.mkt-tab-btn[data-tab="bought"].active {
+  background: linear-gradient(135deg, #2196f3, #1565c0);
+  box-shadow: 0 4px 16px rgba(33,150,243,.35);
+}
+
+/* ── Badge (hisoblagich) ─────────────────────────── */
+.mkt-tab-badge {
+  position: absolute;
+  top: 6px; right: 6px;
+  min-width: 16px; height: 16px;
+  border-radius: 8px;
+  padding: 0 4px;
+  background: var(--danger, #e53935);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+  opacity: 0;
+  transform: scale(.6);
+  transition: opacity .2s, transform .2s;
+}
+.mkt-tab-badge.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+.mkt-tab-btn[data-tab="list"] .mkt-tab-badge { background: var(--primary, #7c5cff); }
+.mkt-tab-btn[data-tab="skipped"] .mkt-tab-badge { background: #f0a500; }
+.mkt-tab-btn[data-tab="bought"] .mkt-tab-badge { background: #2196f3; }
+
+/* ── Tab panel animatsiyasi ──────────────────────── */
+.mkt-tab-panel {
+  display: none;
+  animation: _mkt-fadein .22s ease both;
+}
+.mkt-tab-panel.active { display: block; }
+
+@keyframes _mkt-fadein {
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
 }
 
-.plan-meta { font-size: 11px; color: var(--text-muted, #888); margin-top: 4px; }
-.plan-name-text { font-weight: 700; color: var(--primary, #7c5cff); font-size: 14px; }
-
-/* ── Custom checkbox ──────────────────────────────── */
-.custom-checkbox {
-  width: 22px; height: 22px; border-radius: 50%;
-  border: 2px solid var(--border-color, #444);
-  flex-shrink: 0; cursor: pointer;
-  transition: background .15s, border-color .15s, transform .1s;
-  display: flex; align-items: center; justify-content: center;
-}
-.custom-checkbox.checked {
-  background: var(--success, #4caf7d);
-  border-color: var(--success, #4caf7d);
-}
-.custom-checkbox.checked::after { content: "✓"; font-size: 12px; color: #fff; font-weight: 800; }
-.custom-checkbox:active { transform: scale(.85); }
-
-/* ── Scheduled list item ──────────────────────────── */
-.sched-list-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px; border-radius: 12px;
+/* ── Xarid qilinganlar ro'yxati ──────────────────── */
+.bought-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px; border-radius: 14px;
   background: var(--bg-card, #1e1e2e);
   border: 1.5px solid var(--border-color, #2a2a3e);
   margin-bottom: 8px;
-  animation: _svc-slide-in .2s ease both;
+  animation: _svc-slide-in .22s ease both;
+  opacity: .75;
 }
-.sched-label { font-weight: 600; font-size: 14px; color: var(--text, #e0e0e0); }
-.sched-day   { font-size: 11px; color: var(--text-muted, #888); margin-top: 2px; }
+.bought-item .bought-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(33,150,243,.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+  color: #2196f3;
+}
+.bought-name { font-weight: 700; font-size: 13px; color: var(--text, #e0e0e0); }
+.bought-meta { font-size: 11px; color: var(--text-muted, #888); margin-top: 3px; }
+.bought-price {
+  font-weight: 800; font-size: 13px;
+  color: #2196f3; white-space: nowrap;
+}
 
-/* ── Debt type toggle ─────────────────────────────── */
-.debt-type-btn {
-  flex: 1; padding: 11px 0; border-radius: 10px; font-size: 13px;
-  font-weight: 700; cursor: pointer; text-align: center;
-  border: 2px solid var(--border-color, #333);
-  background: var(--bg-card, #1e1e2e);
-  color: var(--text, #e0e0e0);
-  transition: background .18s, border-color .18s, color .18s, transform .1s;
+/* ── Skipped (O'tkazib yuborilganlar) ────────────── */
+.skipped-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px; border-radius: 14px;
+  background: rgba(240,165,0,.07);
+  border: 1.5px solid rgba(240,165,0,.22);
+  margin-bottom: 8px;
+  animation: _svc-slide-in .22s ease both;
 }
-.debt-type-btn:active { transform: scale(.96); }
+.skipped-icon {
+  font-size: 20px; flex-shrink: 0;
+}
+.skipped-name { font-weight: 700; font-size: 13px; color: var(--text, #e0e0e0); }
+.skipped-meta { font-size: 11px; color: #f0a500; margin-top: 3px; }
 
-/* ── Ripple ───────────────────────────────────────── */
-._svc-ripple {
-  position: absolute; border-radius: 50%;
-  background: rgba(255,255,255,.18);
-  transform: translate(-50%,-50%) scale(0);
-  animation: _svc-rpl .55s linear;
-  pointer-events: none;
+.skipped-unblock-btn {
+  background: rgba(240,165,0,.15);
+  border: 1.5px solid rgba(240,165,0,.4);
+  color: #f0a500;
+  border-radius: 9px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .15s, transform .1s;
 }
-@keyframes _svc-rpl { to { transform: translate(-50%,-50%) scale(2.5); opacity: 0; } }
+.skipped-unblock-btn:hover { background: rgba(240,165,0,.28); }
+.skipped-unblock-btn:active { transform: scale(.93); }
 
-/* ── Badge ────────────────────────────────────────── */
-.svc-badge {
-  display: inline-block; padding: 2px 8px; border-radius: 20px;
-  font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+/* ── Bo'sh holat ─────────────────────────────────── */
+.mkt-empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 38px 0; gap: 8px;
+  color: var(--text-muted, #888);
 }
-.svc-badge-market { background: rgba(124,92,255,.15); color: var(--primary, #7c5cff); }
-.svc-badge-cat    { background: rgba(76,175,125,.12); color: var(--success, #4caf7d); }
+.mkt-empty .mkt-empty-icon { font-size: 38px; opacity: .5; }
+.mkt-empty .mkt-empty-text { font-size: 13px; text-align: center; }
+
+/* ── Statistika kartasi (xarid qilinganlar tepasida) */
+.bought-stats-card {
+  display: flex; gap: 10px;
+  padding: 14px 16px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(33,150,243,.1), rgba(33,150,243,.04));
+  border: 1.5px solid rgba(33,150,243,.2);
+  margin-bottom: 16px;
+}
+.bought-stat {
+  flex: 1; text-align: center;
+}
+.bought-stat-val {
+  font-size: 17px; font-weight: 800;
+  color: #2196f3;
+}
+.bought-stat-lbl {
+  font-size: 10px; color: var(--text-muted, #888);
+  margin-top: 2px; font-weight: 600;
+}
+
+/* ── Compose bo'limidagi filter qator ────────────── */
+.mkt-filter-row {
+  display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.mkt-filter-row select {
+  flex: 1; min-width: 100px;
+}
   `;
   document.head.appendChild(s);
 })();
 
-// ── PLAN CATEGORIES ───────────────────────────────────────────────────────────
+// ── Tab render qilish ─────────────────────────────────────────────────────────
 
-window.updatePlanCats = () => {
-  const cEl = window.el("smart-plan-cat");
-  if (!cEl) return;
-  const p = window.state.profiles.find(x => x.id === window.curProf);
-  const isChild =
-    p && p.age !== null && p.age < 16 &&
-    p.id !== "general" && p.id !== "home_profile";
-  let cats = isChild
-    ? ["Kiyim", "Talim", "Oyinchoq"]
-    : p?.id === "home_profile"
-      ? ["Oziq-ovqat", "Uy_Xojalik"]
-      : Object.keys(window.PLAN_TAGS);
-  cEl.innerHTML = cats
-    .map(x => `<option value="${x}">${x.replace(/_/g, " ")}</option>`)
-    .join("");
-  window.updateSmartTags();
-};
+window.renderMarketTabs = () => {
+  const container = window.el("market-section-root");
+  if (!container) return;
 
-window.updateSmartTags = () => {
-  const cat = window.val("smart-plan-cat");
-  const subEl = window.el("smart-plan-subcat");
-  if (!cat || !subEl) return;
-  subEl.innerHTML = "";
-  if (window.PLAN_TAGS[cat]) {
-    window.show("smart-plan-subcat");
-    Object.keys(window.PLAN_TAGS[cat]).forEach(s => {
-      subEl.innerHTML += `<option value="${s}">${s.replace(/_/g, "/")}</option>`;
-    });
-  } else {
-    window.hide("smart-plan-subcat");
-  }
-  window.renderSmartTags();
-};
+  const active = window._mktActiveTab || "compose";
 
-window.renderSmartTags = () => {
-  const c = window.val("smart-plan-cat");
-  const s = window.val("smart-plan-subcat");
-  const cont = window.el("smart-tags-container");
-  if (!cont) return;
-  cont.innerHTML = "";
-  const tags = window.PLAN_TAGS?.[c]?.[s];
-  if (tags?.length) {
-    tags.forEach(t => {
-      cont.innerHTML += `<div class="smart-tag" onclick="quickAddPlan('${t}')">${t}</div>`;
-    });
-  } else {
-    cont.innerHTML = `<span style="color:var(--text-muted);font-size:12px;">Teglar yo'q.</span>`;
-  }
-};
-
-window.quickAddPlan = t => {
-  const ni = window.el("plan-name");
-  const qi = window.el("plan-qty");
-  ni.value = t;
-  qi.value = "";
-  ni.style.borderColor = "var(--success)";
-  setTimeout(() => (ni.style.borderColor = "var(--border-color)"), 700);
-  qi.focus();
-  window.toast("Hajmini yozing");
-};
-
-// ── PLAN CRUD ─────────────────────────────────────────────────────────────────
-
-window.addPlannedItemManual = () => {
-  const n = window.val("plan-name").trim();
-  const q = window.val("plan-qty").trim();
-  const c = window.val("smart-plan-cat");
-  const m = window.val("plan-market");
-  const p = window.getNum("plan-price");
-  if (!n) return window.toast("Nomi kerak!", true);
-  window.state.plan.push({
-    id: Date.now(),
-    text: q ? `${n} (${q})` : n,
-    cat: c, market: m, price: p,
-    prof: window.curProf,
-    skip: null, archived: false,
-  });
-  window.setVal("plan-name", "");
-  window.setVal("plan-qty", "");
-  window.el("plan-price").value = "";
-  window.save();
-  window.toast("Qo'shildi! ✅");
-};
-
-window.toggleSkipPlan = id => {
-  const today = new Date().toISOString().slice(0, 10);
-  const item = window.state.plan.find(x => x.id == id);
-  if (item) {
-    item.skip = item.skip === today ? null : today;
-    window.save();
-  }
-};
-
-window.openBuyModal = id => {
-  const item = window.state.plan.find(x => x.id == id);
-  if (!item) return;
-  window.buyPlanId = id;
-  window.setTxt("buy-item-name", `✅ Olinyapti: ${item.text}`);
-  window.el("buy-price").value = item.price
-    ? new Intl.NumberFormat("ru-RU").format(item.price).replace(/,/g, " ")
-    : "";
-  window.openModal("modal-buy");
-};
-
-window.confirmBuyItem = () => {
-  const p = window.getNum("buy-price");
-  if (!p || p <= 0) return window.toast("Narx xato!", true);
-  const item = window.state.plan.find(x => x.id == window.buyPlanId);
-  if (!item) return;
-  const d = new Date();
-  window.state.txs.unshift({
-    id: Date.now(), amount: p, desc: item.text,
-    cat: item.cat, subCat: item.market,
-    date: d.toISOString().slice(0, 10),
-    time: d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }),
-    user: window.tgUser, prof: item.prof,
-  });
-  item.archived = true;
-  item.buyPrice = p;
-  item.buyDate = d.toISOString().slice(0, 10);
-  window.closeModal("modal-buy");
-  window.save();
-  window.toast("Xarid amalga oshirildi ✅");
-};
-
-window.permDelPlan = id => {
-  window.state.plan = window.state.plan.filter(x => x.id != id);
-  window.save();
-  window.toast("O'chirildi!");
-};
-
-// ── RENDER PLANNED ────────────────────────────────────────────────────────────
-
-window.renderPlanned = () => {
-  const fc = window.val("filter-cat");
-  const fm = window.val("filter-market");
-  const today = new Date().toISOString().slice(0, 10);
-
-  let items = window.state.plan.filter(
-    x =>
-      x.prof === window.curProf ||
-      window.curProf === "general" ||
-      (window.curProf === "home_profile" && x.prof === "home_profile")
-  );
-  if (fc && fc !== "all") items = items.filter(x => x.cat === fc);
-  if (fm && fm !== "all") items = items.filter(x => x.market === fm);
-
-  const active = items.filter(x => !x.archived);
-
-  const html = active.map(x => {
-    const sk = x.skip === today;
-    return `
-<div class="plan-item${sk ? " skipped" : ""}">
-  <div class="custom-checkbox${!sk ? " checked" : ""}" onclick="toggleSkipPlan(${x.id})"></div>
-  <div style="flex:1; min-width:0;">
-    <div class="plan-name-text" style="text-decoration:${sk ? "line-through" : "none"};">${x.text}</div>
-    <div class="plan-meta">
-      <span class="svc-badge svc-badge-market">📍 ${x.market}</span>
-      <span class="svc-badge svc-badge-cat" style="margin-left:6px;">🏷 ${x.cat.replace(/_/g, " ")}</span>
+  container.innerHTML = `
+    <!-- TAB NAVIGATSIYA -->
+    <div class="mkt-tabs-wrapper">
+      ${[
+        { key: "compose",  icon: "✏️",  label: "Ro'yxat\ntuzish" },
+        { key: "list",     icon: "🛒",  label: "Bozorlik\nro'yxati" },
+        { key: "skipped",  icon: "⏸",  label: "O'tkazib\nyuborilgan" },
+        { key: "bought",   icon: "✅",  label: "Xarid\nqilingan" },
+      ].map(t => `
+        <button
+          class="mkt-tab-btn${active === t.key ? " active" : ""}"
+          data-tab="${t.key}"
+          onclick="switchMktTab('${t.key}')"
+        >
+          <span class="mkt-tab-icon">${t.icon}</span>
+          <span>${t.label.replace("\n", "<br>")}</span>
+          <span class="mkt-tab-badge" id="mkt-badge-${t.key}"></span>
+        </button>
+      `).join("")}
     </div>
-  </div>
-  <button
-    onclick="openBuyModal(${x.id})"
-    class="btn-primary btn-success"
-    style="width:auto; padding:8px 14px; font-size:12px; flex-shrink:0;"
-    ${sk ? "disabled" : ""}
-  >Olish</button>
-</div>`;
-  }).join("");
 
-  window.setHtml(
-    "planned-list-container",
-    html || `<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:24px 0;">📭 Ro'yxat bo'sh.</div>`
+    <!-- PANEL 1: Ro'yxat tuzish -->
+    <div class="mkt-tab-panel${active === "compose" ? " active" : ""}" id="mkt-panel-compose">
+      <div class="svc-section">
+        <label class="label-text">Kategoriya</label>
+        <select id="smart-plan-cat" class="select-input" onchange="updateSmartTags()"></select>
+      </div>
+      <div class="svc-section">
+        <label class="label-text">Ichki kategoriya</label>
+        <select id="smart-plan-subcat" class="select-input" onchange="renderSmartTags()"></select>
+      </div>
+      <div id="smart-tags-container" style="margin-bottom:14px;"></div>
+      <div class="svc-section">
+        <label class="label-text">Mahsulot nomi</label>
+        <input id="plan-name" class="input-field" placeholder="Masalan: Non, Yog', Shakar..." />
+      </div>
+      <div style="display:flex; gap:10px; margin-bottom:12px;">
+        <div style="flex:1;">
+          <label class="label-text">Hajmi / miqdori</label>
+          <input id="plan-qty" class="input-field" placeholder="1 kg, 2 ta..." />
+        </div>
+        <div style="flex:1;">
+          <label class="label-text">Taxminiy narx</label>
+          <input id="plan-price" class="input-field money-input" placeholder="0" type="number" />
+        </div>
+      </div>
+      <div class="svc-section">
+        <label class="label-text">Bozor / do'kon</label>
+        <select id="plan-market" class="select-input">
+          <option value="Yaqin_Bozor">🏪 Yaqin Bozor</option>
+          <option value="Katta_Bozor">🏬 Katta Bozor</option>
+          <option value="Supermarket">🛍 Supermarket</option>
+          <option value="Onlayn">📦 Onlayn</option>
+          <option value="Dona_Do_kon">🏠 Dona Do'kon</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="addPlannedItemManual(); switchMktTab('list');">
+        ➕ Ro'yxatga qo'shish
+      </button>
+    </div>
+
+    <!-- PANEL 2: Bozorlik ro'yxati -->
+    <div class="mkt-tab-panel${active === "list" ? " active" : ""}" id="mkt-panel-list">
+      <div class="mkt-filter-row">
+        <select id="filter-cat" class="select-input" onchange="renderPlanned()">
+          <option value="all">🏷 Barcha tur</option>
+        </select>
+        <select id="filter-market" class="select-input" onchange="renderPlanned()">
+          <option value="all">📍 Barcha bozor</option>
+          <option value="Yaqin_Bozor">Yaqin Bozor</option>
+          <option value="Katta_Bozor">Katta Bozor</option>
+          <option value="Supermarket">Supermarket</option>
+          <option value="Onlayn">Onlayn</option>
+        </select>
+      </div>
+      <div id="planned-list-container"></div>
+      <button
+        class="btn-primary"
+        style="margin-top:12px; background: var(--bg-card); border: 1.5px dashed var(--border-color); color: var(--text-muted);"
+        onclick="switchMktTab('compose')"
+      >
+        ✏️ Yangi mahsulot qo'shish
+      </button>
+    </div>
+
+    <!-- PANEL 3: O'tkazib yuborilganlar -->
+    <div class="mkt-tab-panel${active === "skipped" ? " active" : ""}" id="mkt-panel-skipped">
+      <div id="skipped-list-container"></div>
+    </div>
+
+    <!-- PANEL 4: Xarid qilinganlar -->
+    <div class="mkt-tab-panel${active === "bought" ? " active" : ""}" id="mkt-panel-bought">
+      <div class="bought-stats-card" id="bought-stats-card"></div>
+      <div id="bought-list-container"></div>
+    </div>
+  `;
+
+  window.updatePlanCats();
+  window.renderPlanned();
+  window._renderSkippedList();
+  window._renderBoughtList();
+  window._updateMktBadges();
+};
+
+// ── Tab almashtirish ──────────────────────────────────────────────────────────
+
+window.switchMktTab = key => {
+  window._mktActiveTab = key;
+
+  // Tugmalar
+  document.querySelectorAll(".mkt-tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === key);
+  });
+
+  // Panellar
+  document.querySelectorAll(".mkt-tab-panel").forEach(p => {
+    p.classList.toggle("active", p.id === `mkt-panel-${key}`);
+  });
+
+  // Panel-specific refresh
+  if (key === "list")    { window.renderPlanned(); window._updateMktBadges(); }
+  if (key === "skipped") { window._renderSkippedList(); window._updateMktBadges(); }
+  if (key === "bought")  { window._renderBoughtList(); window._updateMktBadges(); }
+};
+
+// ── Badge yangilash ───────────────────────────────────────────────────────────
+
+window._updateMktBadges = () => {
+  const today = new Date().toISOString().slice(0, 10);
+  const profItems = window.state.plan.filter(
+    x => x.prof === window.curProf || window.curProf === "general"
   );
-};
 
-// ── SCHEDULED PAYMENTS ────────────────────────────────────────────────────────
-
-window.addScheduled = () => {
-  const n = window.val("sched-name").trim();
-  const d = parseInt(window.val("sched-day"));
-  const a = window.getNum("sched-amount");
-  const c = window.val("sched-cat");
-  if (!n || !d || d < 1 || d > 31 || !a) return window.toast("Ma'lumotlar xato!", true);
-  const now = new Date();
-  const tm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  window.state.sched.push({
-    id: Date.now(), label: n, day: d, amt: a, cat: c,
-    tMonth: tm, miss: 0, prof: window.curProf,
-    archived: false, paidTotal: 0,
-  });
-  window.setVal("sched-name", "");
-  window.setVal("sched-day", "");
-  window.el("sched-amount").value = "";
-  window.save();
-  window.toast("Qo'shildi!");
-};
-
-window.delSched = id => {
-  window.initCloseActionOld(() => {
-    const s = window.state.sched.find(x => x.id == id);
-    if (s) {
-      s.archived = true;
-      s.closeDate = new Date().toISOString().slice(0, 10);
-      window.save();
-      window.toast("Arxivlandi!");
-    }
-  });
-};
-
-window.permDelSched = id => {
-  window.state.sched = window.state.sched.filter(x => x.id != id);
-  window.save();
-  window.toast("O'chirildi!");
-};
-
-window.updMiss = (id, v) => {
-  const s = window.state.sched.find(x => x.id == id);
-  if (s) { s.miss = parseInt(v) || 0; window.save(); }
-};
-
-window.paySched = id => {
-  const s = window.state.sched.find(x => x.id == id);
-  if (!s) return;
-
-  const getWorkdays = (year, month) => {
-    const days = new Date(year, month, 0).getDate();
-    let wd = 0;
-    for (let i = 1; i <= days; i++) {
-      const day = new Date(year, month - 1, i).getDay();
-      if (day !== 0 && day !== 6) wd++;
-    }
-    return wd;
+  const counts = {
+    list:    profItems.filter(x => !x.archived && x.skip !== today).length,
+    skipped: profItems.filter(x => !x.archived && x.skip === today).length,
+    bought:  profItems.filter(x =>  x.archived && x.buyDate === today).length,
   };
 
-  const [yr, mo] = s.tMonth.split("-").map(Number);
-  const wd = getWorkdays(yr, mo);
-  const actAmt = s.miss > 0
-    ? Math.max(0, Math.round(s.amt - (s.amt / wd) * s.miss))
-    : s.amt;
-
-  const d = new Date();
-  window.state.txs.unshift({
-    id: Date.now(), amount: actAmt,
-    desc: `${s.label} (${s.tMonth})`,
-    cat: s.cat, subCat: "",
-    date: d.toISOString().slice(0, 10),
-    time: d.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }),
-    user: window.tgUser, prof: s.prof,
+  Object.entries(counts).forEach(([tab, count]) => {
+    const badge = document.getElementById(`mkt-badge-${tab}`);
+    if (!badge) return;
+    badge.textContent = count > 99 ? "99+" : count;
+    badge.classList.toggle("visible", count > 0);
   });
-
-  s.paidTotal = (s.paidTotal || 0) + actAmt;
-
-  let [y, m] = s.tMonth.split("-");
-  m = parseInt(m) + 1;
-  if (m > 12) { m = 1; y = parseInt(y) + 1; }
-  s.tMonth = `${y}-${String(m).padStart(2, "0")}`;
-  s.miss = 0;
-
-  window.save();
-  window.toast("To'landi ✅");
 };
 
-window.renderSchedSet = () => {
-  const active = window.state.sched.filter(
-    s => (s.prof === window.curProf || window.curProf === "general") && !s.archived
+// ── O'tkazib yuborilganlar render ─────────────────────────────────────────────
+
+window._renderSkippedList = () => {
+  const cont = window.el("skipped-list-container");
+  if (!cont) return;
+  const today = new Date().toISOString().slice(0, 10);
+
+  const items = window.state.plan.filter(
+    x =>
+      !x.archived &&
+      x.skip === today &&
+      (x.prof === window.curProf || window.curProf === "general")
   );
-  const html = active.map(s => `
-<div class="sched-list-item">
-  <div>
-    <div class="sched-label">${s.label}</div>
-    <div class="sched-day">📅 Har oy ${s.day}-sana</div>
-  </div>
-  <button onclick="delSched(${s.id})" class="delete-btn">✕</button>
-</div>`).join("");
-  window.setHtml("sched-edit-list", html);
-};
 
-// ── DEBTS ─────────────────────────────────────────────────────────────────────
-
-window.setDebtType = type => {
-  window.debtType = type;
-  const takeBtn = window.el("debt-type-take");
-  const giveBtn = window.el("debt-type-give");
-
-  takeBtn.style.background    = type === "take" ? "var(--success)" : "var(--bg-card)";
-  takeBtn.style.borderColor   = type === "take" ? "var(--success)" : "var(--border-color)";
-  takeBtn.style.color         = type === "take" ? "#fff"           : "var(--text)";
-
-  giveBtn.style.background    = type === "give" ? "var(--danger)" : "var(--bg-card)";
-  giveBtn.style.borderColor   = type === "give" ? "var(--danger)" : "var(--border-color)";
-  giveBtn.style.color         = type === "give" ? "#fff"          : "var(--text)";
-};
-
-window.saveDebt = () => {
-  const n = window.val("debt-name").trim();
-  const a = window.getNum("debt-amount");
-  const s = window.val("debt-start");
-  const e = window.val("debt-due");
-  if (!n || !a) return window.toast("Ma'lumotlar yetarli emas!", true);
-
-  window.state.debts.unshift({
-    id: Date.now(), name: n, amount: a,
-    type: window.debtType, start: s, due: e,
-    archived: false,
-  });
-
-  if (window.debtType === "take") {
-    window.state.txs.unshift({
-      id: Date.now() + 1, amount: a, desc: `Qarz berildi: ${n}`,
-      cat: "Qarz", date: s, time: "00:00",
-      user: window.tgUser, prof: "general",
-    });
-  } else {
-    window.state.incs.unshift({
-      id: Date.now() + 1, amount: a, desc: `Qarz olindi: ${n}`,
-      cat: "Qarz", date: s, time: "00:00",
-      user: window.tgUser, prof: "general",
-    });
+  if (!items.length) {
+    cont.innerHTML = `
+      <div class="mkt-empty">
+        <div class="mkt-empty-icon">⏸</div>
+        <div class="mkt-empty-text">Bugun o'tkazib yuborilgan<br>mahsulotlar yo'q</div>
+      </div>`;
+    return;
   }
 
-  window.setVal("debt-name", "");
-  window.el("debt-amount").value = "";
-  window.save();
-  window.toast("Saqlandi!");
+  cont.innerHTML = items.map(x => `
+    <div class="skipped-item">
+      <span class="skipped-icon">⏸</span>
+      <div style="flex:1; min-width:0;">
+        <div class="skipped-name">${x.text}</div>
+        <div class="skipped-meta">⚠️ Bugun o'tkazib yuborildi · ${x.market?.replace(/_/g, " ") || "—"}</div>
+      </div>
+      <button class="skipped-unblock-btn" onclick="unSkipAndGo(${x.id})">
+        ▶ Qaytarish
+      </button>
+    </div>
+  `).join("");
 };
 
-window.closeDebt = id => {
-  window.initCloseActionOld(() => {
-    const d = window.state.debts.find(x => x.id == id);
-    if (!d) return;
-    const today = new Date().toISOString().slice(0, 10);
-    if (d.type === "take") {
-      window.state.incs.unshift({
-        id: Date.now(), amount: d.amount, desc: `Qarz qaytdi: ${d.name}`,
-        cat: "Qarz", date: today, time: "00:00",
-        user: window.tgUser, prof: "general",
-      });
-    } else {
-      window.state.txs.unshift({
-        id: Date.now(), amount: d.amount, desc: `Qarz to'landi: ${d.name}`,
-        cat: "Qarz", date: today, time: "00:00",
-        user: window.tgUser, prof: "general",
-      });
-    }
-    d.archived = true;
-    d.closeDate = today;
+// Skipped mahsulotni qaytarish va "Bozorlik ro'yxati" tabiga o'tish
+window.unSkipAndGo = id => {
+  const item = window.state.plan.find(x => x.id == id);
+  if (item) {
+    item.skip = null;
     window.save();
-    window.toast("Qarz yopildi ✅");
-  });
+    window.toast("Ro'yxatga qaytarildi ✅");
+    window.switchMktTab("list");
+    window._updateMktBadges();
+  }
 };
 
-window.permDelDebt = id => {
-  window.state.debts = window.state.debts.filter(x => x.id != id);
-  window.save();
-  window.toast("O'chirildi!");
+// ── Xarid qilinganlar render ──────────────────────────────────────────────────
+
+window._renderBoughtList = () => {
+  const cont = window.el("bought-list-container");
+  const statsCont = window.el("bought-stats-card");
+  if (!cont) return;
+
+  const items = window.state.plan
+    .filter(
+      x =>
+        x.archived &&
+        x.buyPrice &&
+        (x.prof === window.curProf || window.curProf === "general")
+    )
+    .sort((a, b) => (b.buyDate || "").localeCompare(a.buyDate || ""));
+
+  // Statistika
+  if (statsCont) {
+    const today = new Date().toISOString().slice(0, 10);
+    const todayItems = items.filter(x => x.buyDate === today);
+    const todaySum = todayItems.reduce((s, x) => s + (x.buyPrice || 0), 0);
+    const totalSum  = items.reduce((s, x) => s + (x.buyPrice || 0), 0);
+
+    statsCont.innerHTML = `
+      <div class="bought-stat">
+        <div class="bought-stat-val">${todayItems.length}</div>
+        <div class="bought-stat-lbl">Bugun xarid</div>
+      </div>
+      <div class="bought-stat">
+        <div class="bought-stat-val">${new Intl.NumberFormat("ru-RU").format(todaySum)}</div>
+        <div class="bought-stat-lbl">Bugungi so'm</div>
+      </div>
+      <div class="bought-stat">
+        <div class="bought-stat-val">${items.length}</div>
+        <div class="bought-stat-lbl">Jami xarid</div>
+      </div>
+      <div class="bought-stat">
+        <div class="bought-stat-val">${new Intl.NumberFormat("ru-RU").format(totalSum)}</div>
+        <div class="bought-stat-lbl">Jami so'm</div>
+      </div>
+    `;
+  }
+
+  if (!items.length) {
+    cont.innerHTML = `
+      <div class="mkt-empty">
+        <div class="mkt-empty-icon">🛍</div>
+        <div class="mkt-empty-text">Hali xarid qilingan<br>mahsulotlar yo'q</div>
+      </div>`;
+    return;
+  }
+
+  cont.innerHTML = items.map(x => `
+    <div class="bought-item">
+      <div class="bought-icon">✅</div>
+      <div style="flex:1; min-width:0;">
+        <div class="bought-name">${x.text}</div>
+        <div class="bought-meta">
+          📍 ${x.market?.replace(/_/g, " ") || "—"} &nbsp;·&nbsp;
+          📅 ${x.buyDate || "—"}
+        </div>
+      </div>
+      <div class="bought-price">${new Intl.NumberFormat("ru-RU").format(x.buyPrice)} so'm</div>
+    </div>
+  `).join("");
 };
+
+// ── Bozorlik bo'limini ochganda chaqiriladi ───────────────────────────────────
+// Siz mavjud kod ichida bozorlik bo'limi render qilinadigan joyga
+// quyidagini qo'shing:
+//
+//   window._mktActiveTab = window._mktActiveTab || "compose";
+//   window.renderMarketTabs();
+//
+// va HTML ichida bozorlik content wrapperni:
+//   <div id="market-section-root"></div>
