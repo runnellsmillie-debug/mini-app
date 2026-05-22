@@ -20,6 +20,9 @@ TOKEN = os.getenv("BOT_TOKEN")
 WEB_APP_URL = "https://runnellsmillie-debug.github.io/mini-app/"
 ASOSIY_ADMIN_ID = 279410924 # SIZNING TELEGRAM ID RAQAMINGIZ
 
+# O'zbekiston vaqti (GMT+5) uchun o'zgaruvchi
+UZB_TZ = datetime.timezone(datetime.timedelta(hours=5))
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -104,7 +107,8 @@ def is_maintenance_mode():
 def register_user(user_id):
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    now = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")
+    # Vaqtni O'zbekiston (GMT+5) bo'yicha olish
+    now = datetime.datetime.now(UZB_TZ).strftime("%d.%m.%Y %H:%M")
     
     cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
     if not cursor.fetchone():
@@ -118,7 +122,8 @@ def register_user(user_id):
 def update_last_active(user_id):
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    now = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")
+    # Vaqtni O'zbekiston (GMT+5) bo'yicha olish
+    now = datetime.datetime.now(UZB_TZ).strftime("%d.%m.%Y %H:%M")
     cursor.execute("UPDATE users SET last_active = ? WHERE user_id = ?", (now, user_id))
     conn.commit()
     conn.close()
@@ -136,8 +141,9 @@ async def log_admin_action(bot_instance, admin_id, action_text):
         except Exception: pass
 
 async def auto_backup_scheduler():
+    """Tungi zaxirani O'zbekiston vaqti bilan 03:00 da yuborish"""
     while True:
-        now = datetime.datetime.now()
+        now = datetime.datetime.now(UZB_TZ)
         target = now.replace(hour=3, minute=0, second=0, microsecond=0)
         if now >= target:
             target += datetime.timedelta(days=1)
@@ -146,7 +152,7 @@ async def auto_backup_scheduler():
         await asyncio.sleep(wait_seconds)
         try:
             db_file = FSInputFile("bot_data.db")
-            await bot.send_document(ASOSIY_ADMIN_ID, db_file, caption="🤖 Avtomatik tungi zaxira (03:00).\n1Money Family ERP")
+            await bot.send_document(ASOSIY_ADMIN_ID, db_file, caption="🤖 Avtomatik tungi zaxira (03:00 UZB).\n1Money Family ERP")
         except Exception as e:
             logger.error(f"Auto-backup xatosi: {e}")
 
