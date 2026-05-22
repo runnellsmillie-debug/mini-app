@@ -17,7 +17,7 @@ from flask import Flask
 # ==========================================
 TOKEN = os.getenv("BOT_TOKEN") 
 WEB_APP_URL = "https://runnellsmillie-debug.github.io/mini-app/"
-ASOSIY_ADMIN_ID = 123456789 # O'ZINGIZNING TELEGRAM ID RAQAMINGIZNI SHU YERGA YOZING
+ASOSIY_ADMIN_ID = 279410924 # O'ZINGIZNING TELEGRAM ID RAQAMINGIZNI SHU YERGA YOZING
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
