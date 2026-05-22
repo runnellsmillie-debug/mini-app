@@ -247,3 +247,42 @@ if(document.readyState==="loading") {
 } else {
     window.initCloudData();
 }
+
+// ==========================================
+// 6. AVTOMATIK SINXRONIZATSIYA (JONLI REJIM)
+// ==========================================
+window.startAutoSync = function() {
+    if (!window.currentBudgetId) return;
+    
+    // Har 5 soniyada (5000 ms) orqa fonda bazani tekshiradi
+    setInterval(async () => {
+        try {
+            let res = await fetch(`${API_BASE}/api/state/${window.currentBudgetId}`);
+            let json = await res.json();
+            
+            if (json.status === "ok" && Object.keys(json.data).length > 0) {
+                let cloudDataStr = JSON.stringify(json.data);
+                let localDataStr = JSON.stringify(window.state);
+                
+                // Agar serverdagi ma'lumot telefondagidan farq qilsa, ekranni darhol yangilaydi
+                if (cloudDataStr !== localDataStr) {
+                    window.state = json.data;
+                    localStorage.setItem('family_erp_state', cloudDataStr);
+                    
+                    if (typeof window.render === 'function') window.render();
+                    if (typeof window.updatePlanCats === 'function') window.updatePlanCats();
+                    console.log("Ma'lumotlar avtomatik yangilandi!");
+                }
+            }
+        } catch(e) {
+            // Orqa fondagi xatoliklarni sezdirmaslik
+        }
+    }, 5000); 
+};
+
+// Dastur yuklanganda jonli rejimni ishga tushirish
+if(document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", window.startAutoSync);
+} else {
+    window.startAutoSync();
+}
