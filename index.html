@@ -9,26 +9,187 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
-</head>
-<body>
 
-    <div id="toast-msg"></div>
+    <style>
+        /* Kun va Tun Rejimi (Dark/Light Mode) uchun asosiy o'zgaruvchilar */
+        :root {
+            --bg-main: #f0f2f5;
+            --bg-card: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --primary: #3b82f6;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        body.dark-mode {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            background-color: var(--bg-main);
+            color: var(--text);
+        }
+
+        /* To'liq ekranli Modal (Profil Tahrirlash) uchun maxsus CSS */
+        .modal-fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--bg-main);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-fs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .modal-fs-body {
+            padding: 20px;
+            flex: 1;
+        }
+
+        /* Galichkali Akkordeon menyu uchun */
+        .accordion-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        .accordion-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(0,0,0,0.02);
+        }
+        .accordion-content {
+            padding: 15px;
+            border-top: 1px solid var(--border-color);
+            display: none; /* Default yopiq bo'ladi */
+            flex-direction: column;
+            gap: 10px;
+        }
+        .perm-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        .perm-checkbox input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary);
+        }
+    </style>
+</head>
+<body class="dark-mode"> <div id="toast-msg"></div>
 
     <div id="modal-confirm" class="modal-layer" onclick="closeModalOutside(event, 'modal-confirm')"><div class="modal-box"><h3 style="margin-top:0; color:var(--danger);">Tasdiqlash</h3><div id="confirm-msg" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">YOPISH deb yozing.</div><input type="text" id="confirm-code" class="input-text" placeholder="YOPISH" autocomplete="off" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-confirm')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="executeConfirmOld()" class="btn-primary" style="background:var(--danger);">Tasdiqlash</button></div></div></div>
-    
     <div id="modal-yn-confirm" class="modal-layer" onclick="closeModalOutside(event, 'modal-yn-confirm')"><div class="modal-box"><h3 style="margin-top:0; color:var(--warning);">Diqqat!</h3><div id="yn-confirm-text" style="color:var(--text-main); font-size:14px; margin-bottom:20px; line-height:1.5;">Tasdiqlaysizmi?</div><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-yn-confirm')" class="btn-primary" style="background:var(--border-color);">Yo'q</button><button onclick="executeConfirmYN()" class="btn-primary btn-success">Ha</button></div></div></div>
 
-    <div id="modal-profile" class="modal-layer" onclick="closeModalOutside(event, 'modal-profile')"><div class="modal-box"><h3 style="margin-top:0; color:var(--primary);">Yangi profil</h3><input type="text" id="prof-name" class="input-text" placeholder="Ism" /><div style="display:flex; gap:10px; margin-bottom:10px;"><input type="number" id="prof-age" class="input-text" placeholder="Yoshi" style="flex:1; margin:0;" /><select id="prof-role" class="input-text" style="flex:2; margin:0;"><option value="child_m">O'g'il</option><option value="child_f">Qiz</option><option value="parent_m">Ota</option><option value="parent_f">Ona</option></select></div><input type="text" id="prof-emoji" class="input-text" placeholder="Emoji" /><div style="display:flex; gap:10px; margin-top:10px;"><button onclick="closeModal('modal-profile')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="saveNewProfile()" class="btn-primary btn-success">Saqlash</button></div></div></div>
-    
-    <div id="modal-buy" class="modal-layer" onclick="closeModalOutside(event, 'modal-buy')"><div class="modal-box"><h3 style="margin-top:0; color:var(--success);">Tasdiqlash</h3><div id="buy-item-name" style="color:var(--text-muted); font-size:14px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="buy-price" class="input-text" placeholder="Narxi" oninput="formatSpace(this)" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-buy')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmBuyItem()" class="btn-primary btn-success">Olish</button></div></div></div>
-    
-    <div id="modal-dep-topup" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-topup')"><div class="modal-box"><h3 style="margin-top:0; color:var(--primary);">Pul qo'shish</h3><div id="topup-name" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="topup-amount" class="input-text" placeholder="Summa..." oninput="formatSpace(this)" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-dep-topup')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmTopup()" class="btn-primary btn-success">Qo'shish</button></div></div></div>
-    
-    <div id="modal-dep-interest" class="modal-layer" onclick="closeModalOutside(event, 'modal-dep-interest')"><div class="modal-box"><h3 style="margin-top:0; color:var(--success);">Foiz hisoblash</h3><div id="interest-info" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="interest-amount" class="input-text" placeholder="Hisoblangan summa..." oninput="formatSpace(this)" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-dep-interest')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmInterest()" class="btn-primary btn-success">Tasdiqlash</button></div></div></div>
-    
-    <div id="modal-principal-pay" class="modal-layer" onclick="closeModalOutside(event, 'modal-principal-pay')"><div class="modal-box"><h3 style="margin-top:0; color:var(--primary);">Tanidan Kamaytirish</h3><div id="principal-pay-info" style="color:var(--text-muted); font-size:12px; margin-bottom:15px;">...</div><input type="text" inputmode="numeric" id="principal-pay-amount" class="input-text" placeholder="Summa..." oninput="formatSpace(this)" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-principal-pay')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="confirmPrincipalPay()" class="btn-primary btn-success">To'lash</button></div></div></div>
-    
-    <div id="modal-schedule" class="modal-layer" onclick="closeModalOutside(event, 'modal-schedule')"><div class="modal-box" style="width:95%; max-width:400px; padding:15px;"><div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h3 style="margin:0; color:var(--primary);" id="schedule-title">Grafik</h3><button onclick="closeModal('modal-schedule')" style="background:none; border:none; color:var(--text-muted); font-size:22px;">✕</button></div><div id="schedule-info" style="color:var(--text-muted); font-size:12px; margin-bottom:10px; border-bottom:1px dashed var(--border-color); padding-bottom:10px;">...</div><div style="max-height:60vh; overflow-y:auto;"><table class="bank-table" id="schedule-table"></table></div><div id="schedule-footer" style="text-align:right; font-weight:bold; color:var(--warning); margin-top:10px;"></div></div></div>
+    <div id="reset-modal" class="modal-layer" style="display: none;">
+        <div class="modal-box" style="border-top: 5px solid var(--danger);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <h3 style="margin:0; color: var(--danger);">⚠️ Xavfli Hudud</h3>
+                <button onclick="document.getElementById('reset-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); font-size:22px;">✕</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">
+                Dasturni nol holatiga qaytarish uchun <b>Asosiy Admin ID raqamini</b> kiriting:
+            </p>
+            <input type="number" id="reset-admin-id" placeholder="ID raqamni kiriting..." style="width: 100%; padding: 12px; background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text); border-radius: 8px; margin-bottom: 20px;">
+            <button onclick="verifyAndReset()" class="btn-primary btn-danger" style="width: 100%; font-weight: bold; font-size: 15px;">
+                Tozalashni tasdiqlash
+            </button>
+        </div>
+    </div>
+
+    <div id="modal-profile-fs" class="modal-fullscreen">
+        <div class="modal-fs-header">
+            <h3 style="margin:0; color:var(--primary);" id="fs-prof-title">Profilni Tahrirlash</h3>
+            <button onclick="closeFullScreenModal('modal-profile-fs')" style="background:none; border:none; color:var(--text); font-size:24px; cursor:pointer;">✕</button>
+        </div>
+        
+        <div class="modal-fs-body">
+            <input type="hidden" id="fs-prof-id" />
+            
+            <div style="margin-bottom: 20px;">
+                <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;">Profil nomi (Ism)</label>
+                <input type="text" id="fs-prof-name" class="input-text" placeholder="Masalan: Sevinch" />
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <div style="flex:1;">
+                    <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;">Emoji</label>
+                    <input type="text" id="fs-prof-emoji" class="input-text" placeholder="👧" />
+                </div>
+                <div style="flex:2;">
+                    <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;">Jinsi / Oila o'rni</label>
+                    <select id="fs-prof-role" class="input-text">
+                        <option value="parent_m">Ota (Erkak)</option>
+                        <option value="parent_f">Ona (Ayol)</option>
+                        <option value="child_m">O'g'il</option>
+                        <option value="child_f">Qiz</option>
+                        <option value="relative">Yaqin qarindosh</option>
+                        <option value="home">Uy/Ro'zg'or (Jins yo'q)</option>
+                    </select>
+                </div>
+            </div>
+
+            <h4 style="color:var(--text); margin-bottom:15px; border-bottom:1px dashed var(--border-color); padding-bottom:10px;">Ruxsatnomalar (Galichka)</h4>
+            
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion('acc-shopping')">
+                    <span>🛒 Bozorlik bo'limlari (Shopping)</span>
+                    <span id="acc-shopping-icon">▼</span>
+                </div>
+                <div class="accordion-content" id="acc-shopping">
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="shop_food"> Oziq-ovqat va Ro'zg'or</label>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="shop_clothes"> Kiyim va Shaxsiy</label>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="shop_school"> Maktab/O'quv qurollari</label>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion('acc-rights')">
+                    <span>⚙️ Asosiy huquqlar (Admin)</span>
+                    <span id="acc-rights-icon">▼</span>
+                </div>
+                <div class="accordion-content" id="acc-rights">
+                    <label class="perm-checkbox" style="color:var(--danger);"><input type="checkbox" class="fs-perm-chk" value="admin_all"> 👑 Barcha huquqlar (To'liq admin)</label>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="view_credit"> Kreditlarni ko'rish va to'lash</label>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="view_dep"> Omonatlarni ko'rish</label>
+                </div>
+            </div>
+
+            <button onclick="saveFullScreenProfile()" class="btn-primary btn-success" style="width:100%; margin-top:30px; font-size:16px; padding:15px;">✅ Profilni Saqlash</button>
+            <button onclick="deleteFullScreenProfile()" class="btn-primary" style="width:100%; margin-top:10px; font-size:14px; background:transparent; color:var(--danger); border:1px solid var(--danger);">🗑 Profilni o'chirish</button>
+        </div>
+    </div>
 
 
     <div class="top-header">
@@ -41,9 +202,42 @@
     
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div id="sidebar-menu" class="sidebar-menu">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px dashed var(--border-color);"><h3 style="margin:0; color:var(--primary);">Profillar</h3><button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text-muted); font-size:22px;">✕</button></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px dashed var(--border-color);">
+            <h3 style="margin:0; color:var(--primary);">Profillar</h3>
+            <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text-muted); font-size:22px;">✕</button>
+        </div>
+        
         <div id="sidebar-profiles-list"></div>
-    </div>
+        
+        <button id="admin-add-prof-btn" onclick="openFullScreenModal(null)" style="width:100%; padding:12px; background:rgba(59,130,246,0.1); border:1px dashed var(--primary); color:var(--primary); border-radius:8px; margin-top:15px; font-weight:bold; cursor:pointer; display:none;">
+            ➕ Yangi profil qo'shish
+        </button>
+
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px dashed var(--border-color);">
+            <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px; text-transform: uppercase;">Sozlamalar</div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.1); padding: 8px 12px; border-radius: 8px;">
+                <span style="font-size: 14px; font-weight: bold;">🌐 Dastur tili</span>
+                <select id="lang-select" onchange="window.setLang(this.value)" style="background: var(--bg-card); color: var(--text); border: 1px solid var(--border-color); border-radius: 5px; padding: 4px 8px; outline: none; cursor: pointer;">
+                    <option value="uz">O'zbekcha</option>
+                    <option value="ru">Русский</option>
+                </select>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.1); padding: 8px 12px; border-radius: 8px;">
+                <span style="font-size: 14px; font-weight: bold;">🎨 Rejim</span>
+                <select id="theme-select" onchange="window.setTheme(this.value)" style="background: var(--bg-card); color: var(--text); border: 1px solid var(--border-color); border-radius: 5px; padding: 4px 8px; outline: none; cursor: pointer;">
+                    <option value="auto">🕒 Avto (GMT+5)</option>
+                    <option value="light">☀️ Kun</option>
+                    <option value="dark">🌙 Tun</option>
+                </select>
+            </div>
+            
+            <button id="admin-reset-btn" onclick="document.getElementById('reset-modal').style.display='flex'" style="width:100%; padding:12px; background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:8px; margin-top:20px; font-weight:bold; display:none;">
+                🗑 Dasturni nol qilish (Reset)
+            </button>
+        </div>
+        </div>
 
 
     <div id="tab-home" class="tab-content">
@@ -181,96 +375,54 @@
                         </select>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; background:var(--bg-dark); padding:10px; border-radius:10px; border:1px solid var(--border-color);">
-                        <input type="checkbox" id="credit-grace-check" style="width:20px; height:20px;" onchange="toggleGraceFields(); updateCreditAnalysis();" />
-                        <label for="credit-grace-check" style="font-size:13px; color:var(--text-main);">Imtiyozli davri bormi?</label>
                     </div>
-                    
-                    <div id="grace-fields" class="hidden" style="gap:8px; margin-bottom:12px; flex-direction:column;">
-                        <div style="display:flex; gap:8px;">
-                            <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Imtiyoz muddati (oy):</div><input type="number" id="credit-grace-dur" class="input-text" style="margin:0;" value="0" oninput="updateCreditAnalysis()"/></div>
-                            <div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Imtiyoz foizi (%):</div><input type="number" id="credit-grace-rate" class="input-text" style="margin:0;" value="0" oninput="updateCreditAnalysis()"/></div>
-                        </div>
-                        <select id="credit-grace-type" class="input-text" style="margin:0; border-color:var(--warning);" onchange="updateCreditAnalysis()">
-                            <option value="no_principal">Tanidan kamaymaydi (Faqat foiz)</option>
-                            <option value="with_principal">Tanidan ham kamayadi</option>
-                        </select>
-                    </div>
-
-                    <div id="credit-analysis-box" class="credit-analysis-box"><div style='font-size:11px; color:var(--text-muted); text-align:center;'>Tahlil uchun bank va summani kiriting...</div></div>
-                    <button id="btn-save-credit" onclick="prepareSaveCredit()" class="btn-primary btn-success disabled" style="opacity:0.5; pointer-events:none;">Kreditni Rasmiylashtirish</button>
-                </div>
             </div>
         </div>
-
-        <div id="bank-sub-dep" class="hidden">
-            <div class="mode-selector" style="margin-bottom: 15px;">
-                <button id="dep-tab-aktiv" class="mode-btn" onclick="switchDepTab('aktiv')">Aktiv</button>
-                <button id="dep-tab-arxiv" class="mode-btn" onclick="switchDepTab('arxiv')">Arxiv</button>
-                <button id="dep-tab-calc" class="mode-btn" onclick="switchDepTab('calc')">Kalkulyator</button>
-            </div>
-            <div id="dep-view-aktiv"><div id="deposits-list-active"></div></div>
-            <div id="dep-view-arxiv" class="hidden"><div id="deposits-list-archived"></div></div>
-            
-            <div id="dep-view-calc" class="hidden">
-                <div class="widget-box">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <b style="color:var(--primary);">➕ Yangi Omonat Ochish</b>
-                        <button onclick="updateBankData()" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:4px 8px; border-radius:6px; font-size:10px; cursor:pointer;">🔄 Yangilash</button>
-                    </div>
-                    <div style="display:flex; gap:8px; margin-bottom:8px;"><select id="dep-bank" class="input-text" style="flex:1; margin:0;" onchange="updateDepTypes()"></select><select id="dep-type-name" class="input-text" style="flex:1; margin:0;" onchange="onDepTypeChange()"></select></div>
-                    <input type="text" id="dep-custom-name" class="input-text hidden" placeholder="Omonat nomi (Mas: Ipoteka Bank)" />
-                    <input type="text" inputmode="numeric" id="dep-amount" class="input-text" placeholder="Boshlang'ich summa..." oninput="formatSpace(this)" />
-                    <div style="display:flex; gap:8px; margin-bottom:8px;"><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Ochilgan sana:</div><input type="date" id="dep-date" class="input-text" style="margin:0;" /></div><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat (oy):</div><input type="number" id="dep-duration" class="input-text" placeholder="Mas: 12" style="margin:0;" /></div></div>
-                    <div style="display:flex; gap:8px; margin-bottom:8px;"><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Foiz stavka (%):</div><input type="number" id="dep-rate" class="input-text" placeholder="Mas: 22" style="margin:0;" /></div><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Stavka turi:</div><select id="dep-ratetype" class="input-text" style="margin:0;"><option value="annual">Yillik</option><option value="monthly">Oylik</option></select></div></div>
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; background:var(--bg-dark); padding:10px; border-radius:10px; border:1px solid var(--border-color);"><input type="checkbox" id="dep-cap" style="width:20px; height:20px;" /><label for="dep-cap" style="font-size:13px; color:var(--text-main);">Kapitalizatsiya (Foiz ustiga qo'shilsinmi?)</label></div>
-                    <button onclick="saveDeposit()" class="btn-primary btn-success">Omonatni Saqlash</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="bank-sub-debt" class="hidden">
-            <div class="widget-box">
-                <input type="text" id="debt-name" class="input-text" placeholder="Kimga / Kimdan" />
-                <input type="text" inputmode="numeric" id="debt-amount" class="input-text" placeholder="Summa..." oninput="formatSpace(this)" />
-                <div style="display:flex; gap:8px; margin-bottom:8px;"><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Sana:</div><input type="date" id="debt-start" class="input-text" style="margin:0;" /></div><div style="flex:1;"><div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">Muddat:</div><input type="date" id="debt-due" class="input-text" style="margin:0;" /></div></div>
-                <div class="mode-selector" style="margin-top:5px;"><button id="debt-type-take" class="mode-btn" style="background:var(--success); border-color:var(--success);" onclick="setDebtType('take')">Menga qaytaradi</button><button id="debt-type-give" class="mode-btn" onclick="setDebtType('give')">Men qaytaraman</button></div>
-                <button onclick="saveDebt()" class="btn-primary">Qarzni Saqlash</button>
-            </div>
-            <div id="debts-list"></div>
-        </div>
-    </div>
-
-
-    <div id="tab-report" class="tab-content hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <span id="report-title-text" style="font-size: 18px; font-weight: bold;">📊 Hisobot</span>
-            <button onclick="downloadExcel()" class="btn-primary btn-success" style="width:auto; padding:10px 18px; font-size:13px;">📥 Excel</button>
-        </div>
-        <div style="display:flex; gap:8px; margin-bottom:15px;"><input type="date" id="rep-from" class="input-text" style="margin:0;" onchange="renderReport()" /><input type="date" id="rep-to" class="input-text" style="margin:0;" onchange="renderReport()" /></div>
-        <div id="user-stats-container" style="display:flex; gap:8px; margin-bottom:15px; overflow-x:auto; padding-bottom:5px;"></div>
-        <div class="balance-grid" style="margin-bottom:15px;"><div class="balance-card" style="border: 1px solid var(--success);" id="rep-inc-card"><div style="font-size: 11px; color: var(--text-muted); margin-bottom:4px;">Kirim (Tushum)</div><div id="rep-inc-val" style="font-size: 16px; font-weight: bold; color: var(--success);">0</div></div><div class="balance-card" style="border: 1px solid var(--danger);"><div style="font-size: 11px; color: var(--text-muted); margin-bottom:4px;">Chiqim (Xarajat)</div><div id="rep-exp-val" style="font-size: 16px; font-weight: bold; color: var(--danger);">0</div></div></div>
-        <div style="font-size: 14px; font-weight: bold; color: var(--primary); margin: 15px 0 10px 0;">📉 Toifalar tahlili:</div>
-        <div id="rep-cats-list"></div>
-        <div style="font-size: 14px; font-weight: bold; color: var(--primary); margin: 20px 0 10px 0;">📅 Xronologiya:</div>
-        <div id="rep-history-list" style="background: var(--bg-card); padding: 12px; border-radius: 14px; border: 1px solid var(--border-color);"></div>
     </div>
 
 
     <div class="bottom-nav">
-        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><i>🏠</i> Asosiy</div>
-        <div class="nav-item" id="nav-add" onclick="switchTab('add')"><i>➕</i> Kiritish</div>
-        <div class="nav-item" id="nav-other" onclick="switchTab('other')"><i>💼</i> Xizmatlar</div>
-        <div class="nav-item" id="nav-report" onclick="switchTab('report')"><i>📊</i> Hisobot</div>
+        <div class="nav-item active" onclick="switchTab('home')"><div class="icon">🏠</div><div>Asosiy</div></div>
+        <div class="nav-item" onclick="switchTab('add')"><div class="icon" style="font-size:24px;">➕</div><div>Kiritish</div></div>
+        <div class="nav-item" onclick="switchTab('other')"><div class="icon">💼</div><div>Xizmatlar</div></div>
+        <div class="nav-item" onclick="switchTab('report')"><div class="icon">📊</div><div>Hisobot</div></div>
     </div>
 
+    <script>
+        // Modal Akkordeon mantiqlari
+        function toggleAccordion(id) {
+            let content = document.getElementById(id);
+            let icon = document.getElementById(id + "-icon");
+            if (content.style.display === "flex") {
+                content.style.display = "none";
+                icon.innerText = "▼";
+            } else {
+                content.style.display = "flex";
+                icon.innerText = "▲";
+            }
+        }
+        
+        function openFullScreenModal(profId = null) {
+            document.getElementById('modal-profile-fs').style.display = 'flex';
+            // Agar profId bo'lsa (tahrirlash) inputlarni to'ldiramiz, bo'lmasa tozalaymiz
+            document.getElementById('fs-prof-id').value = profId || '';
+            if (!profId) {
+                document.getElementById('fs-prof-name').value = '';
+                document.getElementById('fs-prof-emoji').value = '👤';
+                // Checkboxlarni tozalash...
+            }
+        }
 
+        function closeFullScreenModal() {
+            document.getElementById('modal-profile-fs').style.display = 'none';
+        }
+    </script>
     <script src="js/config.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/credit.js"></script>
     <script src="js/deposit.js"></script>
-    <script src="js/shopping.js"></script> <script src="js/services.js"></script>
+    <script src="js/shopping.js"></script>
+    <script src="js/services.js"></script>
     <script src="js/app.js"></script>
-
 </body>
 </html>
