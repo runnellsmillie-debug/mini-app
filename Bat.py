@@ -5,6 +5,7 @@ import os
 import threading
 import sqlite3
 import datetime
+import re
 from aiogram import Bot, Dispatcher, types, F, BaseMiddleware
 from aiogram.filters import CommandStart, Command
 from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove, FSInputFile
@@ -31,6 +32,7 @@ class AdminState(StatesGroup):
     waiting_for_new_admin_id = State()
     waiting_for_del_admin_id = State()
     waiting_for_search_query = State()
+    waiting_for_ban_id = State()
 
 # ==========================================
 # 2. BAZA (DATABASE) QISMI
@@ -54,6 +56,9 @@ def init_db():
     cursor.execute('''CREATE TABLE IF NOT EXISTS admins (user_id INTEGER PRIMARY KEY)''')
     cursor.execute("INSERT OR IGNORE INTO admins (user_id) VALUES (?)", (ASOSIY_ADMIN_ID,))
 
+    cursor.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, val TEXT)''')
+    cursor.execute("INSERT OR IGNORE INTO settings (key, val) VALUES ('maintenance', '0')")
+
     try: cursor.execute("ALTER TABLE budgets ADD COLUMN name TEXT")
     except sqlite3.OperationalError: pass 
     
@@ -63,8 +68,10 @@ def init_db():
     try: cursor.execute("ALTER TABLE users ADD COLUMN last_active TEXT")
     except sqlite3.OperationalError: pass 
 
-    # Bulutli sinxronizatsiya uchun JSON ustuni
     try: cursor.execute("ALTER TABLE budgets ADD COLUMN state_json TEXT DEFAULT '{}'")
+    except sqlite3.OperationalError: pass 
+
+    try: cursor.execute("ALTER TABLE users ADD COLUMN is_banned INTEGER DEFAULT 0")
     except sqlite3.OperationalError: pass 
 
     conn.commit()
@@ -78,6 +85,22 @@ def is_admin(user_id):
     conn.close()
     return bool(res)
 
+def is_user_banned(user_id):
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT is_banned FROM users WHERE user_id = ?", (user_id,))
+    res = cursor.fetchone()
+    conn.close()
+    return res and res[0] == 1
+
+def is_maintenance_mode():
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT val FROM settings WHERE key = 'maintenance'")
+    res = cursor.fetchone()
+    conn.close()
+    return res and res[0] == '1'
+
 def register_user(user_id):
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
@@ -87,7 +110,7 @@ def register_user(user_id):
     if not cursor.fetchone():
         cursor.execute("INSERT INTO budgets (balance, name) VALUES (0, NULL)")
         shaxsiy_budget = cursor.lastrowid
-        cursor.execute("INSERT INTO users (user_id, ozi_yaratgan_budget_id, joriy_budget_id, registered_at, last_active) VALUES (?, ?, ?, ?, ?)", 
+        cursor.execute("INSERT INTO users (user_id, ozi_yaratgan_budget_id, joriy_budget_id, registered_at, last_active, is_banned) VALUES (?, ?, ?, ?, ?, 0)", 
                        (user_id, shaxsiy_budget, shaxsiy_budget, now, now))
         conn.commit()
     conn.close()
@@ -103,7 +126,7 @@ def update_last_active(user_id):
 init_db()
 
 # ==========================================
-# YORDAMCHI FUNKSIYALAR
+# YORDAMCHI FUNKSIYALAR (LOG VA ZAXIRA)
 # ==========================================
 async def log_admin_action(bot_instance, admin_id, action_text):
     if admin_id != ASOSIY_ADMIN_ID:
@@ -128,12 +151,24 @@ async def auto_backup_scheduler():
             logger.error(f"Auto-backup xatosi: {e}")
 
 # ==========================================
-# 3. MIDDLEWARE (Aktivlikni avtomat kuzatuvchi)
+# 3. MIDDLEWARE (Aktivlik va Xavfsizlik nazorati)
 # ==========================================
-class ActivityMiddleware(BaseMiddleware):
+class SecurityMiddleware(BaseMiddleware):
     async def __call__(self, handler, event, data):
         if event.from_user:
-            update_last_active(event.from_user.id)
+            uid = event.from_user.id
+            
+            # 1. Qora ro'yxat tekshiruvi
+            if is_user_banned(uid):
+                return 
+                
+            # 2. Texnik tanaffus tekshiruvi
+            if is_maintenance_mode() and not is_admin(uid):
+                if isinstance(event, types.Message):
+                    await event.answer("🛠 <b>Hozirgi vaqtda tizimda yangilanish ishlari ketyapti.</b>\n\nIltimos, birozdan so'ng qayta urinib ko'ring.", parse_mode="HTML")
+                return 
+                
+            update_last_active(uid)
         return await handler(event, data)
 
 # ==========================================
@@ -158,16 +193,12 @@ def get_state(budget_id):
     cursor.execute("SELECT state_json FROM budgets WHERE budget_id = ?", (budget_id,))
     row = cursor.fetchone()
     conn.close()
-    
-    if row and row[0] and row[0] != '{}':
-        return jsonify({"status": "ok", "data": json.loads(row[0])})
+    if row and row[0] and row[0] != '{}': return jsonify({"status": "ok", "data": json.loads(row[0])})
     return jsonify({"status": "empty", "data": {}})
 
 @app.route('/api/state/<int:budget_id>', methods=['POST', 'OPTIONS'])
 def save_state(budget_id):
-    if request.method == 'OPTIONS':
-        return jsonify({"status": "ok"})
-        
+    if request.method == 'OPTIONS': return jsonify({"status": "ok"})
     new_state = request.json
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
@@ -185,7 +216,7 @@ def run_flask():
 # ==========================================
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
-dp.message.middleware(ActivityMiddleware()) 
+dp.message.middleware(SecurityMiddleware()) 
 
 def get_main_keyboard(user_id):
     conn = sqlite3.connect('bot_data.db')
@@ -200,13 +231,11 @@ def get_main_keyboard(user_id):
     own_name = own_name_res[0] if own_name_res and own_name_res[0] else "Mening hisobim"
     
     accounts_row = [KeyboardButton(text=f"👑 {own_name} (Admin)")]
-    
     if taklif_id:
         cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (taklif_id,))
         taklif_name_res = cursor.fetchone()
         if taklif_name_res and taklif_name_res[0]:
-            taklif_name = taklif_name_res[0]
-            accounts_row.append(KeyboardButton(text=f"🤝 {taklif_name} (Taklif)"))
+            accounts_row.append(KeyboardButton(text=f"🤝 {taklif_name_res[0]} (Taklif)"))
             
     conn.close()
     return ReplyKeyboardMarkup(keyboard=[accounts_row, [KeyboardButton(text="👥 Yangi foydalanuvchi bog'lash"), KeyboardButton(text="📋 Guruh a'zolari")]], resize_keyboard=True)
@@ -235,7 +264,6 @@ async def cmd_start(message: types.Message, state: FSMContext):
         await state.set_state(Setup.waiting_for_name)
         await message.answer("Endi bu hisobingizga nom bering (Masalan: Shaxsiy, Oilaviy byudjet):", reply_markup=ReplyKeyboardRemove())
         return
-
     await message.answer("Sizning hisob-kitob bo'limingiz:", reply_markup=get_main_keyboard(message.from_user.id))
 
 @dp.message(F.contact)
@@ -267,7 +295,6 @@ async def save_budget_name(message: types.Message, state: FSMContext):
     cursor.execute("UPDATE budgets SET name = ? WHERE budget_id = ?", (new_name, budget_id))
     conn.commit()
     conn.close()
-    
     await state.clear()
     await message.answer(f"✅ Hisobingiz nomi '{new_name}' etib belgilandi!", reply_markup=get_main_keyboard(message.from_user.id))
 
@@ -292,7 +319,6 @@ async def open_invited_app(message: types.Message):
     cursor = conn.cursor()
     cursor.execute("SELECT taklif_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
     taklif_id = cursor.fetchone()[0]
-    
     if taklif_id:
         cursor.execute("UPDATE users SET joriy_budget_id = ? WHERE user_id = ?", (taklif_id, message.from_user.id))
         conn.commit()
@@ -311,7 +337,6 @@ async def start_binding(message: types.Message, state: FSMContext):
 async def handle_partner_phone(message: types.Message, state: FSMContext):
     phone = message.text.replace("+", "")
     user_id = message.from_user.id
-    
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
     cursor.execute("SELECT phone, ozi_yaratgan_budget_id FROM users WHERE user_id = ?", (user_id,))
@@ -323,7 +348,6 @@ async def handle_partner_phone(message: types.Message, state: FSMContext):
 
     cursor.execute("SELECT user_id, taklif_budget_id FROM users WHERE phone = ?", (phone,))
     target = cursor.fetchone()
-    
     if not target:
         await message.answer("❌ Bu raqam egasi hali botdan ro'yxatdan o'tmagan.")
         await state.clear(); conn.close(); return
@@ -339,7 +363,6 @@ async def handle_partner_phone(message: types.Message, state: FSMContext):
     conn.close()
     
     inline_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="✅ Ha", callback_data=f"accept_{user_id}"), InlineKeyboardButton(text="❌ Yo'q", callback_data=f"reject_{user_id}")]])
-    
     try:
         await bot.send_message(target_user_id, f"🔔 Taklifnoma!\n\nFoydalanuvchi (+{my_phone}) sizni o'zining hisobiga qo'shmoqchi. Rozimisiz?", reply_markup=inline_kb)
         await message.answer(f"⏳ Taklif (+{phone}) raqamiga yuborildi.")
@@ -400,7 +423,6 @@ async def show_group_members(message: types.Message):
 
 @dp.message(F.web_app_data)
 async def web_app_handler(message: types.Message):
-    # WebApp yopilganda qisqacha log yozib qo'yish
     await message.answer("✅ O'zgarishlar bulutga saqlandi!")
 
 # ==========================================
@@ -409,11 +431,12 @@ async def web_app_handler(message: types.Message):
 def get_admin_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📊 Statistika"), KeyboardButton(text="🔗 Aloqalar")],
-            [KeyboardButton(text="🔍 Qidiruv"), KeyboardButton(text="🧹 Tozalash")],
+            [KeyboardButton(text="📊 Statistika"), KeyboardButton(text="🏆 Top Reyting")],
+            [KeyboardButton(text="🔍 Qidiruv"), KeyboardButton(text="🔗 Aloqalar")],
+            [KeyboardButton(text="🚫 Ban qilish"), KeyboardButton(text="🛠 Tanaffus rejimi")],
             [KeyboardButton(text="📥 Bazani yuklash"), KeyboardButton(text="📢 Xabarnoma")],
             [KeyboardButton(text="👮‍♂️ Admin qo'shish"), KeyboardButton(text="🗑 Admin o'chirish")],
-            [KeyboardButton(text="🔙 Asosiy menyu")]
+            [KeyboardButton(text="🧹 Tozalash"), KeyboardButton(text="🔙 Asosiy menyu")]
         ],
         resize_keyboard=True
     )
@@ -440,12 +463,84 @@ async def show_stats(message: types.Message):
     total_budgets = cursor.fetchone()[0]
     cursor.execute("SELECT COUNT(*) FROM admins")
     total_admins = cursor.fetchone()[0]
+    cursor.execute("SELECT val FROM settings WHERE key = 'maintenance'")
+    m_mode = cursor.fetchone()[0]
     conn.close()
     
+    status = "🔴 YONIQ (Tizim muzlatilgan)" if m_mode == '1' else "🟢 O'CHIQ (Oddiy rejim)"
     text = (f"📊 <b>BOT STATISTIKASI:</b>\n\n👥 Umumiy foydalanuvchilar: <b>{total_users} ta</b>\n"
             f"💼 Ochilgan byudjetlar: <b>{total_budgets} ta</b>\n"
-            f"👮‍♂️ Adminlar soni: <b>{total_admins} ta</b>").replace(",", " ")
+            f"👮‍♂️ Adminlar soni: <b>{total_admins} ta</b>\n\n"
+            f"🛠 Texnik tanaffus holati: <b>{status}</b>").replace(",", " ")
     await message.answer(text, parse_mode="HTML")
+
+@dp.message(F.text == "🏆 Top Reyting")
+async def show_top_users(message: types.Message):
+    if not is_admin(message.from_user.id): return
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT u.phone, b.name, b.balance FROM users u JOIN budgets b ON u.ozi_yaratgan_budget_id = b.budget_id ORDER BY b.balance DESC LIMIT 5")
+    top_users = cursor.fetchall()
+    conn.close()
+    
+    text = "🏆 <b>Eng yuqori balansga ega 5 ta hisob:</b>\n\n"
+    for idx, (phone, name, bal) in enumerate(top_users, 1):
+        phone_disp = f"+{phone}" if phone else "Raqamsiz"
+        name_disp = name if name else "Nomsiz"
+        text += f"{idx}. <b>{name_disp}</b> ({phone_disp}) — {bal:,.0f} UZS\n".replace(",", " ")
+        
+    await message.answer(text, parse_mode="HTML")
+
+@dp.message(F.text == "🛠 Tanaffus rejimi")
+async def toggle_maintenance(message: types.Message):
+    if not is_admin(message.from_user.id): return
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT val FROM settings WHERE key = 'maintenance'")
+    curr = cursor.fetchone()[0]
+    new_val = '0' if curr == '1' else '1'
+    cursor.execute("UPDATE settings SET val = ? WHERE key = 'maintenance'", (new_val,))
+    conn.commit()
+    conn.close()
+    
+    status = "🔴 YONIQ (Endi oddiy foydalanuvchilar botga kira olmaydi)" if new_val == '1' else "🟢 O'CHIQ (Tizim hammaga ochiq)"
+    await message.answer(f"🛠 Texnik tanaffus holati o'zgardi:\n\n{status}")
+    await log_admin_action(bot, message.from_user.id, f"Tanaffus rejimini o'zgartirdi: {new_val}")
+
+@dp.message(F.text == "🚫 Ban qilish")
+async def start_ban(message: types.Message, state: FSMContext):
+    if not is_admin(message.from_user.id): return
+    await state.set_state(AdminState.waiting_for_ban_id)
+    await message.answer("🚫 Bloklash yoki Bandan chiqarish uchun foydalanuvchi ID raqamini yuboring:", reply_markup=ReplyKeyboardRemove())
+
+@dp.message(AdminState.waiting_for_ban_id)
+async def finish_ban(message: types.Message, state: FSMContext):
+    if not message.text.isdigit(): return await message.answer("Xato! ID faqat raqamlardan iborat bo'ladi.")
+    target_id = int(message.text)
+    
+    if target_id == ASOSIY_ADMIN_ID:
+        await state.clear()
+        return await message.answer("❌ O'zingizni ban qila olmaysiz!", reply_markup=get_admin_keyboard())
+        
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT is_banned FROM users WHERE user_id = ?", (target_id,))
+    user = cursor.fetchone()
+    
+    if not user:
+        conn.close()
+        await state.clear()
+        return await message.answer("❌ Bunday foydalanuvchi topilmadi.", reply_markup=get_admin_keyboard())
+        
+    new_status = 0 if user[0] == 1 else 1
+    cursor.execute("UPDATE users SET is_banned = ? WHERE user_id = ?", (new_status, target_id))
+    conn.commit()
+    conn.close()
+    
+    action_text = "🚫 Bloklandi (Ban)" if new_status == 1 else "✅ Bandan chiqarildi"
+    await state.clear()
+    await message.answer(f"Foydalanuvchi {target_id} holati yangilandi:\n<b>{action_text}</b>", parse_mode="HTML", reply_markup=get_admin_keyboard())
+    await log_admin_action(bot, message.from_user.id, f"Foydalanuvchi {target_id} -> {action_text}")
 
 @dp.message(F.text == "🔗 Aloqalar")
 async def show_network(message: types.Message):
@@ -457,19 +552,20 @@ async def show_network(message: types.Message):
     
     text = "🔗 <b>Tizimdagi Guruhlar va Aloqalar:</b>\n\n"
     for b_id, b_name, b_bal in budgets:
-        cursor.execute("SELECT phone, registered_at, last_active, user_id FROM users WHERE ozi_yaratgan_budget_id = ? OR taklif_budget_id = ?", (b_id, b_id))
+        cursor.execute("SELECT phone, registered_at, last_active, user_id, is_banned FROM users WHERE ozi_yaratgan_budget_id = ? OR taklif_budget_id = ?", (b_id, b_id))
         members = cursor.fetchall()
         if not members: continue
         
         b_name_disp = b_name if b_name else "Nomsiz byudjet"
         text += f"💼 <b>{b_name_disp}</b> (ID: {b_id})\n"
-        for phone, reg_at, last_act, uid in members:
+        for phone, reg_at, last_act, uid, is_banned in members:
             cursor.execute("SELECT ozi_yaratgan_budget_id FROM users WHERE user_id = ?", (uid,))
             own_b = cursor.fetchone()[0]
             role = "👑 Asosiy" if own_b == b_id else "🤝 Ulangan"
             phone_disp = f"+{phone}" if phone else "Raqamsiz"
+            ban_str = " (🚫 BANNED)" if is_banned else ""
             
-            text += f" ├ {role}: {phone_disp}\n"
+            text += f" ├ {role}: {phone_disp}{ban_str}\n"
             text += f" │  └ Kirgan: {reg_at if reg_at else 'Noma`lum'}\n"
             text += f" │  └ Faollik: {last_act if last_act else 'Noma`lum'}\n"
         text += "\n"
@@ -515,9 +611,9 @@ async def search_finish(message: types.Message, state: FSMContext):
     cursor = conn.cursor()
     
     if query.isdigit() and len(query) < 11:
-        cursor.execute("SELECT user_id, phone, registered_at, last_active, ozi_yaratgan_budget_id, taklif_budget_id FROM users WHERE user_id = ?", (query,))
+        cursor.execute("SELECT user_id, phone, registered_at, last_active, ozi_yaratgan_budget_id, taklif_budget_id, is_banned FROM users WHERE user_id = ?", (query,))
     else:
-        cursor.execute("SELECT user_id, phone, registered_at, last_active, ozi_yaratgan_budget_id, taklif_budget_id FROM users WHERE phone = ?", (query,))
+        cursor.execute("SELECT user_id, phone, registered_at, last_active, ozi_yaratgan_budget_id, taklif_budget_id, is_banned FROM users WHERE phone = ?", (query,))
         
     user = cursor.fetchone()
     if not user:
@@ -525,11 +621,12 @@ async def search_finish(message: types.Message, state: FSMContext):
         await state.clear()
         return await message.answer("❌ Bunday foydalanuvchi topilmadi.", reply_markup=get_admin_keyboard())
         
-    uid, phone, reg_at, last_act, own_id, taklif_id = user
-    cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (own_id,))
+    uid, phone, reg_at, last_act, own_id, taklif_id, is_banned = user
+    cursor.execute("SELECT name, balance FROM budgets WHERE budget_id = ?", (own_id,))
     own_b = cursor.fetchone()
     
-    text = f"🔍 <b>Qidiruv Natijasi:</b>\n\n🆔 ID: <code>{uid}</code>\n📱 Raqam: +{phone if phone else 'Kiritilmagan'}\n📅 Ro'yxatdan o'tgan: {reg_at if reg_at else 'Noma`lum'}\n⏱ Oxirgi faollik: {last_act if last_act else 'Noma`lum'}\n\n💼 <b>O'zining byudjeti:</b> {own_b[0] if own_b[0] else 'Nomsiz'}"
+    ban_txt = "🚫 BANNED" if is_banned else "🟢 Faol"
+    text = f"🔍 <b>Qidiruv Natijasi:</b>\n\n🆔 ID: <code>{uid}</code>\n📱 Raqam: +{phone if phone else 'Kiritilmagan'}\n🎯 Holati: {ban_txt}\n📅 Ro'yxatdan o'tgan: {reg_at if reg_at else 'Noma`lum'}\n⏱ Oxirgi faollik: {last_act if last_act else 'Noma`lum'}\n\n💼 <b>O'zining byudjeti:</b> {own_b[0] if own_b[0] else 'Nomsiz'}"
     
     if taklif_id:
         cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (taklif_id,))
@@ -554,7 +651,7 @@ async def send_broadcast(message: types.Message, state: FSMContext):
         
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT user_id FROM users")
+    cursor.execute("SELECT user_id FROM users WHERE is_banned = 0")
     users = cursor.fetchall()
     conn.close()
     
@@ -567,7 +664,7 @@ async def send_broadcast(message: types.Message, state: FSMContext):
         except Exception: pass 
             
     await state.clear()
-    await message.answer(f"✅ Media-xabar <b>{sent}</b> ta foydalanuvchiga muvaffaqiyatli tarqatildi!", parse_mode="HTML", reply_markup=get_admin_keyboard())
+    await message.answer(f"✅ Media-xabar <b>{sent}</b> ta faol foydalanuvchiga muvaffaqiyatli tarqatildi!", parse_mode="HTML", reply_markup=get_admin_keyboard())
     await log_admin_action(bot, message.from_user.id, f"Media xabarnoma tarqatdi ({sent} kishiga).")
 
 @dp.message(F.text == "👮‍♂️ Admin qo'shish")
@@ -612,7 +709,32 @@ async def del_admin_finish(message: types.Message, state: FSMContext):
     await log_admin_action(bot, message.from_user.id, f"Adminni o'chirdi: {del_id}")
 
 # ==========================================
-# 7. BOTNI ISHGA TUSHIRISH
+# 7. JONLI YORDAM (SUPPORT CHAT)
+# ==========================================
+@dp.message(F.reply_to_message)
+async def support_reply(message: types.Message):
+    if is_admin(message.from_user.id) and message.reply_to_message.text and "ID:" in message.reply_to_message.text:
+        uid_match = re.search(r"ID:\s*(\d+)", message.reply_to_message.text)
+        if uid_match:
+            target_id = int(uid_match.group(1))
+            try:
+                await bot.send_message(target_id, f"👨‍💻 <b>Admindan javob:</b>\n\n{message.text}", parse_mode="HTML")
+                await message.answer("✅ Javobingiz foydalanuvchiga yetkazildi.")
+            except Exception:
+                await message.answer("❌ Xatolik! Foydalanuvchi botni bloklagan bo'lishi mumkin.")
+        return
+
+@dp.message(F.text)
+async def catch_all_text(message: types.Message):
+    if not is_admin(message.from_user.id):
+        try:
+            msg = f"📩 <b>Yangi murojaat:</b>\n👤 ID: <code>{message.from_user.id}</code>\n\n{message.text}"
+            await bot.send_message(ASOSIY_ADMIN_ID, msg, parse_mode="HTML")
+            await message.answer("📨 Xabaringiz Adminga yetkazildi. Tez orada javob beramiz.")
+        except Exception: pass
+
+# ==========================================
+# 8. BOTNI ISHGA TUSHIRISH
 # ==========================================
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
