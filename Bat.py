@@ -5,7 +5,7 @@ import os
 import threading
 import sqlite3
 from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
@@ -14,6 +14,7 @@ from flask import Flask
 # 1. Konfiguratsiya
 TOKEN = os.getenv("BOT_TOKEN") 
 WEB_APP_URL = "https://runnellsmillie-debug.github.io/mini-app/"
+ASOSIY_ADMIN_ID = 123456789 # O'ZINGIZNING TELEGRAM ID RAQAMINGIZNI SHU YERGA YOZING
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -22,6 +23,11 @@ logger = logging.getLogger(__name__)
 class Setup(StatesGroup):
     waiting_for_name = State()
     waiting_for_partner_phone = State()
+
+class AdminState(StatesGroup):
+    waiting_for_broadcast_msg = State()
+    waiting_for_new_admin_id = State()
+    waiting_for_del_admin_id = State()
 
 # --- BAZA QISMI ---
 def init_db():
@@ -39,7 +45,13 @@ def init_db():
     
     cursor.execute('''CREATE TABLE IF NOT EXISTS invitations 
                       (from_user_id INTEGER, to_phone TEXT, budget_id INTEGER)''')
+
+    # ADMINLAR JADVALI
+    cursor.execute('''CREATE TABLE IF NOT EXISTS admins (user_id INTEGER PRIMARY KEY)''')
     
+    # Asosiy adminni avtomatik bazaga qo'shish
+    cursor.execute("INSERT OR IGNORE INTO admins (user_id) VALUES (?)", (ASOSIY_ADMIN_ID,))
+
     try:
         cursor.execute("ALTER TABLE budgets ADD COLUMN name TEXT")
     except sqlite3.OperationalError:
@@ -47,6 +59,14 @@ def init_db():
 
     conn.commit()
     conn.close()
+
+def is_admin(user_id):
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM admins WHERE user_id = ?", (user_id,))
+    res = cursor.fetchone()
+    conn.close()
+    return bool(res)
 
 def register_user(user_id):
     conn = sqlite3.connect('bot_data.db')
@@ -261,7 +281,7 @@ async def handle_partner_phone(message: types.Message, state: FSMContext):
         )
         await message.answer(f"⏳ Taklif (+{phone}) raqamiga yuborildi.")
     except Exception:
-        await message.answer("❌ Xatolik yuz berdi.")
+        await message.answer("❌ Xatolik yuz berdi. Balki u inson botni bloklagan bo'lishi mumkin.")
         
     await state.clear()
 
@@ -338,7 +358,6 @@ async def web_app_handler(message: types.Message):
         cursor.execute("SELECT joriy_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
         budget_id = cursor.fetchone()[0]
         
-        # Endi faqat bitta ob'ekt emas, ro'yxat kelsa aylanib chiqadi
         for item in data:
             amount = float(item.get("amount", 0))
             action_type = item.get("type", "minus")
@@ -354,10 +373,149 @@ async def web_app_handler(message: types.Message):
         conn.commit()
         conn.close()
         
-        await message.answer(f"✅ Amallar '{b_name}' hisobiga yozildi.\n📊 Yangi balans: {new_balance} UZS")
+        await message.answer(f"✅ Amallar '{b_name}' hisobiga yozildi.\n📊 Yangi balans: {new_balance:,.0f} UZS".replace(",", " "))
     except Exception as e:
         logger.error(f"Xato: {e}")
         await message.answer("Ma'lumotni saqlashda xatolik yuz berdi.")
+
+# ==========================================
+# ADMIN PANEL LOGIKASI
+# ==========================================
+
+def get_admin_keyboard():
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📊 Statistika"), KeyboardButton(text="📢 Xabarnoma")],
+            [KeyboardButton(text="👮‍♂️ Admin qo'shish"), KeyboardButton(text="🗑 Admin o'chirish")],
+            [KeyboardButton(text="🔙 Asosiy menyu")]
+        ],
+        resize_keyboard=True
+    )
+
+@dp.message(Command("admin"))
+async def cmd_admin(message: types.Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return 
+    await state.clear()
+    await message.answer("👑 Admin panelga xush kelibsiz!", reply_markup=get_admin_keyboard())
+
+@dp.message(F.text == "🔙 Asosiy menyu")
+async def back_to_main(message: types.Message, state: FSMContext):
+    await state.clear()
+    await message.answer("Asosiy menyuga qaytdingiz.", reply_markup=get_main_keyboard(message.from_user.id))
+
+@dp.message(F.text == "📊 Statistika")
+async def show_stats(message: types.Message):
+    if not is_admin(message.from_user.id): return
+    
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(*) FROM users")
+    total_users = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM budgets")
+    total_budgets = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT SUM(balance) FROM budgets")
+    total_balance = cursor.fetchone()[0] or 0
+    
+    cursor.execute("SELECT COUNT(*) FROM admins")
+    total_admins = cursor.fetchone()[0]
+    
+    conn.close()
+    
+    text = (
+        f"📊 <b>BOT STATISTIKASI:</b>\n\n"
+        f"👥 Umumiy foydalanuvchilar: <b>{total_users} ta</b>\n"
+        f"💼 Ochilgan byudjetlar: <b>{total_budgets} ta</b>\n"
+        f"💰 Tizimdagi aylanma mablag': <b>{int(total_balance):,} UZS</b>\n"
+        f"👮‍♂️ Adminlar soni: <b>{total_admins} ta</b>"
+    ).replace(",", " ")
+    
+    await message.answer(text, parse_mode="HTML")
+
+@dp.message(F.text == "📢 Xabarnoma")
+async def start_broadcast(message: types.Message, state: FSMContext):
+    if not is_admin(message.from_user.id): return
+    await state.set_state(AdminState.waiting_for_broadcast_msg)
+    await message.answer("Barcha foydalanuvchilarga yuboriladigan xabarni kiriting:\n<i>(Bekor qilish uchun 'bekor' deb yozing)</i>", parse_mode="HTML", reply_markup=ReplyKeyboardRemove())
+
+@dp.message(AdminState.waiting_for_broadcast_msg)
+async def send_broadcast(message: types.Message, state: FSMContext):
+    if message.text.lower() == 'bekor':
+        await state.clear()
+        return await message.answer("Yuborish bekor qilindi.", reply_markup=get_admin_keyboard())
+        
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT user_id FROM users")
+    users = cursor.fetchall()
+    conn.close()
+    
+    sent = 0
+    for (uid,) in users:
+        try:
+            await bot.copy_message(chat_id=uid, from_chat_id=message.chat.id, message_id=message.message_id)
+            sent += 1
+            await asyncio.sleep(0.05) 
+        except Exception:
+            pass 
+            
+    await state.clear()
+    await message.answer(f"✅ Xabar <b>{sent}</b> ta foydalanuvchiga muvaffaqiyatli yuborildi!", parse_mode="HTML", reply_markup=get_admin_keyboard())
+
+@dp.message(F.text == "👮‍♂️ Admin qo'shish")
+async def add_admin_start(message: types.Message, state: FSMContext):
+    if not is_admin(message.from_user.id): return
+    await state.set_state(AdminState.waiting_for_new_admin_id)
+    await message.answer("Yangi adminning Telegram ID raqamini yuboring:", reply_markup=ReplyKeyboardRemove())
+
+@dp.message(AdminState.waiting_for_new_admin_id)
+async def add_admin_finish(message: types.Message, state: FSMContext):
+    if not message.text.isdigit():
+        return await message.answer("Xato! ID faqat raqamlardan iborat bo'ladi.")
+        
+    new_id = int(message.text)
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("INSERT OR IGNORE INTO admins (user_id) VALUES (?)", (new_id,))
+    conn.commit()
+    conn.close()
+    
+    await state.clear()
+    await message.answer(f"✅ ID {new_id} adminlar qatoriga qo'shildi!", reply_markup=get_admin_keyboard())
+
+@dp.message(F.text == "🗑 Admin o'chirish")
+async def del_admin_start(message: types.Message, state: FSMContext):
+    if message.from_user.id != ASOSIY_ADMIN_ID:
+        return await message.answer("❌ Bunga faqat Asosiy Admin huquqiga ega!")
+        
+    await state.set_state(AdminState.waiting_for_del_admin_id)
+    await message.answer("O'chirilishi kerak bo'lgan adminning Telegram ID raqamini yuboring:", reply_markup=ReplyKeyboardRemove())
+
+@dp.message(AdminState.waiting_for_del_admin_id)
+async def del_admin_finish(message: types.Message, state: FSMContext):
+    if not message.text.isdigit():
+        return await message.answer("Xato! ID faqat raqamlardan iborat bo'ladi.")
+        
+    del_id = int(message.text)
+    if del_id == ASOSIY_ADMIN_ID:
+        await state.clear()
+        return await message.answer("❌ O'zingizni o'chira olmaysiz!", reply_markup=get_admin_keyboard())
+        
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM admins WHERE user_id = ?", (del_id,))
+    conn.commit()
+    conn.close()
+    
+    await state.clear()
+    await message.answer(f"🗑 ID {del_id} adminlikdan olib tashlandi!", reply_markup=get_admin_keyboard())
+
+# ==========================================
+# ADMIN QISMI YAKUNI
+# ==========================================
 
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
