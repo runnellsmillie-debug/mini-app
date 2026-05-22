@@ -10,7 +10,7 @@ from aiogram.filters import CommandStart, Command
 from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove, FSInputFile
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from flask import Flask
+from flask import Flask, request, jsonify
 
 # ==========================================
 # 1. KONFIGURATSIYA VA SOZLAMALAR
@@ -63,6 +63,10 @@ def init_db():
     try: cursor.execute("ALTER TABLE users ADD COLUMN last_active TEXT")
     except sqlite3.OperationalError: pass 
 
+    # Bulutli sinxronizatsiya uchun JSON ustuni
+    try: cursor.execute("ALTER TABLE budgets ADD COLUMN state_json TEXT DEFAULT '{}'")
+    except sqlite3.OperationalError: pass 
+
     conn.commit()
     conn.close()
 
@@ -102,16 +106,13 @@ init_db()
 # YORDAMCHI FUNKSIYALAR
 # ==========================================
 async def log_admin_action(bot_instance, admin_id, action_text):
-    """Boshqa adminlar harakat qilsa Asosiy Adminga xabar beradi"""
     if admin_id != ASOSIY_ADMIN_ID:
         try:
             msg = f"🚨 <b>ADMIN HARAKATI:</b>\n👮‍♂️ Admin ID: <code>{admin_id}</code>\n📝 Harakat: {action_text}"
             await bot_instance.send_message(ASOSIY_ADMIN_ID, msg, parse_mode="HTML")
-        except Exception:
-            pass
+        except Exception: pass
 
 async def auto_backup_scheduler():
-    """Har kuni 03:00 da zaxira jo'natuvchi fon jarayoni"""
     while True:
         now = datetime.datetime.now()
         target = now.replace(hour=3, minute=0, second=0, microsecond=0)
@@ -136,11 +137,44 @@ class ActivityMiddleware(BaseMiddleware):
         return await handler(event, data)
 
 # ==========================================
-# 4. FLASK SERVER (UptimeRobot uchun)
+# 4. FLASK SERVER VA BULUTLI API
 # ==========================================
 app = Flask(__name__)
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
 @app.route('/')
 def health_check(): return "Bot is active!", 200
+
+@app.route('/api/state/<int:budget_id>', methods=['GET'])
+def get_state(budget_id):
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT state_json FROM budgets WHERE budget_id = ?", (budget_id,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row and row[0] and row[0] != '{}':
+        return jsonify({"status": "ok", "data": json.loads(row[0])})
+    return jsonify({"status": "empty", "data": {}})
+
+@app.route('/api/state/<int:budget_id>', methods=['POST', 'OPTIONS'])
+def save_state(budget_id):
+    if request.method == 'OPTIONS':
+        return jsonify({"status": "ok"})
+        
+    new_state = request.json
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("UPDATE budgets SET state_json = ? WHERE budget_id = ?", (json.dumps(new_state), budget_id))
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "ok"})
 
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
@@ -158,10 +192,7 @@ def get_main_keyboard(user_id):
     cursor = conn.cursor()
     cursor.execute("SELECT ozi_yaratgan_budget_id, taklif_budget_id FROM users WHERE user_id = ?", (user_id,))
     row = cursor.fetchone()
-    
-    if not row:
-        conn.close()
-        return ReplyKeyboardRemove()
+    if not row: return ReplyKeyboardRemove()
         
     own_id, taklif_id = row
     cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (own_id,))
@@ -188,12 +219,11 @@ async def cmd_start(message: types.Message, state: FSMContext):
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
     cursor.execute("SELECT phone, ozi_yaratgan_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
-    user_data = cursor.fetchone()
-    phone, budget_id = user_data
+    phone, budget_id = cursor.fetchone()
     
     if not phone:
         kb = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text="📱 Raqamni yuborish", request_contact=True)]], resize_keyboard=True)
-        await message.answer("Assalomu alaykum! Xavfsizlik uchun va botdan foydalanishni boshlash uchun avval telefon raqamingizni tasdiqlang:", reply_markup=kb)
+        await message.answer("Assalomu alaykum! Botdan foydalanishni boshlash uchun telefon raqamingizni tasdiqlang:", reply_markup=kb)
         conn.close()
         return
         
@@ -203,7 +233,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
     
     if not budget_name:
         await state.set_state(Setup.waiting_for_name)
-        await message.answer("Ajoyib! Endi bu hisobingizga nom bering (Masalan: Shaxsiy, Oilaviy byudjet):", reply_markup=ReplyKeyboardRemove())
+        await message.answer("Endi bu hisobingizga nom bering (Masalan: Shaxsiy, Oilaviy byudjet):", reply_markup=ReplyKeyboardRemove())
         return
 
     await message.answer("Sizning hisob-kitob bo'limingiz:", reply_markup=get_main_keyboard(message.from_user.id))
@@ -223,7 +253,7 @@ async def get_contact(message: types.Message, state: FSMContext):
     
     if not budget_name:
         await state.set_state(Setup.waiting_for_name)
-        await message.answer(f"✅ Raqam saqlandi (+{phone})!\n\nEndi hisobingizga nom bering:", reply_markup=ReplyKeyboardRemove())
+        await message.answer(f"✅ Raqam saqlandi!\n\nEndi hisobingizga nom bering:", reply_markup=ReplyKeyboardRemove())
     else:
         await message.answer("Asosiy menyu:", reply_markup=get_main_keyboard(message.from_user.id))
 
@@ -251,7 +281,8 @@ async def open_admin_app(message: types.Message):
     conn.commit()
     conn.close()
     
-    web_app = WebAppInfo(url=WEB_APP_URL)
+    url_with_params = f"{WEB_APP_URL}?bid={own_id}"
+    web_app = WebAppInfo(url=url_with_params)
     inline_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 Ilovaga kirish", web_app=web_app)]])
     await message.answer(f"{message.text} faollashdi. Ilovani ochish uchun bosing:", reply_markup=inline_kb)
 
@@ -265,7 +296,8 @@ async def open_invited_app(message: types.Message):
     if taklif_id:
         cursor.execute("UPDATE users SET joriy_budget_id = ? WHERE user_id = ?", (taklif_id, message.from_user.id))
         conn.commit()
-        web_app = WebAppInfo(url=WEB_APP_URL)
+        url_with_params = f"{WEB_APP_URL}?bid={taklif_id}"
+        web_app = WebAppInfo(url=url_with_params)
         inline_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 Ilovaga kirish", web_app=web_app)]])
         await message.answer(f"{message.text} faollashdi. Ilovani ochish uchun bosing:", reply_markup=inline_kb)
     conn.close()
@@ -283,29 +315,23 @@ async def handle_partner_phone(message: types.Message, state: FSMContext):
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
     cursor.execute("SELECT phone, ozi_yaratgan_budget_id FROM users WHERE user_id = ?", (user_id,))
-    my_data = cursor.fetchone()
-    my_phone, my_budget = my_data
+    my_phone, my_budget = cursor.fetchone()
     
     if phone == my_phone:
         await message.answer("❌ O'z raqamingizni kiritdingiz! Boshqa shaxsning raqamini kiriting:")
-        conn.close()
-        return
+        conn.close(); return
 
     cursor.execute("SELECT user_id, taklif_budget_id FROM users WHERE phone = ?", (phone,))
     target = cursor.fetchone()
     
     if not target:
         await message.answer("❌ Bu raqam egasi hali botdan ro'yxatdan o'tmagan.")
-        await state.clear()
-        conn.close()
-        return
+        await state.clear(); conn.close(); return
         
     target_user_id, target_taklif = target
     if target_taklif is not None:
         await message.answer("❌ Bu inson allaqachon boshqa birovning hisobiga ulangan!")
-        await state.clear()
-        conn.close()
-        return
+        await state.clear(); conn.close(); return
 
     cursor.execute("DELETE FROM invitations WHERE to_phone = ? AND budget_id = ?", (phone, my_budget))
     cursor.execute("INSERT INTO invitations VALUES (?, ?, ?)", (user_id, phone, my_budget))
@@ -343,8 +369,6 @@ async def handle_callback(callback: types.CallbackQuery):
             await callback.message.edit_text("✅ Siz taklifni qabul qildingiz!")
             await bot.send_message(from_user_id, f"🎉 +{target_phone} hisobingizga qo'shildi.")
             await bot.send_message(target_user_id, "Menyu yangilandi:", reply_markup=get_main_keyboard(target_user_id))
-        else:
-            await callback.message.edit_text("❌ Bu taklif eskirgan.")
     elif action == "reject":
         await callback.message.edit_text("❌ Siz taklifni rad etdingiz.")
         cursor.execute("DELETE FROM invitations WHERE from_user_id = ? AND to_phone = ?", (from_user_id, target_phone))
@@ -366,8 +390,7 @@ async def show_group_members(message: types.Message):
     b_name = cursor.fetchone()[0]
     conn.close()
     
-    if not members:
-        return await message.answer("Hech kim topilmadi.")
+    if not members: return await message.answer("Hech kim topilmadi.")
         
     text = f"👥 '{b_name}' hisobi a'zolari:\n\n"
     for idx, (phone, uid) in enumerate(members, 1):
@@ -377,30 +400,8 @@ async def show_group_members(message: types.Message):
 
 @dp.message(F.web_app_data)
 async def web_app_handler(message: types.Message):
-    try:
-        data = json.loads(message.web_app_data.data)
-        conn = sqlite3.connect('bot_data.db')
-        cursor = conn.cursor()
-        cursor.execute("SELECT joriy_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
-        budget_id = cursor.fetchone()[0]
-        
-        for item in data:
-            amount = float(item.get("amount", 0))
-            action_type = item.get("type", "minus")
-            if action_type == "minus":
-                cursor.execute("UPDATE budgets SET balance = balance - ? WHERE budget_id = ?", (amount, budget_id))
-            else:
-                cursor.execute("UPDATE budgets SET balance = balance + ? WHERE budget_id = ?", (amount, budget_id))
-                
-        cursor.execute("SELECT balance, name FROM budgets WHERE budget_id = ?", (budget_id,))
-        new_balance, b_name = cursor.fetchone()
-        conn.commit()
-        conn.close()
-        
-        await message.answer(f"✅ Amallar '{b_name}' hisobiga yozildi.\n📊 Yangi balans: {new_balance:,.0f} UZS".replace(",", " "))
-    except Exception as e:
-        logger.error(f"Xato: {e}")
-        await message.answer("Ma'lumotni saqlashda xatolik yuz berdi.")
+    # WebApp yopilganda qisqacha log yozib qo'yish
+    await message.answer("✅ O'zgarishlar bulutga saqlandi!")
 
 # ==========================================
 # 6. MUKAMMAL ADMIN PANEL LOGIKASI
@@ -437,15 +438,12 @@ async def show_stats(message: types.Message):
     total_users = cursor.fetchone()[0]
     cursor.execute("SELECT COUNT(*) FROM budgets")
     total_budgets = cursor.fetchone()[0]
-    cursor.execute("SELECT SUM(balance) FROM budgets")
-    total_balance = cursor.fetchone()[0] or 0
     cursor.execute("SELECT COUNT(*) FROM admins")
     total_admins = cursor.fetchone()[0]
     conn.close()
     
     text = (f"📊 <b>BOT STATISTIKASI:</b>\n\n👥 Umumiy foydalanuvchilar: <b>{total_users} ta</b>\n"
             f"💼 Ochilgan byudjetlar: <b>{total_budgets} ta</b>\n"
-            f"💰 Tizimdagi aylanma mablag': <b>{int(total_balance):,} UZS</b>\n"
             f"👮‍♂️ Adminlar soni: <b>{total_admins} ta</b>").replace(",", " ")
     await message.answer(text, parse_mode="HTML")
 
@@ -464,7 +462,7 @@ async def show_network(message: types.Message):
         if not members: continue
         
         b_name_disp = b_name if b_name else "Nomsiz byudjet"
-        text += f"💼 <b>{b_name_disp}</b> (Balans: {b_bal:,.0f} UZS)\n".replace(",", " ")
+        text += f"💼 <b>{b_name_disp}</b> (ID: {b_id})\n"
         for phone, reg_at, last_act, uid in members:
             cursor.execute("SELECT ozi_yaratgan_budget_id FROM users WHERE user_id = ?", (uid,))
             own_b = cursor.fetchone()[0]
@@ -528,15 +526,15 @@ async def search_finish(message: types.Message, state: FSMContext):
         return await message.answer("❌ Bunday foydalanuvchi topilmadi.", reply_markup=get_admin_keyboard())
         
     uid, phone, reg_at, last_act, own_id, taklif_id = user
-    cursor.execute("SELECT name, balance FROM budgets WHERE budget_id = ?", (own_id,))
+    cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (own_id,))
     own_b = cursor.fetchone()
     
-    text = f"🔍 <b>Qidiruv Natijasi:</b>\n\n🆔 ID: <code>{uid}</code>\n📱 Raqam: +{phone if phone else 'Kiritilmagan'}\n📅 Ro'yxatdan o'tgan: {reg_at if reg_at else 'Noma`lum'}\n⏱ Oxirgi faollik: {last_act if last_act else 'Noma`lum'}\n\n💼 <b>O'zining byudjeti:</b> {own_b[0] if own_b[0] else 'Nomsiz'} (Balans: {own_b[1]:,.0f} UZS)".replace(",", " ")
+    text = f"🔍 <b>Qidiruv Natijasi:</b>\n\n🆔 ID: <code>{uid}</code>\n📱 Raqam: +{phone if phone else 'Kiritilmagan'}\n📅 Ro'yxatdan o'tgan: {reg_at if reg_at else 'Noma`lum'}\n⏱ Oxirgi faollik: {last_act if last_act else 'Noma`lum'}\n\n💼 <b>O'zining byudjeti:</b> {own_b[0] if own_b[0] else 'Nomsiz'}"
     
     if taklif_id:
-        cursor.execute("SELECT name, balance FROM budgets WHERE budget_id = ?", (taklif_id,))
+        cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (taklif_id,))
         taklif_b = cursor.fetchone()
-        text += f"\n🤝 <b>Taklif etilgan byudjet:</b> {taklif_b[0]} (Balans: {taklif_b[1]:,.0f} UZS)".replace(",", " ")
+        text += f"\n🤝 <b>Taklif etilgan byudjet:</b> {taklif_b[0]}"
         
     conn.close()
     await state.clear()
@@ -618,7 +616,7 @@ async def del_admin_finish(message: types.Message, state: FSMContext):
 # ==========================================
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
-    asyncio.create_task(auto_backup_scheduler()) # Tungi zaxira jarayonini yoqish
+    asyncio.create_task(auto_backup_scheduler()) 
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
