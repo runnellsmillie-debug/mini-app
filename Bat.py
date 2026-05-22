@@ -17,7 +17,7 @@ from flask import Flask
 # ==========================================
 TOKEN = os.getenv("BOT_TOKEN") 
 WEB_APP_URL = "https://runnellsmillie-debug.github.io/mini-app/"
-ASOSIY_ADMIN_ID = 279410924 # O'ZINGIZNING TELEGRAM ID RAQAMINGIZNI SHU YERGA YOZING
+ASOSIY_ADMIN_ID = 279410924 # SIZNING TELEGRAM ID RAQAMINGIZ
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -30,6 +30,7 @@ class AdminState(StatesGroup):
     waiting_for_broadcast_msg = State()
     waiting_for_new_admin_id = State()
     waiting_for_del_admin_id = State()
+    waiting_for_search_query = State()
 
 # ==========================================
 # 2. BAZA (DATABASE) QISMI
@@ -53,7 +54,6 @@ def init_db():
     cursor.execute('''CREATE TABLE IF NOT EXISTS admins (user_id INTEGER PRIMARY KEY)''')
     cursor.execute("INSERT OR IGNORE INTO admins (user_id) VALUES (?)", (ASOSIY_ADMIN_ID,))
 
-    # Yangi ustunlarni qo'shish (Xatolik bermasligi uchun try/except da)
     try: cursor.execute("ALTER TABLE budgets ADD COLUMN name TEXT")
     except sqlite3.OperationalError: pass 
     
@@ -83,7 +83,6 @@ def register_user(user_id):
     if not cursor.fetchone():
         cursor.execute("INSERT INTO budgets (balance, name) VALUES (0, NULL)")
         shaxsiy_budget = cursor.lastrowid
-        # Yangi ro'yxatdan o'tgan vaqtni yozib qo'yamiz
         cursor.execute("INSERT INTO users (user_id, ozi_yaratgan_budget_id, joriy_budget_id, registered_at, last_active) VALUES (?, ?, ?, ?, ?)", 
                        (user_id, shaxsiy_budget, shaxsiy_budget, now, now))
         conn.commit()
@@ -98,6 +97,34 @@ def update_last_active(user_id):
     conn.close()
 
 init_db()
+
+# ==========================================
+# YORDAMCHI FUNKSIYALAR
+# ==========================================
+async def log_admin_action(bot_instance, admin_id, action_text):
+    """Boshqa adminlar harakat qilsa Asosiy Adminga xabar beradi"""
+    if admin_id != ASOSIY_ADMIN_ID:
+        try:
+            msg = f"🚨 <b>ADMIN HARAKATI:</b>\n👮‍♂️ Admin ID: <code>{admin_id}</code>\n📝 Harakat: {action_text}"
+            await bot_instance.send_message(ASOSIY_ADMIN_ID, msg, parse_mode="HTML")
+        except Exception:
+            pass
+
+async def auto_backup_scheduler():
+    """Har kuni 03:00 da zaxira jo'natuvchi fon jarayoni"""
+    while True:
+        now = datetime.datetime.now()
+        target = now.replace(hour=3, minute=0, second=0, microsecond=0)
+        if now >= target:
+            target += datetime.timedelta(days=1)
+        wait_seconds = (target - now).total_seconds()
+        
+        await asyncio.sleep(wait_seconds)
+        try:
+            db_file = FSInputFile("bot_data.db")
+            await bot.send_document(ASOSIY_ADMIN_ID, db_file, caption="🤖 Avtomatik tungi zaxira (03:00).\n1Money Family ERP")
+        except Exception as e:
+            logger.error(f"Auto-backup xatosi: {e}")
 
 # ==========================================
 # 3. MIDDLEWARE (Aktivlikni avtomat kuzatuvchi)
@@ -124,7 +151,7 @@ def run_flask():
 # ==========================================
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
-dp.message.middleware(ActivityMiddleware()) # Har bir xabarda aktivlikni yangilaydi
+dp.message.middleware(ActivityMiddleware()) 
 
 def get_main_keyboard(user_id):
     conn = sqlite3.connect('bot_data.db')
@@ -376,12 +403,13 @@ async def web_app_handler(message: types.Message):
         await message.answer("Ma'lumotni saqlashda xatolik yuz berdi.")
 
 # ==========================================
-# 6. YASHIRIN ADMIN PANEL LOGIKASI
+# 6. MUKAMMAL ADMIN PANEL LOGIKASI
 # ==========================================
 def get_admin_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="📊 Statistika"), KeyboardButton(text="🔗 Aloqalar")],
+            [KeyboardButton(text="🔍 Qidiruv"), KeyboardButton(text="🧹 Tozalash")],
             [KeyboardButton(text="📥 Bazani yuklash"), KeyboardButton(text="📢 Xabarnoma")],
             [KeyboardButton(text="👮‍♂️ Admin qo'shish"), KeyboardButton(text="🗑 Admin o'chirish")],
             [KeyboardButton(text="🔙 Asosiy menyu")]
@@ -457,18 +485,75 @@ async def download_db(message: types.Message):
     if not is_admin(message.from_user.id): return
     db_file = FSInputFile("bot_data.db")
     await message.answer_document(db_file, caption="📂 Ma'lumotlar bazasi (SQLite) zaxirasi.\n\nXavfsiz joyda saqlang!")
+    await log_admin_action(bot, message.from_user.id, "Baza yuklab olindi.")
+
+@dp.message(F.text == "🧹 Tozalash")
+async def clean_db(message: types.Message):
+    if not is_admin(message.from_user.id): return
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM users WHERE phone IS NULL")
+    count = cursor.fetchone()[0]
+    
+    if count > 0:
+        cursor.execute("DELETE FROM users WHERE phone IS NULL")
+        conn.commit()
+        await message.answer(f"🧹 <b>{count} ta</b> to'liq ro'yxatdan o'tmagan ('o'lik') profil bazadan o'chirildi!", parse_mode="HTML")
+        await log_admin_action(bot, message.from_user.id, f"{count} ta o'lik profilni tozaladi.")
+    else:
+        await message.answer("✅ Baza toza. O'chiriladigan profillar topilmadi.")
+    conn.close()
+
+@dp.message(F.text == "🔍 Qidiruv")
+async def search_start(message: types.Message, state: FSMContext):
+    if not is_admin(message.from_user.id): return
+    await state.set_state(AdminState.waiting_for_search_query)
+    await message.answer("Qidirilayotgan shaxsning <b>Telefon raqamini</b> (masalan: 998901234567) yoki <b>Telegram ID</b> sini yozing:", parse_mode="HTML", reply_markup=ReplyKeyboardRemove())
+
+@dp.message(AdminState.waiting_for_search_query)
+async def search_finish(message: types.Message, state: FSMContext):
+    query = message.text.replace("+", "").strip()
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    
+    if query.isdigit() and len(query) < 11:
+        cursor.execute("SELECT user_id, phone, registered_at, last_active, ozi_yaratgan_budget_id, taklif_budget_id FROM users WHERE user_id = ?", (query,))
+    else:
+        cursor.execute("SELECT user_id, phone, registered_at, last_active, ozi_yaratgan_budget_id, taklif_budget_id FROM users WHERE phone = ?", (query,))
+        
+    user = cursor.fetchone()
+    if not user:
+        conn.close()
+        await state.clear()
+        return await message.answer("❌ Bunday foydalanuvchi topilmadi.", reply_markup=get_admin_keyboard())
+        
+    uid, phone, reg_at, last_act, own_id, taklif_id = user
+    cursor.execute("SELECT name, balance FROM budgets WHERE budget_id = ?", (own_id,))
+    own_b = cursor.fetchone()
+    
+    text = f"🔍 <b>Qidiruv Natijasi:</b>\n\n🆔 ID: <code>{uid}</code>\n📱 Raqam: +{phone if phone else 'Kiritilmagan'}\n📅 Ro'yxatdan o'tgan: {reg_at if reg_at else 'Noma`lum'}\n⏱ Oxirgi faollik: {last_act if last_act else 'Noma`lum'}\n\n💼 <b>O'zining byudjeti:</b> {own_b[0] if own_b[0] else 'Nomsiz'} (Balans: {own_b[1]:,.0f} UZS)".replace(",", " ")
+    
+    if taklif_id:
+        cursor.execute("SELECT name, balance FROM budgets WHERE budget_id = ?", (taklif_id,))
+        taklif_b = cursor.fetchone()
+        text += f"\n🤝 <b>Taklif etilgan byudjet:</b> {taklif_b[0]} (Balans: {taklif_b[1]:,.0f} UZS)".replace(",", " ")
+        
+    conn.close()
+    await state.clear()
+    await message.answer(text, parse_mode="HTML", reply_markup=get_admin_keyboard())
 
 @dp.message(F.text == "📢 Xabarnoma")
 async def start_broadcast(message: types.Message, state: FSMContext):
     if not is_admin(message.from_user.id): return
     await state.set_state(AdminState.waiting_for_broadcast_msg)
-    await message.answer("Barcha foydalanuvchilarga yuboriladigan xabarni kiriting:\n<i>(Bekor qilish uchun 'bekor' deb yozing)</i>", parse_mode="HTML", reply_markup=ReplyKeyboardRemove())
+    await message.answer("Barchaga tarqatiladigan xabarni yuboring.\n<i>(Matn, rasm, video yoki ovozli xabar bo'lishi mumkin. Bekor qilish uchun 'bekor' deng)</i>", parse_mode="HTML", reply_markup=ReplyKeyboardRemove())
 
 @dp.message(AdminState.waiting_for_broadcast_msg)
 async def send_broadcast(message: types.Message, state: FSMContext):
-    if message.text.lower() == 'bekor':
+    if message.text and message.text.lower() == 'bekor':
         await state.clear()
         return await message.answer("Yuborish bekor qilindi.", reply_markup=get_admin_keyboard())
+        
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
     cursor.execute("SELECT user_id FROM users")
@@ -484,7 +569,8 @@ async def send_broadcast(message: types.Message, state: FSMContext):
         except Exception: pass 
             
     await state.clear()
-    await message.answer(f"✅ Xabar <b>{sent}</b> ta foydalanuvchiga muvaffaqiyatli yuborildi!", parse_mode="HTML", reply_markup=get_admin_keyboard())
+    await message.answer(f"✅ Media-xabar <b>{sent}</b> ta foydalanuvchiga muvaffaqiyatli tarqatildi!", parse_mode="HTML", reply_markup=get_admin_keyboard())
+    await log_admin_action(bot, message.from_user.id, f"Media xabarnoma tarqatdi ({sent} kishiga).")
 
 @dp.message(F.text == "👮‍♂️ Admin qo'shish")
 async def add_admin_start(message: types.Message, state: FSMContext):
@@ -503,6 +589,7 @@ async def add_admin_finish(message: types.Message, state: FSMContext):
     conn.close()
     await state.clear()
     await message.answer(f"✅ ID {new_id} adminlar qatoriga qo'shildi!", reply_markup=get_admin_keyboard())
+    await log_admin_action(bot, message.from_user.id, f"Yangi admin qo'shdi: {new_id}")
 
 @dp.message(F.text == "🗑 Admin o'chirish")
 async def del_admin_start(message: types.Message, state: FSMContext):
@@ -524,12 +611,14 @@ async def del_admin_finish(message: types.Message, state: FSMContext):
     conn.close()
     await state.clear()
     await message.answer(f"🗑 ID {del_id} adminlikdan olib tashlandi!", reply_markup=get_admin_keyboard())
+    await log_admin_action(bot, message.from_user.id, f"Adminni o'chirdi: {del_id}")
 
 # ==========================================
 # 7. BOTNI ISHGA TUSHIRISH
 # ==========================================
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
+    asyncio.create_task(auto_backup_scheduler()) # Tungi zaxira jarayonini yoqish
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
