@@ -236,7 +236,7 @@ def get_main_keyboard(user_id):
     own_name_res = cursor.fetchone()
     own_name = own_name_res[0] if own_name_res and own_name_res[0] else "Mening hisobim"
     
-    accounts_row = [KeyboardButton(text=f"👑 {own_name} (Admin)")]
+    accounts_row = [KeyboardButton(text=f"👑 {own_name} (Men)")]
     if taklif_id:
         cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (taklif_id,))
         taklif_name_res = cursor.fetchone()
