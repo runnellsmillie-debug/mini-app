@@ -107,7 +107,6 @@ def is_maintenance_mode():
 def register_user(user_id):
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    # Vaqtni O'zbekiston (GMT+5) bo'yicha olish
     now = datetime.datetime.now(UZB_TZ).strftime("%d.%m.%Y %H:%M")
     
     cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
@@ -122,7 +121,6 @@ def register_user(user_id):
 def update_last_active(user_id):
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    # Vaqtni O'zbekiston (GMT+5) bo'yicha olish
     now = datetime.datetime.now(UZB_TZ).strftime("%d.%m.%Y %H:%M")
     cursor.execute("UPDATE users SET last_active = ? WHERE user_id = ?", (now, user_id))
     conn.commit()
@@ -141,7 +139,6 @@ async def log_admin_action(bot_instance, admin_id, action_text):
         except Exception: pass
 
 async def auto_backup_scheduler():
-    """Tungi zaxirani O'zbekiston vaqti bilan 03:00 da yuborish"""
     while True:
         now = datetime.datetime.now(UZB_TZ)
         target = now.replace(hour=3, minute=0, second=0, microsecond=0)
@@ -163,17 +160,11 @@ class SecurityMiddleware(BaseMiddleware):
     async def __call__(self, handler, event, data):
         if event.from_user:
             uid = event.from_user.id
-            
-            # 1. Qora ro'yxat tekshiruvi
-            if is_user_banned(uid):
-                return 
-                
-            # 2. Texnik tanaffus tekshiruvi
+            if is_user_banned(uid): return 
             if is_maintenance_mode() and not is_admin(uid):
                 if isinstance(event, types.Message):
                     await event.answer("🛠 <b>Hozirgi vaqtda tizimda yangilanish ishlari ketyapti.</b>\n\nIltimos, birozdan so'ng qayta urinib ko'ring.", parse_mode="HTML")
                 return 
-                
             update_last_active(uid)
         return await handler(event, data)
 
@@ -241,7 +232,7 @@ def get_main_keyboard(user_id):
         cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (taklif_id,))
         taklif_name_res = cursor.fetchone()
         if taklif_name_res and taklif_name_res[0]:
-            accounts_row.append(KeyboardButton(text=f"🤝 {taklif_name_res[0]} (Taklif)"))
+            accounts_row.append(KeyboardButton(text=f"🤝 {taklif_name_res[0]} (Taklif)")]
             
     conn.close()
     return ReplyKeyboardMarkup(keyboard=[accounts_row, [KeyboardButton(text="👥 Yangi foydalanuvchi bog'lash"), KeyboardButton(text="📋 Guruh a'zolari")]], resize_keyboard=True)
@@ -314,7 +305,10 @@ async def open_admin_app(message: types.Message):
     conn.commit()
     conn.close()
     
-    url_with_params = f"{WEB_APP_URL}?bid={own_id}"
+    # Asosiy egasi ekanligini URL orqali ilovaga bildiramiz
+    is_main_admin = "true" if message.from_user.id == ASOSIY_ADMIN_ID else "false"
+    url_with_params = f"{WEB_APP_URL}?bid={own_id}&uid={message.from_user.id}&isadmin={is_main_admin}"
+    
     web_app = WebAppInfo(url=url_with_params)
     inline_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 Ilovaga kirish", web_app=web_app)]])
     await message.answer(f"{message.text} faollashdi. Ilovani ochish uchun bosing:", reply_markup=inline_kb)
@@ -328,7 +322,10 @@ async def open_invited_app(message: types.Message):
     if taklif_id:
         cursor.execute("UPDATE users SET joriy_budget_id = ? WHERE user_id = ?", (taklif_id, message.from_user.id))
         conn.commit()
-        url_with_params = f"{WEB_APP_URL}?bid={taklif_id}"
+        
+        # Taklif qilingan foydalanuvchi ekanligini bildiramiz (admin emas)
+        url_with_params = f"{WEB_APP_URL}?bid={taklif_id}&uid={message.from_user.id}&isadmin=false"
+        
         web_app = WebAppInfo(url=url_with_params)
         inline_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 Ilovaga kirish", web_app=web_app)]])
         await message.answer(f"{message.text} faollashdi. Ilovani ochish uchun bosing:", reply_markup=inline_kb)
@@ -394,9 +391,33 @@ async def handle_callback(callback: types.CallbackQuery):
             shared_budget_id = inv[0]
             cursor.execute("UPDATE users SET taklif_budget_id = ?, joriy_budget_id = ? WHERE user_id = ?", (shared_budget_id, shared_budget_id, target_user_id))
             cursor.execute("DELETE FROM invitations WHERE to_phone = ?", (target_phone,))
+            
+            # --- Avtomatik profil yaratish mantig'i ---
+            cursor.execute("SELECT state_json FROM budgets WHERE budget_id = ?", (shared_budget_id,))
+            state_row = cursor.fetchone()
+            if state_row and state_row[0]:
+                state_data = json.loads(state_row[0])
+                if "profiles" not in state_data:
+                    state_data["profiles"] = []
+                
+                # Agar shu raqam bilan profil bo'lmasa, yangi qo'shamiz
+                profil_id = f"user_{target_user_id}"
+                if not any(p.get("id") == profil_id for p in state_data["profiles"]):
+                    yangi_profil = {
+                        "id": profil_id,
+                        "name": f"Foydalanuvchi (+{target_phone})",
+                        "icon": "👤",
+                        "role": "guest",
+                        "permissions": [],
+                        "linked_phone": target_phone
+                    }
+                    state_data["profiles"].append(yangi_profil)
+                    cursor.execute("UPDATE budgets SET state_json = ? WHERE budget_id = ?", (json.dumps(state_data), shared_budget_id))
+            # ------------------------------------------
+
             conn.commit()
             await callback.message.edit_text("✅ Siz taklifni qabul qildingiz!")
-            await bot.send_message(from_user_id, f"🎉 +{target_phone} hisobingizga qo'shildi.")
+            await bot.send_message(from_user_id, f"🎉 +{target_phone} hisobingizga qo'shildi va unga avtomatik profil yaratildi.")
             await bot.send_message(target_user_id, "Menyu yangilandi:", reply_markup=get_main_keyboard(target_user_id))
     elif action == "reject":
         await callback.message.edit_text("❌ Siz taklifni rad etdingiz.")
