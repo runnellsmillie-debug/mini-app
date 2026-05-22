@@ -4,9 +4,18 @@
 const API_BASE = "https://mini-app-gkr9.onrender.com"; // Render manzili
 const urlParams = new URLSearchParams(window.location.search);
 
-window.currentBudgetId = urlParams.get('bid'); // Botdan kelgan oilaviy ID
-window.tgUserId = urlParams.get('uid');        // Botdan kelgan shaxsiy ID
-window.isAdmin = urlParams.get('isadmin') === 'true'; // Asosiy Admin ekanligini tekshirish
+window.currentBudgetId = urlParams.get('bid');
+window.tgUserId = urlParams.get('uid');
+window.tgFirstName = urlParams.get('fname') || '';
+window.isAdmin = urlParams.get('isadmin') === 'true';
+try {
+    if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+        const u = window.Telegram.WebApp.initDataUnsafe.user;
+        window.tgUser = u.first_name || window.tgUser;
+        if (!window.tgFirstName) window.tgFirstName = u.first_name || '';
+        if (!window.tgUserId) window.tgUserId = String(u.id);
+    }
+} catch (e) {}
 
 window.sessionData = window.sessionData || []; 
 window.amtStr = ""; 
@@ -52,25 +61,21 @@ window.initCloudData = async function() {
 };
 
 async function postLoadInit() {
-    // Profillar yo'q bo'lsa yaratamiz (Permissions bilan)
-    if (!window.state.profiles || !window.state.profiles.length) {
-        window.state.profiles = [ 
-            { id: "general", name: "Umumiy", icon: "🏠", role: "home", permissions: ["admin_all"] }, 
-            { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", role: "home", permissions: [] } 
-        ];
+    window.normalizeAllProfiles();
+    if (window.isBudgetAdmin()) {
+        const n = window.state.profiles.length;
+        window.ensureCreatorProfile();
+        if (window.state.profiles.length > n) window.save(true);
     }
-    
-    // Ro'yxatlar yo'q bo'lsa bo'sh massiv yaratamiz
-    ['txs','incs','debts','sched','plan','deps','credits'].forEach(k => { if(!window.state[k]) window.state[k] = []; });
-    
-    // Admin elementlarini faollashtirish
-    if (window.isAdmin) {
+    ['txs','incs','debts','sched','plan','deps','credits','audit'].forEach(k => { if(!window.state[k]) window.state[k] = []; });
+
+    if (window.isBudgetAdmin()) {
         if(document.getElementById('admin-add-prof-btn')) document.getElementById('admin-add-prof-btn').style.display = 'block';
         if(document.getElementById('admin-reset-btn')) document.getElementById('admin-reset-btn').style.display = 'block';
     }
 
-    // Mavzuni qollash (O'zbekiston vaqti bilan)
     window.applyTheme();
+    window.applyModulePermissions();
     
     if(window.loadExternalData) await window.loadExternalData();
     
@@ -125,11 +130,15 @@ setInterval(() => { if (window.state.theme === 'auto' || !window.state.theme) wi
 // 4. TO'LIQ EKRANLI PROFIL TAHRIRLASH
 // ==========================================
 window.openFullScreenModal = function(profId = null) {
+    if (!window.isBudgetAdmin()) return window.toast("Faqat yaratuvchi profil qo'sha/tahrirlaydi", true);
     document.getElementById('modal-profile-fs').style.display = 'flex';
     document.getElementById('fs-prof-id').value = profId || '';
-    
     const checkboxes = document.querySelectorAll('.fs-perm-chk');
-    checkboxes.forEach(chk => chk.checked = false); // Avval tozalaymiz
+    checkboxes.forEach(chk => chk.checked = false);
+    if (window.el('fs-prof-pin-enabled')) window.el('fs-prof-pin-enabled').checked = false;
+    if (window.el('fs-prof-pin')) window.el('fs-prof-pin').value = '';
+    if (window.el('fs-prof-age')) window.el('fs-prof-age').value = '';
+    if (window.el('fs-prof-limit')) window.el('fs-prof-limit').value = '';
 
     if (profId) {
         document.getElementById('fs-prof-title').innerText = "Profilni Tahrirlash";
@@ -138,15 +147,16 @@ window.openFullScreenModal = function(profId = null) {
             document.getElementById('fs-prof-name').value = p.name || '';
             document.getElementById('fs-prof-emoji').value = p.icon || '👤';
             document.getElementById('fs-prof-role').value = p.role || 'child_m';
-            if (p.permissions) {
-                checkboxes.forEach(chk => { if (p.permissions.includes(chk.value)) chk.checked = true; });
-            }
+            if (window.el('fs-prof-age')) window.el('fs-prof-age').value = p.age != null ? p.age : '';
+            if (window.el('fs-prof-limit')) window.el('fs-prof-limit').value = p.monthlyLimit ? String(p.monthlyLimit).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '';
+            if (window.el('fs-prof-pin-enabled')) window.el('fs-prof-pin-enabled').checked = !!p.pinEnabled;
+            if (p.permissions) checkboxes.forEach(chk => { if (p.permissions.includes(chk.value)) chk.checked = true; });
         }
     } else {
         document.getElementById('fs-prof-title').innerText = "Yangi Profil Qo'shish";
         document.getElementById('fs-prof-name').value = '';
         document.getElementById('fs-prof-emoji').value = '👤';
-        document.getElementById('fs-prof-role').value = 'child_m';
+        document.getElementById('fs-prof-role').value = 'child_f';
     }
 };
 
@@ -155,40 +165,84 @@ window.closeFullScreenModal = function() {
 };
 
 window.saveFullScreenProfile = function() {
+    if (!window.isBudgetAdmin()) return window.toast("Ruxsat yo'q", true);
     let id = document.getElementById('fs-prof-id').value;
     let name = document.getElementById('fs-prof-name').value.trim();
     let icon = document.getElementById('fs-prof-emoji').value.trim() || '👤';
     let role = document.getElementById('fs-prof-role').value;
+    let ageVal = window.el('fs-prof-age') ? window.val('fs-prof-age') : '';
+    let age = ageVal !== '' ? parseInt(ageVal, 10) : null;
+    let monthlyLimit = window.getNum ? window.getNum('fs-prof-limit') : (parseInt((window.val('fs-prof-limit') || '').replace(/\s/g, ''), 10) || 0);
     let perms = Array.from(document.querySelectorAll('.fs-perm-chk:checked')).map(chk => chk.value);
+    let pinEnabled = window.el('fs-prof-pin-enabled')?.checked;
+    let pinRaw = (window.val('fs-prof-pin') || '').replace(/\D/g, '');
 
     if(!name) return alert("Ismni kiriting!");
 
+    const build = (base) => window.normalizeProfile({
+        ...base, name, icon, role, age, monthlyLimit, permissions: perms,
+        pinEnabled: !!pinEnabled,
+        pinHash: pinRaw.length === 4 ? window.hashPin(pinRaw) : (base?.pinHash || ""),
+        gender: role.endsWith('_f') ? 'f' : role.endsWith('_m') ? 'm' : ''
+    });
+
     if (id) {
         let p = window.state.profiles.find(x => x.id === id);
-        if (p) { p.name = name; p.icon = icon; p.role = role; p.permissions = perms; }
+        if (p) {
+            const updated = build(p);
+            if (pinRaw.length !== 4) updated.pinHash = p.pinHash;
+            Object.assign(p, updated);
+            window.logAudit('profile_edit', name, { prof: id });
+        }
     } else {
-        window.state.profiles.push({
-            id: 'prof_' + Date.now(), name: name, icon: icon, role: role, permissions: perms, linked_phone: ""
-        });
+        const np = build({ id: 'prof_' + Date.now(), linked_phone: '', linked_uid: null });
+        window.state.profiles.push(np);
+        window.logAudit('profile_create', name, { prof: np.id });
     }
     window.save(true);
     closeFullScreenModal();
     if(window.renderSidebar) window.renderSidebar();
+    window.applyModulePermissions();
     window.render();
 };
 
 window.deleteFullScreenProfile = function() {
+    if (!window.isBudgetAdmin()) return window.toast("Ruxsat yo'q", true);
     let id = document.getElementById('fs-prof-id').value;
     if(!id) return alert("Bu yangi profil, u hali saqlanmagan.");
-    if (id === 'general' || id === 'home_profile') return alert("Asosiy profillarni o'chirib bo'lmaydi!");
-    
+    if (window.PROTECTED_PROFILE_IDS.includes(id) || id.startsWith('creator_')) return alert("Bu profilni o'chirib bo'lmaydi!");
     if(confirm("Profilni butunlay o'chirasizmi?")) {
         window.state.profiles = window.state.profiles.filter(x => x.id !== id);
         if(window.curProf === id) window.curProf = 'general';
+        window.logAudit('profile_delete', id);
         window.save(true);
         closeFullScreenModal();
         if(window.renderSidebar) window.renderSidebar();
         window.render();
+    }
+};
+
+window.selectProfileSafe = function(profId) {
+    window.requestProfileAccess(profId, () => {
+        window.curProf = profId;
+        window.actMainCat = null;
+        window.actSubCat = null;
+        const p = window.state.profiles.find(x => x.id === profId);
+        if (document.getElementById('current-profile-name')) document.getElementById('current-profile-name').innerText = p?.name || 'Umumiy';
+        if (window.toggleSidebar) window.toggleSidebar();
+        window.applyModulePermissions();
+        if (window.updatePlanCats) window.updatePlanCats();
+        if (window.renderSidebar) window.renderSidebar();
+        if (window.render) window.render();
+        if (window.checkAccess) window.checkAccess();
+    });
+};
+
+window.onSidebarProfileClick = function(profId) {
+    if (window.isBudgetAdmin()) {
+        window.openFullScreenModal(profId);
+    } else {
+        window.selectProfileSafe(profId);
     }
 };
 
@@ -199,31 +253,35 @@ window.renderSidebar = function() {
     const list = document.getElementById("sidebar-profiles-list");
     if (!list) return;
 
-    const d = new Date();
-    const currentMonthStr = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0');
-    
     let html = "";
-    window.state.profiles.forEach(p => {
-        // Shu profilning joriy oydagi sarf-xarajati
-        let spentThisMonth = window.state.txs.filter(x => x.prof === p.id && x.date.startsWith(currentMonthStr)).reduce((s, x) => s + x.amount, 0);
-        
-        // Qalamcha faqat adminga ko'rinadi
-        let editBtn = window.isAdmin ? `<button onclick="event.stopPropagation(); openFullScreenModal('${p.id}')" style="background:none; border:none; color:var(--text-muted); font-size:16px; padding:5px;">✏️</button>` : "";
-        let activeStyle = (window.curProf === p.id) ? "border: 1px solid var(--primary); background: rgba(59, 130, 246, 0.1);" : "border: 1px solid var(--border-color); background: var(--bg-card);";
+    window.state.profiles.filter(p => !p.archived).forEach(p => {
+        const spent = window.getProfileMonthSpend(p.id);
+        const lim = window.getLimitStatus(p.id);
+        let warn = "";
+        if (lim.level === "danger") warn = " ⚠️";
+        else if (lim.level === "warn") warn = " 🟡";
+        const lock = window.needsPin(p.id) ? " 🔒" : "";
+        const limitLine = p.monthlyLimit > 0
+            ? `<div style="font-size:10px; color:var(--text-muted);">Limit: ${window.formatM(p.monthlyLimit).replace(" so'm","")} (${lim.pct || 0}%)</div>`
+            : "";
+        const activeCls = window.curProf === p.id ? ' active-profile' : '';
 
         html += `
-        <div class="list-item" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:10px 15px; border-radius:10px; margin-bottom:10px; ${activeStyle}" onclick="window.curProf='${p.id}'; window.renderSidebar(); window.render(); document.getElementById('current-profile-name').innerText='${p.name}'; toggleSidebar();">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <span style="font-size:24px;">${p.icon}</span>
+        <div class="list-item${activeCls}" onclick="window.onSidebarProfileClick('${p.id}')">
+            <div style="display:flex; align-items:center; gap:12px; flex:1;">
+                <span style="font-size:24px;">${p.icon}${warn}${lock}</span>
                 <div>
                     <div style="font-weight:bold; font-size:15px;">${p.name}</div>
-                    <div style="font-size:11px; color:var(--text-muted);">Joriy oy: ${window.formatM(spentThisMonth).replace(" so'm", "")}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">Joriy oy: ${window.formatM(spent).replace(" so'm", "")}</div>
+                    ${limitLine}
                 </div>
             </div>
-            ${editBtn}
+            ${window.isBudgetAdmin() ? `<button onclick="event.stopPropagation(); window.selectProfileSafe('${p.id}')" title="Tanlash" style="background:none;border:none;font-size:14px;padding:4px;">✓</button>` : ''}
         </div>`;
     });
     list.innerHTML = html;
+    const cur = window.state.profiles.find(x => x.id === window.curProf);
+    if (document.getElementById('current-profile-name')) document.getElementById('current-profile-name').innerText = cur?.name || 'Umumiy';
 };
 
 // ==========================================
@@ -243,7 +301,7 @@ window.verifyAndReset = function() {
     if (confirm("⚠️ DIQQAT! Barcha xarajatlar... Ishonchingiz komilmi?")) {
         localStorage.removeItem('family_erp_state');
         localStorage.removeItem('xarajat_pro_v8');
-        window.state = { txs: [], plan: [], sched: [], debts: [], incs: [], profiles: [ { id: "general", name: "Umumiy", icon: "🏠", role: "home", permissions: ["admin_all"] }, { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", role: "home", permissions: [] } ], deps: [], credits: [], theme: 'auto', lang: 'uz' };
+        window.state = { txs: [], plan: [], sched: [], debts: [], incs: [], profiles: window.DEFAULT_PROFILES.map(p => ({ ...p, permissions: [...p.permissions] })), deps: [], credits: [], audit: [], theme: 'auto', lang: 'uz' };
         window.save(true);
         alert("✅ Tizim muvaffaqiyatli tozalandi.");
         document.getElementById('reset-modal').style.display='none';
@@ -290,7 +348,7 @@ window.pressNum = v => {
     window.setTxt("num-display", displayVal);
 };
 
-window.getCats = function() { return window.CATS_DATA[window.curProf === "home_profile" ? "home" : (window.state.profiles.find(x=>x.id===window.curProf)?.role||"general")] || window.CATS_DATA.general; };
+window.getCats = function() { return window.getCatsForProfile ? window.getCatsForProfile() : (window.CATS_DATA.general || []); };
 
 window.renderAddCats = function() {
     const cont = window.el("cats-container"), head = window.el("cats-header-container"); if(!cont || !head) return;
@@ -319,8 +377,15 @@ window.saveTx = (l, isDeepItem=false) => {
     if(isDeepItem && window.actSubCat) realSubCat = `${window.actSubCat.label} › ${l}`; else if(window.actMainCat) realSubCat = l;
 
     const i = { id: Date.now(), amount: a, desc: de?.value.trim() || l, cat: realCat, subCat: realSubCat, date: d.toISOString().slice(0,10), time: d.toLocaleTimeString("uz-UZ",{hour:'2-digit',minute:'2-digit'}), user: window.tgUser, prof: window.curProf };
-    if(window.addMode==="expense") window.state.txs.unshift(i); else window.state.incs.unshift(i); 
+    if(window.addMode==="expense") {
+        const lim = window.getLimitStatus(window.curProf);
+        if (lim.level === "danger") return window.toast("Oylik limit tugagan!", true);
+        window.state.txs.unshift(i);
+    } else window.state.incs.unshift(i);
+    window.logAudit(window.addMode === 'expense' ? 'expense' : 'income', i.desc, { amount: a, cat: realCat });
     window.sessionData.push({ amount: a, category: `${i.desc} [${window.tgUser}]`, type: window.addMode==='expense'?'minus':'plus' });
+    const sc = document.getElementById('session-count');
+    if (sc) sc.innerText = String(window.sessionData.length);
     window.amtStr = ""; if(de) de.value = ""; window.setTxt("num-display", "0"); 
     window.save(); 
     if(window.actSubCat||window.actMainCat) { window.setHtml("stay-hint", `✅ Oxirgi: <b style="color:var(--success);">${window.formatM(a)}</b>. Yana kiriting!`); window.renderAddCats(); } else window.setHtml("stay-hint", ""); window.toast("Saqlandi!");
@@ -341,6 +406,14 @@ window.renderReport = function() {
 
     const cb = [...fIncs.map(i=>({...i,m:'plus'})), ...fTxs.map(x=>({...x,m:'minus'}))].sort((a,b)=>b.id-a.id);
     window.setHtml("rep-history-list", cb.map(i => `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-color); font-size:13px;"><div><div style="font-weight:bold; color:${i.m==='plus'?'var(--success)':'#fff'};">${i.desc}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">👤 ${i.user||'Siz'} | 📅 ${i.date}</div></div><div style="display:flex; align-items:center; gap:10px;"><span style="font-weight:bold; color:${i.m==='plus'?'var(--success)':'var(--danger)'};">${i.m==='plus'?'+':'-'}${window.formatM(i.amount).replace(" so'm","")}</span> <button class="delete-btn" onclick="delItem('${i.m==='minus'?'tx':'inc'}', ${i.id})">✕</button></div></div>`).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Tarix bo'sh.</div>");
+};
+
+window.delItem = function(type, id) {
+    if (type === 'tx') window.state.txs = window.state.txs.filter(x => x.id !== id);
+    else window.state.incs = window.state.incs.filter(x => x.id !== id);
+    window.save(true);
+    if (window.renderReport) window.renderReport();
+    window.toast("O'chirildi");
 };
 
 window.downloadExcel = () => { let c="\uFEFFSana,Profil,Turi,Odam,Rukun,Kategoriya,Izoh,Summa\n"; [...window.state.incs.map(i=>({...i,t:"Kirim"})), ...window.state.txs.map(t=>({...t,t:"Chiqim"}))].sort((a,b)=>b.id-a.id).forEach(r => { const p = window.state.profiles.find(x=>x.id==r.prof)?.name||'Umumiy'; c+=`${r.date},${p},${r.t},${r.user||'Siz'},${r.cat||''},${r.subCat||''},${r.desc},${r.amount}\n`; }); const b=new Blob([c], {type:'text/csv;charset=utf-8;'}); const l=document.createElement("a"); l.setAttribute("href", URL.createObjectURL(b)); l.setAttribute("download", "Hisobot.csv"); document.body.appendChild(l); l.click(); };
@@ -410,8 +483,10 @@ window.startAutoSync = function() {
                     window.state = json.data;
                     localStorage.setItem('family_erp_state', cloudDataStr);
                     if (typeof window.render === 'function') window.render();
+                    window.normalizeAllProfiles();
                     if (typeof window.renderSidebar === 'function') window.renderSidebar();
                     if (typeof window.updatePlanCats === 'function') window.updatePlanCats();
+                    if (typeof window.applyModulePermissions === 'function') window.applyModulePermissions();
                 }
             }
         } catch(e) {}

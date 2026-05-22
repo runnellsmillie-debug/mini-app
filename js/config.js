@@ -107,5 +107,11 @@ window.buildDetailedCategories = function() {
         gen.push(catItem);
     });
     gen.push({ id: "boshqa", label: "Boshqa Chiqim", icon: "💸", color: "#94A3B8", subs: [] });
-    window.CATS_DATA.general = gen; window.CATS_DATA.home = gen; window.CATS_DATA.child_m = gen; window.CATS_DATA.child_f = gen;
+    window.CATS_DATA.general = gen;
+    window.CATS_DATA.home = gen;
+    const childFirst = window.sortCatsForAge ? window.sortCatsForAge(gen, 4) : gen;
+    window.CATS_DATA.child_m = childFirst;
+    window.CATS_DATA.child_f = childFirst;
+    window.CATS_DATA.guest = gen;
+    window.CATS_DATA.relative = gen;
 };

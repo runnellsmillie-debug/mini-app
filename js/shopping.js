@@ -23,13 +23,23 @@ window.switchPlanTab = (tab) => {
 };
 
 // --- KATEGORIYALAR VA TEGLAR ---
-window.updatePlanCats = () => { 
-    const cEl = window.el("smart-plan-cat"); if(!cEl) return; 
-    const p = window.state.profiles.find(x=>x.id===window.curProf); 
-    const isChild = p && p.age !== null && p.age < 16 && p.id !== "general" && p.id !== "home_profile"; 
-    let c = isChild ? ["Kiyim", "Talim", "Oyinchoq"] : (p?.id === "home_profile" ? ["Oziq-ovqat", "Uy_Xojalik"] : Object.keys(window.PLAN_TAGS)); 
-    cEl.innerHTML = c.map(x => `<option value="${x}">${x.replace(/_/g,' ')}</option>`).join(""); 
-    window.updateSmartTags(); 
+window.updatePlanCats = () => {
+    const cEl = window.el("smart-plan-cat"); if(!cEl) return;
+    const p = window.state.profiles.find(x => x.id === window.curProf);
+    let c = Object.keys(window.PLAN_TAGS || {});
+    if (p?.id === "home_profile") c = ["Oziq-ovqat", "Uy_Xojalik"];
+    else if (p && p.age != null && p.age <= 6) c = ["Oyinchoq", "Bolalar", "Talim", "Kiyim", "Oziq-ovqat"].filter(x => c.includes(x) || c.some(k => k.includes(x.split('_')[0])));
+    else if (p && p.age != null && p.age < 16) c = ["Kiyim", "Talim", "Oyinchoq", "Oziq-ovqat"].filter(x => c.includes(x));
+    if (p && p.permissions && p.permissions.length && !p.permissions.includes("admin_all")) {
+        const allow = [];
+        if (p.permissions.includes("shop_food")) allow.push("Oziq-ovqat", "Uy_Xojalik");
+        if (p.permissions.includes("shop_clothes")) allow.push("Kiyim");
+        if (p.permissions.includes("shop_school")) allow.push("Talim");
+        if (allow.length) c = c.filter(x => allow.some(a => x.includes(a) || a.includes(x)));
+    }
+    if (!c.length) c = Object.keys(window.PLAN_TAGS || {});
+    cEl.innerHTML = c.map(x => `<option value="${x}">${x.replace(/_/g,' ')}</option>`).join("");
+    window.updateSmartTags();
 };
 
 window.updateSmartTags = () => { 

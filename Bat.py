@@ -12,11 +12,17 @@ from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton, Inlin
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from flask import Flask, request, jsonify
+from dotenv import load_dotenv
+from urllib.parse import quote
+
+load_dotenv()
 
 # ==========================================
 # 1. KONFIGURATSIYA VA SOZLAMALAR
 # ==========================================
-TOKEN = os.getenv("BOT_TOKEN") 
+TOKEN = os.getenv("BOT_TOKEN")
+if not TOKEN:
+    raise RuntimeError("BOT_TOKEN topilmadi. .env faylida BOT_TOKEN=... qo'shing yoki muhit o'zgaruvchisini o'rnating.") 
 WEB_APP_URL = "https://runnellsmillie-debug.github.io/mini-app/"
 ASOSIY_ADMIN_ID = 279410924 # SIZNING TELEGRAM ID RAQAMINGIZ
 
@@ -25,6 +31,82 @@ UZB_TZ = datetime.timezone(datetime.timedelta(hours=5))
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+def default_profiles():
+    return [
+        {"id": "general", "name": "Umumiy", "icon": "🏠", "role": "home", "age": None, "gender": "", "monthlyLimit": 0, "pinEnabled": True, "pinHash": "", "permissions": ["admin_all"], "linked_phone": "", "linked_uid": None},
+        {"id": "home_profile", "name": "Uy/Ro'zg'or", "icon": "🏡", "role": "home", "age": None, "gender": "", "monthlyLimit": 0, "pinEnabled": True, "pinHash": "", "permissions": [], "linked_phone": "", "linked_uid": None},
+    ]
+
+def load_state_json(raw):
+    base = {"profiles": default_profiles(), "txs": [], "incs": [], "debts": [], "sched": [], "plan": [], "deps": [], "credits": [], "audit": [], "theme": "auto", "lang": "uz"}
+    if raw and raw != "{}":
+        try:
+            data = json.loads(raw)
+            if isinstance(data, dict):
+                for k, v in data.items():
+                    base[k] = v
+                if not base.get("profiles"):
+                    base["profiles"] = default_profiles()
+        except json.JSONDecodeError:
+            pass
+    return base
+
+def save_budget_state(cursor, budget_id, state_data):
+    cursor.execute("UPDATE budgets SET state_json = ? WHERE budget_id = ?", (json.dumps(state_data, ensure_ascii=False), budget_id))
+
+def ensure_creator_profile(state_data, user_id, display_name, phone=None):
+    cid = f"creator_{user_id}"
+    profiles = state_data.setdefault("profiles", default_profiles())
+    if any(p.get("id") == cid for p in profiles):
+        for p in profiles:
+            if p.get("id") == cid:
+                p["name"] = display_name or p.get("name", "Yaratuvchi")
+                if phone:
+                    p["linked_phone"] = phone
+                p["linked_uid"] = user_id
+        return state_data
+    profiles.append({
+        "id": cid,
+        "name": display_name or "Yaratuvchi",
+        "icon": "👑",
+        "role": "parent_m",
+        "age": None,
+        "gender": "m",
+        "monthlyLimit": 0,
+        "pinEnabled": False,
+        "pinHash": "",
+        "permissions": ["admin_all"],
+        "linked_phone": phone or "",
+        "linked_uid": user_id,
+    })
+    return state_data
+
+def ensure_invited_profile(state_data, user_id, display_name, phone):
+    pid = f"user_{user_id}"
+    profiles = state_data.setdefault("profiles", default_profiles())
+    if any(p.get("id") == pid for p in profiles):
+        return state_data
+    profiles.append({
+        "id": pid,
+        "name": display_name or f"Foydalanuvchi (+{phone})",
+        "icon": "👤",
+        "role": "guest",
+        "age": None,
+        "gender": "",
+        "monthlyLimit": 0,
+        "pinEnabled": False,
+        "pinHash": "",
+        "permissions": ["mod_plan", "shop_food"],
+        "linked_phone": phone or "",
+        "linked_uid": user_id,
+    })
+    return state_data
+
+def webapp_url(budget_id, user_id, is_admin, first_name=""):
+    fn = quote((first_name or "")[:40])
+    adm = "true" if is_admin else "false"
+    return f"{WEB_APP_URL}?bid={budget_id}&uid={user_id}&isadmin={adm}&fname={fn}"
 
 class Setup(StatesGroup):
     waiting_for_name = State()
@@ -232,7 +314,7 @@ def get_main_keyboard(user_id):
         cursor.execute("SELECT name FROM budgets WHERE budget_id = ?", (taklif_id,))
         taklif_name_res = cursor.fetchone()
         if taklif_name_res and taklif_name_res[0]:
-            accounts_row.append(KeyboardButton(text=f"🤝 {taklif_name_res[0]} (Taklif)")]
+            accounts_row.append(KeyboardButton(text=f"🤝 {taklif_name_res[0]} (Taklif)"))
             
     conn.close()
     return ReplyKeyboardMarkup(keyboard=[accounts_row, [KeyboardButton(text="👥 Yangi foydalanuvchi bog'lash"), KeyboardButton(text="📋 Guruh a'zolari")]], resize_keyboard=True)
@@ -290,6 +372,14 @@ async def save_budget_name(message: types.Message, state: FSMContext):
     cursor.execute("SELECT ozi_yaratgan_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
     budget_id = cursor.fetchone()[0]
     cursor.execute("UPDATE budgets SET name = ? WHERE budget_id = ?", (new_name, budget_id))
+    cursor.execute("SELECT phone FROM users WHERE user_id = ?", (message.from_user.id,))
+    phone_row = cursor.fetchone()
+    phone = phone_row[0] if phone_row else ""
+    cursor.execute("SELECT state_json FROM budgets WHERE budget_id = ?", (budget_id,))
+    st_row = cursor.fetchone()
+    state_data = load_state_json(st_row[0] if st_row and st_row[0] else None)
+    state_data = ensure_creator_profile(state_data, message.from_user.id, message.from_user.first_name or new_name, phone)
+    save_budget_state(cursor, budget_id, state_data)
     conn.commit()
     conn.close()
     await state.clear()
@@ -305,9 +395,7 @@ async def open_admin_app(message: types.Message):
     conn.commit()
     conn.close()
     
-    # Asosiy egasi ekanligini URL orqali ilovaga bildiramiz
-    is_main_admin = "true" if message.from_user.id == ASOSIY_ADMIN_ID else "false"
-    url_with_params = f"{WEB_APP_URL}?bid={own_id}&uid={message.from_user.id}&isadmin={is_main_admin}"
+    url_with_params = webapp_url(own_id, message.from_user.id, True, message.from_user.first_name)
     
     web_app = WebAppInfo(url=url_with_params)
     inline_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 Ilovaga kirish", web_app=web_app)]])
@@ -324,7 +412,7 @@ async def open_invited_app(message: types.Message):
         conn.commit()
         
         # Taklif qilingan foydalanuvchi ekanligini bildiramiz (admin emas)
-        url_with_params = f"{WEB_APP_URL}?bid={taklif_id}&uid={message.from_user.id}&isadmin=false"
+        url_with_params = webapp_url(taklif_id, message.from_user.id, False, message.from_user.first_name)
         
         web_app = WebAppInfo(url=url_with_params)
         inline_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 Ilovaga kirish", web_app=web_app)]])
@@ -392,28 +480,12 @@ async def handle_callback(callback: types.CallbackQuery):
             cursor.execute("UPDATE users SET taklif_budget_id = ?, joriy_budget_id = ? WHERE user_id = ?", (shared_budget_id, shared_budget_id, target_user_id))
             cursor.execute("DELETE FROM invitations WHERE to_phone = ?", (target_phone,))
             
-            # --- Avtomatik profil yaratish mantig'i ---
             cursor.execute("SELECT state_json FROM budgets WHERE budget_id = ?", (shared_budget_id,))
             state_row = cursor.fetchone()
-            if state_row and state_row[0]:
-                state_data = json.loads(state_row[0])
-                if "profiles" not in state_data:
-                    state_data["profiles"] = []
-                
-                # Agar shu raqam bilan profil bo'lmasa, yangi qo'shamiz
-                profil_id = f"user_{target_user_id}"
-                if not any(p.get("id") == profil_id for p in state_data["profiles"]):
-                    yangi_profil = {
-                        "id": profil_id,
-                        "name": f"Foydalanuvchi (+{target_phone})",
-                        "icon": "👤",
-                        "role": "guest",
-                        "permissions": [],
-                        "linked_phone": target_phone
-                    }
-                    state_data["profiles"].append(yangi_profil)
-                    cursor.execute("UPDATE budgets SET state_json = ? WHERE budget_id = ?", (json.dumps(state_data), shared_budget_id))
-            # ------------------------------------------
+            state_data = load_state_json(state_row[0] if state_row and state_row[0] else None)
+            inv_name = callback.from_user.full_name or callback.from_user.first_name or f"+{target_phone}"
+            state_data = ensure_invited_profile(state_data, target_user_id, inv_name, target_phone)
+            save_budget_state(cursor, shared_budget_id, state_data)
 
             conn.commit()
             await callback.message.edit_text("✅ Siz taklifni qabul qildingiz!")

@@ -2,8 +2,14 @@
 // UI.JS - Modallar, Navigatsiya, Drag & Drop
 // ==========================================
 
-window.openModal = id => { window.el(id).style.display = "flex"; }; 
-window.closeModal = id => { window.el(id).style.display = "none"; }; 
+window.openModal = id => {
+    const el = window.el(id);
+    if (el) { el.classList.remove('hidden'); el.style.display = 'flex'; }
+};
+window.closeModal = id => {
+    const el = window.el(id);
+    if (el) { el.style.display = 'none'; el.classList.add('hidden'); }
+}; 
 window.closeModalOutside = (e, id) => { if(e.target.id === id) window.closeModal(id); };
 
 window.toggleSidebar = () => { 
@@ -12,18 +18,16 @@ window.toggleSidebar = () => {
     else { m.classList.add("open"); o.style.display="block"; } 
 };
 
-window.renderSidebar = function() {
-    let h = window.state.profiles.map(p => `<div class="sidebar-item ${p.id === window.curProf ? 'active' : ''}" onclick="selectProfile('${p.id}')"><div class="sidebar-avatar">${p.icon}</div><div>${p.name}</div></div>`).join("");
-    h += `<div class="sidebar-item" onclick="openModal('modal-profile')" style="border:1px dashed var(--border-color); justify-content:center; opacity:0.8; margin-top:15px;"><div>➕ Yangi qo'shish</div></div>`;
-    window.setHtml("sidebar-profiles-list", h); 
-    window.setTxt("current-profile-name", window.state.profiles.find(x => x.id === window.curProf)?.name || "Umumiy");
-};
-
-window.selectProfile = id => { 
-    window.curProf = id; window.actMainCat = null; window.actSubCat = null; 
-    window.toggleSidebar(); window.renderSidebar(); window.checkAccess(); 
-    if(window.updatePlanCats) window.updatePlanCats(); 
-    if(window.render) window.render(); 
+window.selectProfile = id => {
+    if (window.selectProfileSafe) window.selectProfileSafe(id);
+    else {
+        window.curProf = id;
+        window.toggleSidebar();
+        if (window.renderSidebar) window.renderSidebar();
+        window.checkAccess();
+        if (window.updatePlanCats) window.updatePlanCats();
+        if (window.render) window.render();
+    }
 };
 
 window.saveNewProfile = () => { 
@@ -35,16 +39,14 @@ window.saveNewProfile = () => {
     window.save(); window.renderSidebar(); window.toast("Qo'shildi!"); 
 };
 
-window.checkAccess = function() { 
-    const p = window.state.profiles.find(x => x.id === window.curProf); 
-    const isChild = p && p.age !== null && p.age < 16 && p.id !== "general" && p.id !== "home_profile"; 
-    if(isChild) { 
-        window.hide("nav-other"); window.hide("mode-inc"); window.hide("rep-inc-card"); window.hide("user-stats-container"); 
-        if(window.curTab === "other") window.switchTab("home"); 
-        if(window.addMode !== "expense" && window.setAddMode) window.setAddMode("expense"); 
-    } else { 
-        window.show("nav-other"); window.show("mode-inc"); window.show("rep-inc-card"); window.show("user-stats-container"); 
-    } 
+window.checkAccess = function() {
+    const p = window.state.profiles.find(x => x.id === window.curProf);
+    const isChild = p && p.age != null && p.age < 16 && !window.PROTECTED_PROFILE_IDS?.includes(p.id);
+    if (isChild) {
+        if (window.addMode !== "expense" && window.setAddMode) window.setAddMode("expense");
+        if (window.curTab === "other" && !window.hasPermission("mod_plan")) window.switchTab("home");
+    }
+    if (window.applyModulePermissions) window.applyModulePermissions();
 };
 
 window.switchTab = id => { 
@@ -60,6 +62,7 @@ window.switchTab = id => {
     if(id !== 'other' && window.el('back-btn') && !window.el('back-btn').classList.contains('hidden')) { window.closeBankSubView(); }
     if(id === 'add') window.checkAccess(); 
     if(id === 'home' && window.updatePlanCats) window.updatePlanCats(); 
+    if(id === 'report' && window.renderReport) window.renderReport();
     if(window.render) window.render(); 
 };
 
