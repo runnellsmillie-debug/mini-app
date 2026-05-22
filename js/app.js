@@ -1,17 +1,22 @@
 // ==========================================
 // BULUTLI SINXRONIZATSIYA VA API SOZLAMALARI
 // ==========================================
-const API_BASE = "https://mini-app-gkr9.onrender.com"; // Render manzilingiz
+const API_BASE = "https://mini-app-gkr9.onrender.com"; // Render manzili
 const urlParams = new URLSearchParams(window.location.search);
+
 window.currentBudgetId = urlParams.get('bid'); // Botdan kelgan oilaviy ID
-window.sessionData = window.sessionData || []; // Vaqtinchalik tranzaksiyalar
+window.tgUserId = urlParams.get('uid');        // Botdan kelgan shaxsiy ID
+window.isAdmin = urlParams.get('isadmin') === 'true'; // Asosiy Admin ekanligini tekshirish
+
+window.sessionData = window.sessionData || []; 
 window.amtStr = ""; 
+window.curProf = "general"; // Default profil
 
 // ==========================================
 // 1. DASTUR HOLATI (STATE)
 // ==========================================
 window.state = {
-    txs: [], plan: [], sched: [], debts: [], incs: [], profiles: [], deps: [], credits: []
+    txs: [], plan: [], sched: [], debts: [], incs: [], profiles: [], deps: [], credits: [], theme: 'auto', lang: 'uz'
 };
 
 // ==========================================
@@ -35,9 +40,8 @@ window.initCloudData = async function() {
         }
     }
     
-    // 2. Agar bulutda bo'lmasa yoki internet yo'q bo'lsa, telefon xotirasidan olamiz
+    // 2. Agar bulutda bo'lmasa, telefon xotirasidan olamiz
     if (!loadedFromCloud) {
-        // Eski versiya (xarajat_pro_v8) yoki yangi versiya (family_erp_state) xotirasini tekshiramiz
         const raw = localStorage.getItem('family_erp_state') || localStorage.getItem('xarajat_pro_v8');
         if (raw) { 
             try { window.state = { ...window.state, ...JSON.parse(raw) }; } catch(e) {} 
@@ -48,13 +52,25 @@ window.initCloudData = async function() {
 };
 
 async function postLoadInit() {
-    // Profillar yo'q bo'lsa yaratamiz
+    // Profillar yo'q bo'lsa yaratamiz (Permissions bilan)
     if (!window.state.profiles || !window.state.profiles.length) {
-        window.state.profiles = [ { id: "general", name: "Umumiy", icon: "🏠", age: null, role: "parent_m" }, { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", age: null, role: "home" } ];
+        window.state.profiles = [ 
+            { id: "general", name: "Umumiy", icon: "🏠", role: "home", permissions: ["admin_all"] }, 
+            { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", role: "home", permissions: [] } 
+        ];
     }
     
     // Ro'yxatlar yo'q bo'lsa bo'sh massiv yaratamiz
     ['txs','incs','debts','sched','plan','deps','credits'].forEach(k => { if(!window.state[k]) window.state[k] = []; });
+    
+    // Admin elementlarini faollashtirish
+    if (window.isAdmin) {
+        if(document.getElementById('admin-add-prof-btn')) document.getElementById('admin-add-prof-btn').style.display = 'block';
+        if(document.getElementById('admin-reset-btn')) document.getElementById('admin-reset-btn').style.display = 'block';
+    }
+
+    // Mavzuni qollash (O'zbekiston vaqti bilan)
+    window.applyTheme();
     
     if(window.loadExternalData) await window.loadExternalData();
     
@@ -67,37 +83,182 @@ async function postLoadInit() {
     if(window.updatePlanCats) window.updatePlanCats();
     if(window.initDragAndDrop) window.initDragAndDrop();
     
-    window.render(); // Asosiy chizuvchini chaqiramiz
+    window.render(); 
 }
 
 // ==========================================
-// 3. BULUTGA VA XOTIRAGA SAQLASH
+// 3. TIL VA MAVZU (THEME) SOZLAMALARI
 // ==========================================
-window.save = function(force = false) {
-    // 1. Zaxira uchun telefonga saqlaymiz
-    localStorage.setItem('family_erp_state', JSON.stringify(window.state));
-    
-    // 2. Bulutga saqlaymiz
-    if (window.currentBudgetId) {
-        fetch(`${API_BASE}/api/state/${window.currentBudgetId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(window.state)
-        }).catch(err => console.error("Bulutga saqlash xatosi:", err));
-    }
-    
-    if (!force && typeof window.render === 'function') window.render();
+window.setLang = function(lang) {
+    window.state.lang = lang;
+    window.save(true);
+    alert("Til saqlandi! (To'liq tarjima ishlashi uchun lug'at qo'shilishi kerak)");
 };
 
-window.resetAppData = function() {
-    if(confirm("Barcha ma'lumotlar o'chadi. Dastur toza 0 holatiga qaytadi. Ishonchingiz komilmi?")) {
+window.applyTheme = function() {
+    let theme = window.state.theme || 'auto';
+    let isDark = false;
+
+    if (theme === 'auto') {
+        // Avto rejim: O'zbekiston vaqtini aniqlash (GMT+5)
+        let d = new Date();
+        let utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+        let uzbDate = new Date(utc + (3600000 * 5));
+        let h = uzbDate.getHours();
+        isDark = (h >= 19 || h < 6); // 19:00 dan 06:00 gacha tun
+    } else {
+        isDark = (theme === 'dark');
+    }
+
+    document.body.classList.toggle('dark-mode', isDark);
+    if(document.getElementById('theme-select')) document.getElementById('theme-select').value = theme;
+    if(document.getElementById('lang-select')) document.getElementById('lang-select').value = window.state.lang || 'uz';
+};
+
+window.setTheme = function(theme) {
+    window.state.theme = theme; window.save(true); window.applyTheme();
+};
+
+setInterval(() => { if (window.state.theme === 'auto' || !window.state.theme) window.applyTheme(); }, 60000);
+
+// ==========================================
+// 4. TO'LIQ EKRANLI PROFIL TAHRIRLASH
+// ==========================================
+window.openFullScreenModal = function(profId = null) {
+    document.getElementById('modal-profile-fs').style.display = 'flex';
+    document.getElementById('fs-prof-id').value = profId || '';
+    
+    const checkboxes = document.querySelectorAll('.fs-perm-chk');
+    checkboxes.forEach(chk => chk.checked = false); // Avval tozalaymiz
+
+    if (profId) {
+        document.getElementById('fs-prof-title').innerText = "Profilni Tahrirlash";
+        let p = window.state.profiles.find(x => x.id === profId);
+        if (p) {
+            document.getElementById('fs-prof-name').value = p.name || '';
+            document.getElementById('fs-prof-emoji').value = p.icon || '👤';
+            document.getElementById('fs-prof-role').value = p.role || 'child_m';
+            if (p.permissions) {
+                checkboxes.forEach(chk => { if (p.permissions.includes(chk.value)) chk.checked = true; });
+            }
+        }
+    } else {
+        document.getElementById('fs-prof-title').innerText = "Yangi Profil Qo'shish";
+        document.getElementById('fs-prof-name').value = '';
+        document.getElementById('fs-prof-emoji').value = '👤';
+        document.getElementById('fs-prof-role').value = 'child_m';
+    }
+};
+
+window.closeFullScreenModal = function() {
+    document.getElementById('modal-profile-fs').style.display = 'none';
+};
+
+window.saveFullScreenProfile = function() {
+    let id = document.getElementById('fs-prof-id').value;
+    let name = document.getElementById('fs-prof-name').value.trim();
+    let icon = document.getElementById('fs-prof-emoji').value.trim() || '👤';
+    let role = document.getElementById('fs-prof-role').value;
+    let perms = Array.from(document.querySelectorAll('.fs-perm-chk:checked')).map(chk => chk.value);
+
+    if(!name) return alert("Ismni kiriting!");
+
+    if (id) {
+        let p = window.state.profiles.find(x => x.id === id);
+        if (p) { p.name = name; p.icon = icon; p.role = role; p.permissions = perms; }
+    } else {
+        window.state.profiles.push({
+            id: 'prof_' + Date.now(), name: name, icon: icon, role: role, permissions: perms, linked_phone: ""
+        });
+    }
+    window.save(true);
+    closeFullScreenModal();
+    if(window.renderSidebar) window.renderSidebar();
+    window.render();
+};
+
+window.deleteFullScreenProfile = function() {
+    let id = document.getElementById('fs-prof-id').value;
+    if(!id) return alert("Bu yangi profil, u hali saqlanmagan.");
+    if (id === 'general' || id === 'home_profile') return alert("Asosiy profillarni o'chirib bo'lmaydi!");
+    
+    if(confirm("Profilni butunlay o'chirasizmi?")) {
+        window.state.profiles = window.state.profiles.filter(x => x.id !== id);
+        if(window.curProf === id) window.curProf = 'general';
+        window.save(true);
+        closeFullScreenModal();
+        if(window.renderSidebar) window.renderSidebar();
+        window.render();
+    }
+};
+
+// ==========================================
+// 5. YON MENYU (SIDEBAR) VA STATISTIKA
+// ==========================================
+window.renderSidebar = function() {
+    const list = document.getElementById("sidebar-profiles-list");
+    if (!list) return;
+
+    const d = new Date();
+    const currentMonthStr = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0');
+    
+    let html = "";
+    window.state.profiles.forEach(p => {
+        // Shu profilning joriy oydagi sarf-xarajati
+        let spentThisMonth = window.state.txs.filter(x => x.prof === p.id && x.date.startsWith(currentMonthStr)).reduce((s, x) => s + x.amount, 0);
+        
+        // Qalamcha faqat adminga ko'rinadi
+        let editBtn = window.isAdmin ? `<button onclick="event.stopPropagation(); openFullScreenModal('${p.id}')" style="background:none; border:none; color:var(--text-muted); font-size:16px; padding:5px;">✏️</button>` : "";
+        let activeStyle = (window.curProf === p.id) ? "border: 1px solid var(--primary); background: rgba(59, 130, 246, 0.1);" : "border: 1px solid var(--border-color); background: var(--bg-card);";
+
+        html += `
+        <div class="list-item" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer; padding:10px 15px; border-radius:10px; margin-bottom:10px; ${activeStyle}" onclick="window.curProf='${p.id}'; window.renderSidebar(); window.render(); document.getElementById('current-profile-name').innerText='${p.name}'; toggleSidebar();">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:24px;">${p.icon}</span>
+                <div>
+                    <div style="font-weight:bold; font-size:15px;">${p.name}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">Joriy oy: ${window.formatM(spentThisMonth).replace(" so'm", "")}</div>
+                </div>
+            </div>
+            ${editBtn}
+        </div>`;
+    });
+    list.innerHTML = html;
+};
+
+// ==========================================
+// 6. XAVFSIZ TOZALASH (HARD RESET)
+// ==========================================
+window.verifyAndReset = function() {
+    const inputId = document.getElementById("reset-admin-id").value;
+    const TRUE_ADMIN_ID = "279410924"; 
+    
+    if (inputId !== TRUE_ADMIN_ID) {
+        alert("❌ Xato! Sizda dasturni tozalash huquqi yo'q (ID noto'g'ri).");
+        document.getElementById('reset-modal').style.display='none';
+        document.getElementById("reset-admin-id").value = "";
+        return;
+    }
+    
+    if (confirm("⚠️ DIQQAT! Barcha xarajatlar... Ishonchingiz komilmi?")) {
         localStorage.removeItem('family_erp_state');
         localStorage.removeItem('xarajat_pro_v8');
-        window.state = { txs: [], plan: [], sched: [], debts: [], incs: [], profiles: [], deps: [], credits: [] };
+        window.state = { txs: [], plan: [], sched: [], debts: [], incs: [], profiles: [ { id: "general", name: "Umumiy", icon: "🏠", role: "home", permissions: ["admin_all"] }, { id: "home_profile", name: "Uy/Ro'zg'or", icon: "🏡", role: "home", permissions: [] } ], deps: [], credits: [], theme: 'auto', lang: 'uz' };
         window.save(true);
-        alert("Barcha ma'lumotlar tozalandi!");
+        alert("✅ Tizim muvaffaqiyatli tozalandi.");
+        document.getElementById('reset-modal').style.display='none';
         window.location.reload();
     }
+};
+
+window.save = function(force = false) {
+    localStorage.setItem('family_erp_state', JSON.stringify(window.state));
+    if (window.currentBudgetId) {
+        fetch(`${API_BASE}/api/state/${window.currentBudgetId}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(window.state)
+        }).catch(err => console.error("Bulutga saqlash xatosi:", err));
+    }
+    if (!force && typeof window.render === 'function') window.render();
 };
 
 window.saveAndExit = () => { 
@@ -112,7 +273,7 @@ window.saveAndExit = () => {
 };
 
 // ==========================================
-// 4. ASOSIY BOSHQRUV VA UI (Sizning kodingiz)
+// 7. ASOSIY BOSHQRUV VA UI
 // ==========================================
 window.setAddMode = m => { 
     window.addMode = m; window.actMainCat = null; window.actSubCat = null; 
@@ -161,7 +322,7 @@ window.saveTx = (l, isDeepItem=false) => {
     if(window.addMode==="expense") window.state.txs.unshift(i); else window.state.incs.unshift(i); 
     window.sessionData.push({ amount: a, category: `${i.desc} [${window.tgUser}]`, type: window.addMode==='expense'?'minus':'plus' });
     window.amtStr = ""; if(de) de.value = ""; window.setTxt("num-display", "0"); 
-    window.save(); // Saqlash shu yerdan chaqiriladi
+    window.save(); 
     if(window.actSubCat||window.actMainCat) { window.setHtml("stay-hint", `✅ Oxirgi: <b style="color:var(--success);">${window.formatM(a)}</b>. Yana kiriting!`); window.renderAddCats(); } else window.setHtml("stay-hint", ""); window.toast("Saqlandi!");
 };
 
@@ -184,9 +345,6 @@ window.renderReport = function() {
 
 window.downloadExcel = () => { let c="\uFEFFSana,Profil,Turi,Odam,Rukun,Kategoriya,Izoh,Summa\n"; [...window.state.incs.map(i=>({...i,t:"Kirim"})), ...window.state.txs.map(t=>({...t,t:"Chiqim"}))].sort((a,b)=>b.id-a.id).forEach(r => { const p = window.state.profiles.find(x=>x.id==r.prof)?.name||'Umumiy'; c+=`${r.date},${p},${r.t},${r.user||'Siz'},${r.cat||''},${r.subCat||''},${r.desc},${r.amount}\n`; }); const b=new Blob([c], {type:'text/csv;charset=utf-8;'}); const l=document.createElement("a"); l.setAttribute("href", URL.createObjectURL(b)); l.setAttribute("download", "Hisobot.csv"); document.body.appendChild(l); l.click(); };
 
-// ==========================================
-// 5. BARCHASINI UPDATE QILUVCHI RENDER
-// ==========================================
 window.render = function() {
     const tInc = window.state.incs.reduce((s,i)=>s+i.amount, 0), tExp = window.state.txs.reduce((s,t)=>s+t.amount, 0);
     window.setTxt("main-total-balance", window.formatM(tInc - tExp)); 
@@ -208,19 +366,16 @@ window.render = function() {
     if(window.curTab === "other") {
         const todayStr = new Date().toISOString().slice(0,10); const today = new Date();
         
-        // DEBTS RENDER
         let activeDebts = window.state.debts.filter(x=>!x.archived);
         let hDebts = activeDebts.map(x => `<div class="list-item" style="border-left: 5px solid ${x.type=='take'?'var(--success)':'var(--danger)'}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:6px;"><div><div style="font-size:15px; font-weight:bold;">${x.name}</div><div style="font-size:11px; color:var(--text-muted);">${x.type=='take'?'Olaman':'Beraman'}</div></div><div style="font-weight:bold; font-size:15px;">${window.formatM(x.amount)}</div></div><button onclick="closeDebt(${x.id})" class="btn-primary btn-success" style="padding:10px; font-size:13px; margin-bottom:0;">✅ Qarz uzildi</button></div>`).join("");
         window.setHtml("debts-list", hDebts || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Qarzlar yo'q.</div>");
 
-        // DEPOSITS RENDER
         let activeDeps = window.state.deps.filter(x=>!x.archived), archDeps = window.state.deps.filter(x=>x.archived);
         let hDepsAct = activeDeps.map(dep => `<div class="list-item" style="border-left: 5px solid var(--success); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:var(--success);">${dep.bankIcon||'🏦'} ${dep.name}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px;">${window.formatM(dep.amount)}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="openTopupModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 2px; font-size:11px; margin-bottom:0;">+ Qo'sh</button><button onclick="openIntModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 2px; font-size:11px; margin-bottom:0;">💸 Foiz</button><button onclick="openDepScheduleModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 2px; font-size:11px; margin-bottom:0;">📊 Grafik</button></div><button onclick="closeDep(${dep.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px; margin-bottom:0;">Omonatni Yopish</button></div>`).join("");
         let hDepsArch = archDeps.map(dep => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${dep.bankIcon||'🏦'} ${dep.name}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${window.formatM(dep.amount)}</div></div></div><button onclick="permDelDep(${dep.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%; margin-bottom:0;">🗑️ O'chirish</button></div>`).join("");
         window.setHtml("deposits-list-active", hDepsAct || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Aktiv omonatlar yo'q.</div>");
         window.setHtml("deposits-list-archived", hDepsArch || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Arxivlangan omonatlar yo'q.</div>");
 
-        // CREDITS RENDER (Aktiv / Arxiv)
         let activeCredits = window.state.credits.filter(x=>!x.archived), archCredits = window.state.credits.filter(x=>x.archived);
         let hCredits = activeCredits.map(cr => {
             let overdue = false; let nextUnpaid = cr.schedule.find(x => x.status === 'unpaid');
@@ -240,49 +395,33 @@ window.render = function() {
 };
 
 // ==========================================
-// DASTURNI ISHGA TUSHIRISH (BOOTSTRAP)
-// ==========================================
-if(document.readyState==="loading") {
-    document.addEventListener("DOMContentLoaded", window.initCloudData);
-} else {
-    window.initCloudData();
-}
-
-// ==========================================
-// 6. AVTOMATIK SINXRONIZATSIYA (JONLI REJIM)
+// BOOTSTRAP VA AVTO-SINXRONIZATSIYA
 // ==========================================
 window.startAutoSync = function() {
     if (!window.currentBudgetId) return;
-    
-    // Har 5 soniyada (5000 ms) orqa fonda bazani tekshiradi
     setInterval(async () => {
         try {
             let res = await fetch(`${API_BASE}/api/state/${window.currentBudgetId}`);
             let json = await res.json();
-            
             if (json.status === "ok" && Object.keys(json.data).length > 0) {
                 let cloudDataStr = JSON.stringify(json.data);
                 let localDataStr = JSON.stringify(window.state);
-                
-                // Agar serverdagi ma'lumot telefondagidan farq qilsa, ekranni darhol yangilaydi
                 if (cloudDataStr !== localDataStr) {
                     window.state = json.data;
                     localStorage.setItem('family_erp_state', cloudDataStr);
-                    
                     if (typeof window.render === 'function') window.render();
+                    if (typeof window.renderSidebar === 'function') window.renderSidebar();
                     if (typeof window.updatePlanCats === 'function') window.updatePlanCats();
-                    console.log("Ma'lumotlar avtomatik yangilandi!");
                 }
             }
-        } catch(e) {
-            // Orqa fondagi xatoliklarni sezdirmaslik
-        }
+        } catch(e) {}
     }, 3000); 
 };
 
-// Dastur yuklanganda jonli rejimni ishga tushirish
-if(document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", window.startAutoSync);
+if(document.readyState==="loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+        window.initCloudData(); window.startAutoSync();
+    });
 } else {
-    window.startAutoSync();
+    window.initCloudData(); window.startAutoSync();
 }
