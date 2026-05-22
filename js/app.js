@@ -277,7 +277,7 @@ window.startAutoSync = function() {
         } catch(e) {
             // Orqa fondagi xatoliklarni sezdirmaslik
         }
-    }, 5000); 
+    }, 2000); 
 };
 
 // Dastur yuklanganda jonli rejimni ishga tushirish
