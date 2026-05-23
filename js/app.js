@@ -555,25 +555,128 @@ window.isCatHidden = function(id, level, parentId) {
     return list.includes(id);
 };
 
-window.hideCatItem = function(id, level, parentId) {
-    if (!id || id === "umumiy") return;
-    if (!window.state.catHidden) window.state.catHidden = {};
-    const key = window.getCatHiddenKey(level, parentId);
-    if (!window.state.catHidden[key]) window.state.catHidden[key] = [];
-    if (!window.state.catHidden[key].includes(id)) window.state.catHidden[key].push(id);
-    window.save(true);
-    if (window.renderAddCats) window.renderAddCats();
-    else if (window.renderServicesMenu) window.renderServicesMenu();
+window.isSubFullyHidden = function(sub, mainCatId) {
+    if (!sub) return true;
+    if (window.isCatHidden(sub.id, "rukun", mainCatId)) return true;
+    if (!sub.items?.length) return false;
+    return sub.items.every(i => window.isCatHidden(i.id, "items", sub.id));
 };
 
-window.restoreCatItem = function(id, level, parentId) {
-    if (!id) return;
-    const key = window.getCatHiddenKey(level, parentId);
-    if (!window.state.catHidden?.[key]) return;
-    window.state.catHidden[key] = window.state.catHidden[key].filter(x => x !== id);
+window.isMainCatFullyHidden = function(cat) {
+    if (!cat) return true;
+    if (window.isCatHidden(cat.id, "main", null)) return true;
+    if (!cat.subs?.length) return false;
+    return cat.subs.every(s => window.isSubFullyHidden(s, cat.id));
+};
+
+window.getCurrentCatItems = function(level, parentId) {
+    if (level === "services") {
+        const p = window.getActiveProfile ? window.getActiveProfile() : null;
+        return window.SERVICE_ITEMS.filter(it => {
+            const perm = window.SUBVIEW_PERM?.[it.id];
+            return !perm || window.hasPermission(perm, p);
+        });
+    }
+    if (window.addMode === "income") return window.INC_SOURCES.map((s, i) => ({ ...s, id: "inc_" + i }));
+    if (level === "items" && window.actSubCat) return window.actSubCat.items || [];
+    if (level === "rukun" && window.actMainCat) return window.actMainCat.subs || [];
+    if (level === "main") return window.getCats();
+    return [];
+};
+
+window.canHideAtLevel = function(id, level, parentId) {
+    const storeParent = parentId === "root" ? null : (parentId === "income" ? "income" : parentId);
+    const all = window.getCurrentCatItems(level, parentId);
+    const visible = all.filter(i => !window.isCatHidden(i.id, level, storeParent));
+    if (visible.length <= 1 && visible.some(i => i.id === id)) return false;
+    return true;
+};
+
+window.cascadeHideSubIfEmpty = function(subId, mainCatId) {
+    const main = window.actMainCat || window.getCats().find(c => c.id === mainCatId);
+    const sub = main?.subs?.find(s => s.id === subId);
+    if (!sub?.items?.length || !mainCatId) return;
+    const allHidden = sub.items.every(i => window.isCatHidden(i.id, "items", subId));
+    if (!allHidden) return;
+    if (!window.state.catHidden) window.state.catHidden = {};
+    const key = window.getCatHiddenKey("rukun", mainCatId);
+    if (!window.state.catHidden[key]) window.state.catHidden[key] = [];
+    if (!window.state.catHidden[key].includes(subId)) window.state.catHidden[key].push(subId);
+};
+
+window.cascadeRestoreSubChildren = function(subId) {
+    const key = window.getCatHiddenKey("items", subId);
+    if (window.state.catHidden?.[key]) delete window.state.catHidden[key];
+};
+
+window.cascadeRestoreMainChildren = function(mainCatId) {
+    const cat = window.getCats().find(c => c.id === mainCatId);
+    if (!cat?.subs) return;
+    const rk = window.getCatHiddenKey("rukun", mainCatId);
+    cat.subs.forEach(sub => {
+        if (window.state.catHidden?.[rk]) {
+            window.state.catHidden[rk] = window.state.catHidden[rk].filter(x => x !== sub.id);
+        }
+        window.cascadeRestoreSubChildren(sub.id);
+    });
+};
+
+window.hideCatItem = function(id, level, parentId) {
+    if (!id || id === "umumiy") return;
+    const normParent = parentId === "root" ? null : (parentId === "income" ? "income" : parentId);
+    if (!window.canHideAtLevel(id, level, parentId)) {
+        window.toast("Kamida bitta qoldiring!", true);
+        return;
+    }
+    if (!window.state.catHidden) window.state.catHidden = {};
+    const key = window.getCatHiddenKey(level, normParent);
+    if (!window.state.catHidden[key]) window.state.catHidden[key] = [];
+    if (!window.state.catHidden[key].includes(id)) window.state.catHidden[key].push(id);
+
+    if (level === "items" && normParent && window.actMainCat) {
+        window.cascadeHideSubIfEmpty(normParent, window.actMainCat.id);
+    }
+    if (level === "rukun" && normParent) {
+        const main = window.getCats().find(c => c.id === normParent);
+        const sub = main?.subs?.find(s => s.id === id);
+        if (sub?.items?.length) sub.items.forEach(i => {
+            const ik = window.getCatHiddenKey("items", id);
+            if (!window.state.catHidden[ik]) window.state.catHidden[ik] = [];
+            if (!window.state.catHidden[ik].includes(i.id)) window.state.catHidden[ik].push(i.id);
+        });
+    }
+
     window.save(true);
-    if (window.renderAddCats) window.renderAddCats();
-    else if (window.renderServicesMenu) window.renderServicesMenu();
+    if (level === "services") {
+        if (window.renderServicesMenu) window.renderServicesMenu();
+    } else if (window.renderAddCats) {
+        window.renderAddCats();
+    }
+};
+
+window.restoreCatItem = function(id, level, parentId, silent) {
+    if (!id) return;
+    const normParent = parentId === "root" ? null : (parentId === "income" ? "income" : parentId);
+    const key = window.getCatHiddenKey(level, normParent);
+    if (window.state.catHidden?.[key]) {
+        window.state.catHidden[key] = window.state.catHidden[key].filter(x => x !== id);
+    }
+
+    if (level === "rukun" && normParent) {
+        window.cascadeRestoreSubChildren(id);
+    }
+    if (level === "main") {
+        window.cascadeRestoreMainChildren(id);
+    }
+
+    window.save(true);
+    if (!silent) {
+        if (level === "services") {
+            if (window.renderServicesMenu) window.renderServicesMenu();
+        } else if (window.renderAddCats) {
+            window.renderAddCats();
+        }
+    }
 };
 
 window.toggleCatHidden = function(id, level, parentId) {
@@ -637,7 +740,16 @@ window.isItemUsed = function(item, level) {
 
 window.filterCatItems = function(items, level, parentId) {
     let list = window.applyCatOrder([...items], level, parentId);
-    const isHidden = id => window.isCatHidden(id, level, parentId);
+    const normParent = parentId === "root" ? null : (parentId === "income" ? "income" : parentId);
+    const isHidden = id => window.isCatHidden(id, level, normParent);
+
+    if (level === "main" && !window.catEditMode) {
+        list = list.filter(c => !window.isMainCatFullyHidden(c));
+    }
+    if (level === "rukun" && parentId && !window.catEditMode) {
+        list = list.filter(s => !window.isSubFullyHidden(s, parentId));
+    }
+
     if (window.catEditMode) {
         return [...list.filter(i => !isHidden(i.id)), ...list.filter(i => isHidden(i.id))];
     }
@@ -679,19 +791,11 @@ window.setupAddCatDrag = function() {
     const zone = window.el("add-cats-zone");
     const cont = window.el("cats-container");
     if (!zone || !cont) return;
-    if (zone.dataset.dragSetup === "3") return;
-    zone.dataset.dragSetup = "3";
+    if (zone.dataset.dragSetup === "4") return;
+    zone.dataset.dragSetup = "4";
     let dragEl = null, pressTimer = null;
 
     const clearPress = () => { clearTimeout(pressTimer); pressTimer = null; };
-
-    const getGridMeta = () => {
-        const grid = cont.querySelector(".cat-scroll--add");
-        return {
-            level: grid?.getAttribute("data-level") || window.getAddCatLevel(),
-            parent: grid?.getAttribute("data-parent") || "root"
-        };
-    };
 
     const saveOrderFromGrid = (grid) => {
         if (!grid) return;
@@ -714,23 +818,19 @@ window.setupAddCatDrag = function() {
         if (e.target.closest(".cat-btn__hide") || e.target.closest(".add-cats-done")) return;
         if (e.target.closest(".back-link") && !e.target.closest(".add-cats-done")) return;
 
-        if (!window.catEditMode) {
-            if (e.target.closest(".cat-btn--add")) return;
-            const meta = getGridMeta();
-            clearPress();
-            pressTimer = setTimeout(() => {
-                window.enterCatEditMode(meta.level, meta.parent);
-                if (navigator.vibrate) navigator.vibrate(50);
-            }, 500);
-            return;
-        }
-
         const target = e.target.closest(".cat-btn--add[data-cat-id]");
         if (!target || target.classList.contains("cat-btn--ghost")) return;
+        const grid = target.closest(".cat-scroll--add");
+        const level = grid?.getAttribute("data-level") || "main";
+        const parent = grid?.getAttribute("data-parent") || "root";
+
         clearPress();
-        dragEl = target;
-        dragEl.classList.add("dragging");
-        if (navigator.vibrate) navigator.vibrate(30);
+        pressTimer = setTimeout(() => {
+            if (!window.catEditMode) window.enterCatEditMode(level, parent);
+            dragEl = target;
+            dragEl.classList.add("dragging");
+            if (navigator.vibrate) navigator.vibrate(50);
+        }, 500);
     }, { passive: true });
 
     zone.addEventListener("touchmove", e => {
@@ -883,7 +983,7 @@ window.renderAddCats = function() {
     const editHead = `<div class="add-crumb add-crumb--edit"><span>↕️ Tartiblash rejimi</span><button type="button" class="back-link add-cats-done" onclick="window.exitCatEditMode()">Tayyor</button></div>`;
 
     if (window.addMode === "income") {
-        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">Bo'sh joyni ushlang — tartiblash rejimi</div>`;
+        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">Ushlab turing — tartiblash rejimi</div>`;
         const src = window.filterCatItems(window.INC_SOURCES.map((s, i) => ({ ...s, id: "inc_" + i })), "main", "income");
         cont.innerHTML = wrap(src.map(s => mkBtn(s, `saveTx('${s.label.replace(/'/g, "\\'")}')`)).join(""), "income");
         window.syncAddLayout();
@@ -908,7 +1008,7 @@ window.renderAddCats = function() {
         }
         cont.innerHTML = wrap(html, window.actMainCat.id);
     } else {
-        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">Bo'sh joyni ushlang — tartiblash rejimi</div>`;
+        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">Ushlab turing — tartiblash rejimi</div>`;
         cont.innerHTML = wrap(cats.map(c => mkBtn(c, `clickMainCat('${c.id}')`, "cat-btn--main")).join(""), null);
     }
     window.syncAddLayout();

@@ -222,7 +222,7 @@ window.renderServicesMenu = function() {
     if (head) {
         head.innerHTML = window.serviceEditMode
             ? `<div class="add-crumb add-crumb--edit"><span>↕️ Tartiblash rejimi</span><button type="button" class="back-link add-cats-done" onclick="window.exitServiceEditMode()">Tayyor</button></div>`
-            : `<div class="add-cats-hint">Bo'sh joyni ushlang — tartiblash rejimi</div>`;
+            : `<div class="add-cats-hint">Ushlab turing — tartiblash rejimi</div>`;
     }
 
     menu.classList.toggle("services-menu--edit", window.serviceEditMode);
@@ -262,10 +262,13 @@ window.setupServicesMenuDrag = function() {
         if (e.target.closest(".cat-btn__hide") || e.target.closest(".add-cats-done")) return;
 
         if (!window.serviceEditMode) {
-            if (e.target.closest(".main-menu-btn")) return;
+            const target = e.target.closest(".main-menu-btn[data-cat-id]");
+            if (!target) return;
             clearPress();
             pressTimer = setTimeout(() => {
                 window.enterServiceEditMode();
+                dragEl = target;
+                dragEl.classList.add("dragging");
                 if (navigator.vibrate) navigator.vibrate(50);
             }, 500);
             return;
