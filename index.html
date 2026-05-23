@@ -182,14 +182,6 @@
             <span id="sub-view-title"></span>
         </button>
     </div>
-
-    <div id="subview-context-bar" class="subview-context-bar hidden">
-        <div class="ctx-chip ctx-prof"><span id="ctx-prof-icon">👤</span> <span id="ctx-prof-name">Profil</span></div>
-        <span class="ctx-dash">—</span>
-        <div class="ctx-chip ctx-section" id="ctx-section">Bo'lim</div>
-        <span class="ctx-dash ctx-cat-sep hidden" id="ctx-cat-sep">—</span>
-        <div class="ctx-chip ctx-detail hidden" id="ctx-detail"></div>
-    </div>
     
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div id="sidebar-menu" class="sidebar-menu">
@@ -340,7 +332,7 @@
         <div id="bank-sub-sched" class="hidden bank-sub-panel">
             <div class="widget-box">
                 <input type="text" id="sched-name" class="input-text" placeholder="Nomi (Mas: Bog'cha to'lovi)" />
-                <div style="display:flex; gap:8px; margin-bottom:8px;"><select id="sched-cat" class="input-text" style="flex:1; margin:0;" onchange="window.ctxDetailLabel=this.options[this.selectedIndex].text; window.updateSubViewContext();"><option value="Oila/Bolalar">Oila</option><option value="Uy/Kommunal">Uy/Kommunal</option><option value="Majburiyatlar">Kredit</option><option value="Boshqa">Boshqa</option></select><input type="number" id="sched-day" placeholder="Sana" class="input-text" style="width:70px; margin:0;" /></div>
+                <div style="display:flex; gap:8px; margin-bottom:8px;"><select id="sched-cat" class="input-text" style="flex:1; margin:0;"><option value="Oila/Bolalar">Oila</option><option value="Uy/Kommunal">Uy/Kommunal</option><option value="Majburiyatlar">Kredit</option><option value="Boshqa">Boshqa</option></select><input type="number" id="sched-day" placeholder="Sana" class="input-text" style="width:70px; margin:0;" /></div>
                 <input type="text" inputmode="numeric" id="sched-amount" placeholder="Summa (To'liq)" class="input-text" oninput="formatSpace(this)" />
                 <button onclick="addScheduled()" class="btn-primary btn-success" style="margin-bottom:10px;">➕ Qo'shish</button>
                 <div id="sched-edit-list"></div>

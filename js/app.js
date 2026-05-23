@@ -274,7 +274,6 @@ window.selectProfileSafe = function(profId) {
         if (window.updatePlanCats) window.updatePlanCats();
         if (window.renderSidebar) window.renderSidebar();
         if (window.renderAddProfileStrip) window.renderAddProfileStrip();
-        if (window.updateSubViewContext) window.updateSubViewContext();
         if (window.render) window.render();
         if (window.checkAccess) window.checkAccess();
     });

@@ -329,7 +329,6 @@ window.applyModulePermissions = function() {
     }
     if (window.closeBankSubViewIfDenied) window.closeBankSubViewIfDenied();
     if (window.renderAddProfileStrip) window.renderAddProfileStrip();
-    if (window.updateSubViewContext) window.updateSubViewContext();
 };
 
 window.initProfileRowPress = function(rowEl, profId) {

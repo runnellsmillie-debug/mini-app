@@ -23,8 +23,6 @@ window.switchPlanTab = (tab) => {
 
 window.selectPlanCat = (cat) => {
     window.setVal("smart-plan-cat", cat);
-    window.ctxDetailLabel = (cat || "").replace(/_/g, " ");
-    if (window.updateSubViewContext) window.updateSubViewContext();
     window.renderPlanCatChips();
     window.updateSmartTags();
 };

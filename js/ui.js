@@ -74,12 +74,7 @@ window.switchTab = (id, silent) => {
     if (id === "add") window.checkAccess();
     if (id === "home" && window.updatePlanCats) window.updatePlanCats();
     if (id === "report" && window.renderReport) window.renderReport();
-    if (id !== "other" || !window.curBankSub) {
-        window.ctxSectionLabel = "";
-        window.ctxDetailLabel = "";
-    }
     document.body.classList.toggle("on-add-tab", id === "add");
-    if (window.updateSubViewContext) window.updateSubViewContext();
     if (window.render) window.render();
 };
 
@@ -90,7 +85,6 @@ window.openUniversalConfirm = (text, actionFunc) => { window.setTxt("yn-confirm-
 window.executeConfirmYN = () => { if(window.confirmActionYN) window.confirmActionYN(); window.closeModal("modal-yn-confirm"); window.confirmActionYN = null; };
 
 window.curBankSub = null;
-window.ctxSectionLabel = "";
 
 window.SUBVIEW_PERM = {
     plan: "mod_plan",
@@ -98,43 +92,6 @@ window.SUBVIEW_PERM = {
     credit: "view_credit",
     dep: "view_dep",
     debt: "mod_debt"
-};
-
-window.SUBVIEW_LABELS = {
-    plan: "Bozorlik",
-    sched: "Rejali to'lovlar",
-    credit: "Kreditlar",
-    dep: "Omonatlar",
-    debt: "Qarzlar"
-};
-
-window.updateSubViewContext = function(detail) {
-    const bar = window.el("subview-context-bar");
-    if (!bar) return;
-    const p = window.getActiveProfile ? window.getActiveProfile() : null;
-    const profIcon = window.el("ctx-prof-icon");
-    const profName = window.el("ctx-prof-name");
-    if (profIcon) profIcon.textContent = p?.icon || "👤";
-    if (profName) profName.textContent = p?.name || "Profil";
-    const sectionEl = window.el("ctx-section");
-    if (sectionEl) sectionEl.textContent = window.ctxSectionLabel || "";
-    const detailEl = window.el("ctx-detail");
-    const sep = window.el("ctx-cat-sep");
-    const showDetail = !!(detail || window.ctxDetailLabel);
-    const label = detail || window.ctxDetailLabel || "";
-    if (detailEl && sep) {
-        if (showDetail && label) {
-            detailEl.textContent = label;
-            detailEl.classList.remove("hidden");
-            sep.classList.remove("hidden");
-        } else {
-            detailEl.classList.add("hidden");
-            sep.classList.add("hidden");
-        }
-    }
-    const showBar = !!window.curBankSub;
-    bar.classList.toggle("hidden", !showBar);
-    document.body.classList.toggle("has-ctx-bar", showBar);
 };
 
 window.closeBankSubViewIfDenied = function() {
@@ -148,8 +105,6 @@ window.openBankSubView = (type) => {
     if (perm && !window.hasPermission(perm)) return window.toast("Bu bo'limga ruxsat yo'q", true);
 
     window.curBankSub = type;
-    window.ctxSectionLabel = window.SUBVIEW_LABELS[type] || type;
-    window.ctxDetailLabel = "";
 
     window.el('bank-main-menu').classList.add('hidden');
     ['plan', 'sched', 'credit', 'dep', 'debt'].forEach(s => { if(window.el('bank-sub-'+s)) window.el('bank-sub-'+s).classList.add('hidden'); });
@@ -165,7 +120,6 @@ window.openBankSubView = (type) => {
         'debt': '<span>🤝</span> <span>Qarzlar</span>' 
     };
     window.setHtml('sub-view-title', titles[type]);
-    window.updateSubViewContext();
 
     if(type === 'credit' && window.switchCrTab) window.switchCrTab('aktiv');
     if(type === 'dep' && window.switchDepTab) window.switchDepTab('aktiv');
@@ -173,21 +127,14 @@ window.openBankSubView = (type) => {
         if (window.updatePlanCats) window.updatePlanCats();
         if (window.switchPlanTab) window.switchPlanTab('add');
     }
-    if(type === 'sched' && window.el('sched-cat')) {
-        window.ctxDetailLabel = window.val('sched-cat') || "";
-        window.updateSubViewContext();
-    }
 };
 
 window.closeBankSubView = () => {
     window.curBankSub = null;
-    window.ctxSectionLabel = "";
-    window.ctxDetailLabel = "";
     ['plan', 'sched', 'credit', 'dep', 'debt'].forEach(s => { if(window.el('bank-sub-'+s)) window.el('bank-sub-'+s).classList.add('hidden'); });
     window.el('bank-main-menu').classList.remove('hidden');
     window.el('back-btn').classList.add('hidden');
     window.el('main-menu-btn-top').classList.remove('hidden');
-    window.updateSubViewContext();
 };
 
 window.switchCrTab = (tab) => {

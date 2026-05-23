@@ -30,7 +30,6 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --header-h: 56px;
     --nav-h: 64px;
-    --ctx-bar-h: 40px;
     --numpad-dock-h: 188px;
     --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -68,10 +67,6 @@ body {
     padding-bottom: calc(var(--nav-h) + var(--safe-bottom) + 8px);
     transition: background-color 0.3s ease, color 0.3s ease;
     line-height: 1.45;
-}
-
-body.has-ctx-bar {
-    padding-top: calc(var(--header-h) + var(--ctx-bar-h) + var(--safe-top) + 8px);
 }
 
 .hidden { display: none !important; }
@@ -159,60 +154,6 @@ body.has-ctx-bar {
 #back-btn .icon {
     font-size: 18px;
     color: var(--primary);
-}
-
-/* ——— Subview context bar ——— */
-.subview-context-bar {
-    position: fixed;
-    top: calc(var(--header-h) + var(--safe-top));
-    left: 0;
-    width: 100%;
-    z-index: 999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 8px 12px;
-    background: color-mix(in srgb, var(--bg-card) 94%, transparent);
-    border-bottom: 1px solid var(--border-color);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-
-.ctx-chip {
-    font-size: 12px;
-    font-weight: 600;
-    padding: 5px 10px;
-    border-radius: 999px;
-    background: var(--primary-soft);
-    color: var(--text);
-    white-space: nowrap;
-    max-width: 42vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.ctx-chip.ctx-prof {
-    background: var(--bg-main);
-    border: 1px solid var(--border-color);
-}
-
-.ctx-chip.ctx-section {
-    background: var(--primary);
-    color: #fff;
-}
-
-.ctx-chip.ctx-detail {
-    background: var(--warning-soft);
-    color: var(--warning);
-    border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
-}
-
-.ctx-dash {
-    color: var(--text-muted);
-    font-size: 11px;
-    opacity: 0.6;
 }
 
 /* ——— Plan / bozorlik layout ——— */
