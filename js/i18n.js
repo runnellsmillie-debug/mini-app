@@ -934,6 +934,7 @@ window.applyLang = function() {
     const kbDock = document.querySelector(".add-numpad-dock");
     if (kbDock) kbDock.setAttribute("aria-label", window.t("keyboard"));
     if (window.syncPlanUi) window.syncPlanUi();
+    if (window.updatePlanTabCycleLabel && window.curBankSub === 'plan') window.updatePlanTabCycleLabel(window.curPlanTab || 'add');
     if (window.renderPlanAddCats && window.curBankSub === "plan") window.renderPlanAddCats();
     if (window.renderPlanKeyboard && window.curBankSub === "plan") window.renderPlanKeyboard(true);
     if (window.syncPlanAmountDisplay) window.syncPlanAmountDisplay();

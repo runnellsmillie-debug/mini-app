@@ -282,8 +282,35 @@ window.updatePlanFilters = function() {
     }
 };
 
-window.planTabDrawerOpen = false;
 window.planNotifOpen = false;
+window.curPlanTab = 'add';
+window.PLAN_TAB_ORDER = ['add', 'active', 'skip', 'history'];
+window.PLAN_TAB_I18N = {
+    add: 'plan_tab_list',
+    active: 'plan_tab_active',
+    skip: 'plan_tab_skip',
+    history: 'plan_tab_history'
+};
+
+window.updatePlanTabCycleLabel = function(tab) {
+    window.curPlanTab = tab || window.curPlanTab || 'add';
+    const labelEl = window.el('plan-tab-cycle-label');
+    const btn = window.el('plan-tab-cycle');
+    if (labelEl) labelEl.textContent = window.t(window.PLAN_TAB_I18N[window.curPlanTab] || 'plan_tab_list');
+    if (btn) btn.classList.toggle('plan-tab-cycle-btn--active', window.curPlanTab === 'add');
+};
+
+window.cyclePlanTab = function() {
+    const order = window.PLAN_TAB_ORDER;
+    const idx = order.indexOf(window.curPlanTab);
+    const next = order[(idx + 1) % order.length];
+    const btn = window.el('plan-tab-cycle');
+    if (btn) {
+        btn.classList.add('plan-tab-cycle-btn--spin');
+        setTimeout(() => btn.classList.remove('plan-tab-cycle-btn--spin'), 340);
+    }
+    window.switchPlanTab(next);
+};
 
 window.ensurePlanUrgentAcks = function() {
     if (!window.state.planUrgentAcks) window.state.planUrgentAcks = {};
@@ -316,7 +343,7 @@ window.updatePlanBellBadge = function() {
             badge.classList.remove("hidden");
         } else badge.classList.add("hidden");
     }
-    if (btn) btn.classList.toggle("plan-chrome-btn--unread", unread.length > 0 && !window.planNotifOpen);
+    if (btn) btn.classList.toggle("plan-header-bell--unread", unread.length > 0 && !window.planNotifOpen);
 };
 
 window.renderPlanNotifPanel = function() {
@@ -375,47 +402,14 @@ window.closePlanPanels = function() {
     window.el("plan-notif-panel")?.classList.add("hidden");
 };
 
-window.togglePlanTabDrawer = function() {
-    window.planTabDrawerOpen = !window.planTabDrawerOpen;
-    const drawer = window.el("plan-tab-drawer");
-    const btn = window.el("plan-tabs-toggle");
-    if (drawer) {
-        drawer.classList.toggle("plan-tab-drawer--open", window.planTabDrawerOpen);
-    }
-    document.body.classList.toggle("plan-tabs-open", window.planTabDrawerOpen);
-    if (btn) btn.classList.toggle("plan-chrome-btn--active", window.planTabDrawerOpen);
-    window.syncPlanLayout();
-};
-
-window.closePlanTabDrawer = function(silent) {
-    window.planTabDrawerOpen = false;
-    const drawer = window.el("plan-tab-drawer");
-    const btn = window.el("plan-tabs-toggle");
-    if (drawer) drawer.classList.remove("plan-tab-drawer--open");
-    document.body.classList.remove("plan-tabs-open");
-    if (btn) btn.classList.remove("plan-chrome-btn--active");
-    if (!silent) window.syncPlanLayout();
-};
-
 window.switchPlanTab = (tab) => {
     ['add', 'active', 'skip', 'history'].forEach(t => {
-        let btn = window.el('plan-tab-' + t);
         let view = window.el('plan-view-' + t);
-        if (btn && view) {
-            if (t === tab) {
-                btn.style.background = 'var(--primary)';
-                btn.style.borderColor = 'var(--primary)';
-                view.classList.remove('hidden');
-            } else {
-                btn.style.background = 'var(--bg-card)';
-                btn.style.borderColor = 'var(--border-color)';
-                view.classList.add('hidden');
-            }
-        }
+        if (view) view.classList.toggle('hidden', t !== tab);
     });
     const onAdd = tab === 'add' && window.curBankSub === 'plan';
     document.body.classList.toggle('on-plan-add-tab', onAdd);
-    window.closePlanTabDrawer(true);
+    window.updatePlanTabCycleLabel(tab);
     if (tab === 'add') {
         window.renderPlanMarketChips();
         window.renderPlanAddCats();

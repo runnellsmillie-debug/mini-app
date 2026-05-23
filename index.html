@@ -154,6 +154,23 @@
             <span class="icon">←</span>
             <span id="sub-view-title"></span>
         </button>
+        <div id="plan-header-bar" class="plan-header-bar hidden">
+            <button type="button" class="plan-header-back" onclick="closeBankSubView()">
+                <span class="icon">←</span>
+                <span id="plan-header-title">🛒 Bozorlik</span>
+            </button>
+            <button type="button" id="plan-tab-cycle" class="plan-tab-cycle-btn" onclick="window.cyclePlanTab()">
+                <span id="plan-tab-cycle-label">Ro'yxat</span>
+            </button>
+            <button type="button" id="plan-bell-btn" class="plan-header-bell" onclick="window.togglePlanNotifPanel()" data-i18n-aria="notifications" aria-label="Xabarlar">
+                🔔
+                <span id="plan-bell-badge" class="plan-bell-badge hidden">0</span>
+            </button>
+        </div>
+    </div>
+    <div id="plan-notif-panel" class="plan-notif-panel hidden">
+        <div class="plan-notif-panel__head" data-i18n="plan_notif_title">Bozorlik eslatmalari</div>
+        <div id="plan-notif-list" class="plan-notif-panel__body"></div>
     </div>
 
     <div id="header-today-panel" class="header-float-panel hidden">
@@ -300,27 +317,6 @@
         </div>
 
         <div id="bank-sub-plan" class="hidden bank-sub-panel">
-            <div class="plan-chrome" id="plan-chrome">
-                <button type="button" id="plan-tabs-toggle" class="plan-chrome-btn" onclick="window.togglePlanTabDrawer()" aria-label="Tabs">☰</button>
-                <div class="plan-chrome-spacer"></div>
-                <button type="button" id="plan-bell-btn" class="plan-chrome-btn plan-chrome-btn--bell" onclick="window.togglePlanNotifPanel()" aria-label="Notifications">
-                    🔔
-                    <span id="plan-bell-badge" class="plan-bell-badge hidden">0</span>
-                </button>
-            </div>
-            <div id="plan-tab-drawer" class="plan-tab-drawer">
-                <div class="mode-selector plan-tab-bar">
-                    <button id="plan-tab-add" class="mode-btn" onclick="switchPlanTab('add')" style="background:var(--primary); border-color:var(--primary);"><span data-i18n="plan_tab_list">Ro'yxat</span></button>
-                    <button id="plan-tab-active" class="mode-btn" onclick="switchPlanTab('active')"><span data-i18n="plan_tab_active">Faol</span></button>
-                    <button id="plan-tab-skip" class="mode-btn" onclick="switchPlanTab('skip')"><span data-i18n="plan_tab_skip">Keyinroq</span></button>
-                    <button id="plan-tab-history" class="mode-btn" onclick="switchPlanTab('history')"><span data-i18n="plan_tab_history">Tarix</span></button>
-                </div>
-            </div>
-            <div id="plan-notif-panel" class="plan-notif-panel hidden">
-                <div class="plan-notif-panel__head" data-i18n="plan_notif_title">Bozorlik eslatmalari</div>
-                <div id="plan-notif-list" class="plan-notif-panel__body"></div>
-            </div>
-
             <div id="plan-view-add" class="plan-add-screen">
                 <div class="plan-top-dock">
                     <div class="plan-amount-row">

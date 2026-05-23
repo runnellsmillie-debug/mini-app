@@ -143,19 +143,27 @@ window.openBankSubView = (type) => {
     window.el('bank-sub-'+type).classList.remove('hidden');
     window.el('main-menu-btn-top').classList.add('hidden');
     window.el('header-main')?.classList.add('hidden');
-    window.el('back-btn').classList.remove('hidden');
+    const planBar = window.el('plan-header-bar');
+    const backBtn = window.el('back-btn');
     const titleEl = window.el('sub-view-title');
-    if (titleEl) {
-        titleEl.classList.remove('hidden');
-        const labels = {
-            plan: window.t("sub_plan"),
-            sched: window.t("sub_sched"),
-            credit: window.t("sub_credit"),
-            dep: window.t("sub_dep"),
-            debt: window.t("sub_debt")
-        };
-        const icons = { plan: "🛒", sched: "📅", credit: "💳", dep: "🏦", debt: "🤝" };
-        titleEl.textContent = `${icons[type] || ""} ${labels[type] || ""}`.trim();
+    const labels = {
+        plan: window.t("sub_plan"),
+        sched: window.t("sub_sched"),
+        credit: window.t("sub_credit"),
+        dep: window.t("sub_dep"),
+        debt: window.t("sub_debt")
+    };
+    const icons = { plan: "🛒", sched: "📅", credit: "💳", dep: "🏦", debt: "🤝" };
+
+    if (type === 'plan') {
+        backBtn?.classList.add('hidden');
+        planBar?.classList.remove('hidden');
+        const planTitle = window.el('plan-header-title');
+        if (planTitle) planTitle.textContent = `${icons.plan} ${labels.plan}`;
+    } else {
+        backBtn?.classList.remove('hidden');
+        planBar?.classList.add('hidden');
+        if (titleEl) titleEl.textContent = `${icons[type] || ""} ${labels[type] || ""}`.trim();
     }
     document.body.classList.toggle('on-plan-subview', type === 'plan');
 
@@ -172,14 +180,11 @@ window.closeBankSubView = () => {
     window.curBankSub = null;
     document.body.classList.remove('on-plan-add-tab');
     document.body.classList.remove('on-plan-subview');
-    document.body.classList.remove('plan-tabs-open');
     if (window.closePlanPanels) window.closePlanPanels();
-    if (window.closePlanTabDrawer) window.closePlanTabDrawer(true);
-    const titleEl = window.el('sub-view-title');
-    if (titleEl) titleEl.classList.add('hidden');
+    window.el('plan-header-bar')?.classList.add('hidden');
     ['plan', 'sched', 'credit', 'dep', 'debt'].forEach(s => { if(window.el('bank-sub-'+s)) window.el('bank-sub-'+s).classList.add('hidden'); });
     window.el('bank-main-menu').classList.remove('hidden');
-    window.el('back-btn').classList.add('hidden');
+    window.el('back-btn')?.classList.add('hidden');
     window.el('main-menu-btn-top').classList.remove('hidden');
     window.el('header-main')?.classList.remove('hidden');
 };
@@ -220,7 +225,13 @@ window.refreshBankSubViewTitle = function() {
         debt: window.t("sub_debt")
     };
     const icons = { plan: "🛒", sched: "📅", credit: "💳", dep: "🏦", debt: "🤝" };
-    titleEl.textContent = `${icons[window.curBankSub] || ""} ${map[window.curBankSub] || ""}`.trim();
+    if (window.curBankSub === 'plan') {
+        const planTitle = window.el('plan-header-title');
+        if (planTitle) planTitle.textContent = `${icons.plan} ${map.plan}`;
+        if (window.updatePlanTabCycleLabel) window.updatePlanTabCycleLabel(window.curPlanTab || 'add');
+    } else {
+        titleEl.textContent = `${icons[window.curBankSub] || ""} ${map[window.curBankSub] || ""}`.trim();
+    }
 };
 
 window.migrateServiceMenuOrder = function() {
