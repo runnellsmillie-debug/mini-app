@@ -100,6 +100,7 @@ async function postLoadInit() {
     if(window.syncDescDisplay) window.syncDescDisplay();
     if(window.setupAddCatDrag) window.setupAddCatDrag();
     if(window.syncAddLayout) window.syncAddLayout();
+    if(window.applyLang) window.applyLang();
     
     window.render();
 }
@@ -108,9 +109,21 @@ async function postLoadInit() {
 // 3. TIL VA MAVZU (THEME) SOZLAMALARI
 // ==========================================
 window.setLang = function(lang) {
+    if (!["uz", "ru", "en"].includes(lang)) return;
     window.state.lang = lang;
     window.save(true);
-    alert("Til saqlandi! (To'liq tarjima ishlashi uchun lug'at qo'shilishi kerak)");
+    if (window.applyLang) window.applyLang();
+};
+
+window.syncSettingsUI = function() {
+    const lang = window.state.lang || "uz";
+    document.querySelectorAll(".settings-flag-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.getAttribute("data-lang") === lang);
+    });
+    const theme = window.state.theme || "auto";
+    document.querySelectorAll(".settings-theme-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.getAttribute("data-theme") === theme);
+    });
 };
 
 window.applyTheme = function() {
@@ -118,19 +131,17 @@ window.applyTheme = function() {
     let isDark = false;
 
     if (theme === 'auto') {
-        // Avto rejim: O'zbekiston vaqtini aniqlash (GMT+5)
         let d = new Date();
         let utc = d.getTime() + (d.getTimezoneOffset() * 60000);
         let uzbDate = new Date(utc + (3600000 * 5));
         let h = uzbDate.getHours();
-        isDark = (h >= 19 || h < 6); // 19:00 dan 06:00 gacha tun
+        isDark = (h >= 19 || h < 6);
     } else {
         isDark = (theme === 'dark');
     }
 
     document.body.classList.toggle('dark-mode', isDark);
-    if(document.getElementById('theme-select')) document.getElementById('theme-select').value = theme;
-    if(document.getElementById('lang-select')) document.getElementById('lang-select').value = window.state.lang || 'uz';
+    if (window.syncSettingsUI) window.syncSettingsUI();
 };
 
 window.setTheme = function(theme) {
@@ -297,16 +308,16 @@ window.renderSidebar = function() {
     if (!list) return;
 
     const datalist = document.getElementById("profile-names-datalist");
+    const sorted = window.getSortedProfiles ? window.getSortedProfiles() : window.state.profiles.filter(p => !p.archived);
     if (datalist) {
-        datalist.innerHTML = window.state.profiles.filter(p => !p.archived)
-            .map(p => `<option value="${(p.name || '').replace(/"/g, '')}"></option>`).join("");
+        datalist.innerHTML = sorted.map(p => `<option value="${(p.name || '').replace(/"/g, '')}"></option>`).join("");
     }
 
     let html = "";
     if (window.isBudgetAdmin()) {
-        html += `<div class="profile-hint-admin">Bosing — profilga kirish · 3 son. ushlab turing — tahrirlash</div>`;
+        html += `<div class="profile-hint-admin">${window.t("profile_hint_admin")}</div>`;
     }
-    window.state.profiles.filter(p => !p.archived).forEach(p => {
+    sorted.forEach(p => {
         const spent = window.getProfileMonthSpend(p.id);
         const lim = window.getLimitStatus(p.id);
         let warn = "";
@@ -314,18 +325,18 @@ window.renderSidebar = function() {
         else if (lim.level === "warn") warn = " 🟡";
         const lock = window.needsPin(p.id) ? " 🔒" : "";
         const limitLine = p.monthlyLimit > 0
-            ? `<div style="font-size:10px; color:var(--text-muted);">Limit: ${window.formatM(p.monthlyLimit).replace(" so'm","")} (${lim.pct || 0}%)</div>`
+            ? `<div style="font-size:10px; color:var(--text-muted);">${window.t("limit_prefix")} ${window.formatM(p.monthlyLimit).replace(" so'm","")} (${lim.pct || 0}%)</div>`
             : "";
         const activeCls = window.curProf === p.id ? ' active-profile' : '';
 
-        const linkBadge = p.linked_uid ? `<span class="profile-link-badge" title="Telegram bog'langan">📲</span>` : "";
+        const linkBadge = p.linked_uid ? `<span class="profile-link-badge" title="${window.t("linked_title")}">📲</span>` : "";
         html += `
         <div class="list-item profile-row${activeCls}" data-prof-id="${p.id}">
             <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
                 <span class="profile-avatar">${p.icon}${warn}${lock}</span>
                 <div class="profile-meta" style="min-width:0;">
                     <div class="profile-name">${p.name} ${linkBadge}</div>
-                    <div class="profile-spend">Oy: ${window.formatM(spent).replace(" so'm", "")}</div>
+                    <div class="profile-spend">${window.t("month_prefix")} ${window.formatM(spent).replace(" so'm", "")}</div>
                     ${limitLine}
                 </div>
             </div>
@@ -625,7 +636,7 @@ window.hideCatItem = function(id, level, parentId) {
     if (!id || id === "umumiy") return;
     const normParent = parentId === "root" ? null : (parentId === "income" ? "income" : parentId);
     if (!window.canHideAtLevel(id, level, parentId)) {
-        window.toast("Kamida bitta qoldiring!", true);
+        window.toast(window.t("keep_one"), true);
         return;
     }
     if (!window.state.catHidden) window.state.catHidden = {};
@@ -762,7 +773,7 @@ window.enterCatEditMode = function(level, parentId) {
     window.catEditParent = parentId === "root" ? null : parentId;
     window.el("add-cats-zone")?.classList.add("cats-zone--edit");
     window.renderAddCats();
-    window.toast("Tartiblash rejimi");
+    window.toast(window.t("sort_mode"));
 };
 
 window.exitCatEditMode = function(silent) {
@@ -772,7 +783,7 @@ window.exitCatEditMode = function(silent) {
     window.catEditParent = null;
     window.el("add-cats-zone")?.classList.remove("cats-zone--edit");
     window.renderAddCats();
-    if (!silent) window.toast("Tayyor");
+    if (!silent) window.toast(window.t("ready"));
 };
 
 window.onHideCatClick = function(e, id, level, parentId) {
@@ -959,7 +970,7 @@ window.syncDescDisplay = () => {
         el.innerHTML = `<span class="add-desc-val">${window.descStr.replace(/</g, "&lt;")}</span>`;
         el.classList.add("has-text");
     } else {
-        el.innerHTML = `<span class="add-desc-ph">Izoh (ixtiyoriy)...</span>`;
+        el.innerHTML = `<span class="add-desc-ph">${window.t ? window.t("desc_ph") : "Izoh (ixtiyoriy)..."}</span>`;
         el.classList.remove("has-text");
     }
 };
@@ -1075,10 +1086,10 @@ window.renderAddCats = function() {
     };
     const wrap = (html, pId) => `<div class="cat-scroll--add cat-grid--${level}" data-level="${level}" data-parent="${pId || "root"}">${html}</div>`;
 
-    const editHead = `<div class="add-crumb add-crumb--edit"><span>↕️ Tartiblash rejimi</span><button type="button" class="back-link add-cats-done" onclick="window.exitCatEditMode()">Tayyor</button></div>`;
+    const editHead = `<div class="add-crumb add-crumb--edit"><span>↕️ ${window.t("sort_mode")}</span><button type="button" class="back-link add-cats-done" onclick="window.exitCatEditMode()">${window.t("ready")}</button></div>`;
 
     if (window.addMode === "income") {
-        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">Ushlab turing — tartiblash rejimi</div>`;
+        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">${window.t("sort_hint")}</div>`;
         const src = window.filterCatItems(window.INC_SOURCES.map((s, i) => ({ ...s, id: "inc_" + i })), "main", "income");
         cont.innerHTML = wrap(src.map(s => mkBtn(s, `saveTx('${s.label.replace(/'/g, "\\'")}')`)).join(""), "income");
         window.syncAddLayout();
@@ -1087,11 +1098,11 @@ window.renderAddCats = function() {
 
     const cats = window.filterCatItems(window.getCats(), "main", null);
     if (window.actSubCat) {
-        head.innerHTML = window.catEditMode ? editHead : `<div class="add-crumb"><span>${window.actMainCat.label} <b>›</b> ${window.actSubCat.label}</span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
+        head.innerHTML = window.catEditMode ? editHead : `<div class="add-crumb"><span>${window.actMainCat.label} <b>›</b> ${window.actSubCat.label}</span><button type="button" class="back-link" onclick="backCat()">${window.t("back")}</button></div>`;
         const items = window.filterCatItems(window.actSubCat.items, "items", window.actSubCat.id);
         cont.innerHTML = wrap(items.map(i => mkBtn(i, `saveTx('${i.label.replace(/'/g, "\\'")}', true)`, "cat-btn--pick")).join(""), window.actSubCat.id);
     } else if (window.actMainCat && window.actMainCat.subs && window.actMainCat.subs.length > 0) {
-        head.innerHTML = window.catEditMode ? editHead : `<div class="add-crumb"><span>Rukun: <b>${window.actMainCat.label}</b></span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
+        head.innerHTML = window.catEditMode ? editHead : `<div class="add-crumb"><span>${window.t("rukun")} <b>${window.actMainCat.label}</b></span><button type="button" class="back-link" onclick="backCat()">${window.t("back")}</button></div>`;
         let subs = window.filterCatItems(window.actMainCat.subs, "rukun", window.actMainCat.id);
         let html = subs.map(s => {
             const f = s.items?.length > 0;
@@ -1103,7 +1114,7 @@ window.renderAddCats = function() {
         }
         cont.innerHTML = wrap(html, window.actMainCat.id);
     } else {
-        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">Ushlab turing — tartiblash rejimi</div>`;
+        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">${window.t("sort_hint")}</div>`;
         cont.innerHTML = wrap(cats.map(c => mkBtn(c, `clickMainCat('${c.id}')`, "cat-btn--main")).join(""), null);
     }
     window.syncAddLayout();

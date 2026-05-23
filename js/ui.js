@@ -14,8 +14,25 @@ window.closeModalOutside = (e, id) => { if(e.target.id === id) window.closeModal
 
 window.toggleSidebar = () => { 
     const m = window.el("sidebar-menu"), o = window.el("sidebar-overlay"); 
-    if (m.classList.contains("open")) { m.classList.remove("open"); o.style.display="none"; } 
-    else { m.classList.add("open"); o.style.display="block"; } 
+    if (m.classList.contains("open")) { 
+        m.classList.remove("open"); 
+        o.style.display="none";
+        window.el("sidebar-settings-panel")?.classList.add("hidden");
+        window.el("sidebar-settings-btn")?.classList.remove("active");
+    } else { 
+        m.classList.add("open"); 
+        o.style.display="block"; 
+    } 
+};
+
+window.toggleSettingsPanel = function() {
+    const panel = window.el("sidebar-settings-panel");
+    const btn = window.el("sidebar-settings-btn");
+    if (!panel) return;
+    panel.classList.toggle("hidden");
+    const visible = !panel.classList.contains("hidden");
+    btn?.classList.toggle("active", visible);
+    if (visible && window.syncSettingsUI) window.syncSettingsUI();
 };
 
 window.selectProfile = id => {
@@ -190,14 +207,14 @@ window.migrateServiceMenuOrder = function() {
 window.enterServiceEditMode = function() {
     window.serviceEditMode = true;
     window.renderServicesMenu();
-    window.toast("Tartiblash rejimi");
+    window.toast(window.t("sort_mode"));
 };
 
 window.exitServiceEditMode = function(silent) {
     if (!window.serviceEditMode) return;
     window.serviceEditMode = false;
     window.renderServicesMenu();
-    if (!silent) window.toast("Tayyor");
+    if (!silent) window.toast(window.t("ready"));
 };
 
 window.renderServicesMenu = function() {
@@ -221,8 +238,8 @@ window.renderServicesMenu = function() {
 
     if (head) {
         head.innerHTML = window.serviceEditMode
-            ? `<div class="add-crumb add-crumb--edit"><span>↕️ Tartiblash rejimi</span><button type="button" class="back-link add-cats-done" onclick="window.exitServiceEditMode()">Tayyor</button></div>`
-            : `<div class="add-cats-hint">Ushlab turing — tartiblash rejimi</div>`;
+            ? `<div class="add-crumb add-crumb--edit"><span>↕️ ${window.t("sort_mode")}</span><button type="button" class="back-link add-cats-done" onclick="window.exitServiceEditMode()">${window.t("ready")}</button></div>`
+            : `<div class="add-cats-hint">${window.t("sort_hint")}</div>`;
     }
 
     menu.classList.toggle("services-menu--edit", window.serviceEditMode);

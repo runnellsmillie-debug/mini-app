@@ -183,14 +183,14 @@
             <span id="current-profile-name" class="header-profile-name">Umumiy</span>
             <div class="header-finance-card">
                 <button type="button" class="header-stat-btn header-stat-btn--balance" id="header-balance-btn">
-                    <span class="header-stat-btn__lbl">Balans</span>
+                    <span class="header-stat-btn__lbl" data-i18n="balance">Balans</span>
                     <span id="header-balance" class="header-stat-btn__val">0</span>
                 </button>
                 <button type="button" class="header-stat-btn header-stat-btn--today" id="header-today-btn" onclick="window.toggleHeaderTodayPanel()">
-                    <span class="header-stat-btn__lbl">Bugun</span>
+                    <span class="header-stat-btn__lbl" data-i18n="today">Bugun</span>
                     <span id="header-today-exp" class="header-stat-btn__val">0</span>
                 </button>
-                <button type="button" class="header-bell-btn" id="header-bell-btn" onclick="window.toggleHeaderNotifPanel()" aria-label="Xabarlar">
+                <button type="button" class="header-bell-btn" id="header-bell-btn" onclick="window.toggleHeaderNotifPanel()" data-i18n-aria="notifications" aria-label="Xabarlar">
                     🔔
                     <span id="header-bell-badge" class="header-bell-badge hidden">0</span>
                 </button>
@@ -203,11 +203,11 @@
     </div>
 
     <div id="header-today-panel" class="header-float-panel hidden">
-        <div class="header-float-panel__head">Bugungi xarajatlar</div>
+        <div class="header-float-panel__head" data-i18n="today_expenses">Bugungi xarajatlar</div>
         <div id="header-today-list" class="header-float-panel__body"></div>
     </div>
     <div id="header-notif-panel" class="header-float-panel hidden">
-        <div class="header-float-panel__head">Oilaviy xarajatlar</div>
+        <div class="header-float-panel__head" data-i18n="family_expenses">Oilaviy xarajatlar</div>
         <div id="header-notif-list" class="header-float-panel__body"></div>
     </div>
     <div id="header-panel-overlay" class="header-panel-overlay hidden" onclick="window.closeHeaderPanels()"></div>
@@ -215,12 +215,33 @@
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div id="sidebar-menu" class="sidebar-menu">
         <div class="sidebar-head">
-            <h3>Profillar</h3>
-            <button type="button" class="sidebar-close" onclick="toggleSidebar()" aria-label="Yopish">✕</button>
+            <h3 data-i18n="profiles">Profillar</h3>
+            <div class="sidebar-head-actions">
+                <button type="button" id="sidebar-settings-btn" class="sidebar-icon-btn" onclick="window.toggleSettingsPanel()" data-i18n-aria="settings" aria-label="Sozlamalar">⚙️</button>
+                <button type="button" class="sidebar-close" onclick="toggleSidebar()" data-i18n-aria="close" aria-label="Yopish">✕</button>
+            </div>
+        </div>
+
+        <div id="sidebar-settings-panel" class="sidebar-settings-panel hidden">
+            <div class="sidebar-section-label" data-i18n="language">Til</div>
+            <div class="settings-icon-row" id="lang-flag-row">
+                <button type="button" class="settings-flag-btn" data-lang="uz" onclick="window.setLang('uz')" title="O'zbekcha">🇺🇿</button>
+                <button type="button" class="settings-flag-btn" data-lang="ru" onclick="window.setLang('ru')" title="Русский">🇷🇺</button>
+                <button type="button" class="settings-flag-btn" data-lang="en" onclick="window.setLang('en')" title="English">🇬🇧</button>
+            </div>
+            <div class="sidebar-section-label" data-i18n="theme">Rejim</div>
+            <div class="settings-icon-row" id="theme-icon-row">
+                <button type="button" class="settings-theme-btn" data-theme="light" onclick="window.setTheme('light')" data-i18n-title="theme_light" title="Kun">☀️</button>
+                <button type="button" class="settings-theme-btn" data-theme="dark" onclick="window.setTheme('dark')" data-i18n-title="theme_dark" title="Tun">🌙</button>
+                <button type="button" class="settings-theme-btn" data-theme="auto" onclick="window.setTheme('auto')" data-i18n-title="theme_auto" title="Avto">🌓</button>
+            </div>
+            <button type="button" id="admin-reset-btn" onclick="document.getElementById('reset-modal').style.display='flex'" style="display:none;">
+                🗑 <span data-i18n="admin_reset">Dasturni tozalash</span>
+            </button>
         </div>
         
         <div class="profile-quick-pick">
-            <input type="text" id="profile-quick-input" class="input-text" list="profile-names-datalist" placeholder="Profil ismi (tez tanlash)..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();window.quickSelectProfileByName();}" />
+            <input type="text" id="profile-quick-input" class="input-text" list="profile-names-datalist" data-i18n-placeholder="profile_quick_ph" placeholder="Profil ismi (tez tanlash)..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();window.quickSelectProfileByName();}" />
             <button type="button" class="profile-quick-btn" onclick="window.quickSelectProfileByName()" aria-label="Tanlash">→</button>
         </div>
         <datalist id="profile-names-datalist"></datalist>
@@ -228,39 +249,14 @@
         <div id="sidebar-profiles-list"></div>
         
         <button type="button" id="admin-add-prof-btn" onclick="openFullScreenModal(null)" style="display:none;">
-            ➕ Yangi profil
+            ➕ <span data-i18n="new_profile">Yangi profil</span>
         </button>
-
-        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
-            <div class="sidebar-section-label">Sozlamalar</div>
-            
-            <div class="sidebar-setting-row">
-                <span>🌐 Til</span>
-                <select id="lang-select" onchange="window.setLang(this.value)">
-                    <option value="uz">O'zbekcha</option>
-                    <option value="ru">Русский</option>
-                </select>
-            </div>
-
-            <div class="sidebar-setting-row">
-                <span>🎨 Rejim</span>
-                <select id="theme-select" onchange="window.setTheme(this.value)">
-                    <option value="auto">Avto</option>
-                    <option value="light">Kun</option>
-                    <option value="dark">Tun</option>
-                </select>
-            </div>
-            
-            <button type="button" id="admin-reset-btn" onclick="document.getElementById('reset-modal').style.display='flex'" style="display:none;">
-                🗑 Dasturni tozalash
-            </button>
-        </div>
     </div>
 
 
     <div id="tab-home" class="tab-content">
         <div class="balance-card-main">
-            <div class="balance-label">Jami mavjud mablag'</div>
+            <div class="balance-label" data-i18n="total_balance">Jami mavjud mablag'</div>
             <div id="main-total-balance">0 so'm</div>
         </div>
         <button onclick="saveAndExit()" class="btn-primary btn-success">✅ Saqlash va chiqish (<span id="session-count">0</span>)</button>
@@ -541,13 +537,14 @@
     </div>
 
     <nav class="bottom-nav" aria-label="Asosiy menyu">
-        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><div class="icon">🏠</div><span>Asosiy</span></div>
-        <div class="nav-item" id="nav-add" onclick="switchTab('add')"><div class="icon">➕</div><span>Kiritish</span></div>
-        <div class="nav-item" id="nav-other" onclick="switchTab('other')"><div class="icon">💼</div><span>Xizmatlar</span></div>
-        <div class="nav-item" id="nav-report" onclick="switchTab('report')"><div class="icon">📊</div><span>Hisobot</span></div>
+        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><div class="icon">🏠</div><span data-i18n="nav_home">Asosiy</span></div>
+        <div class="nav-item" id="nav-add" onclick="switchTab('add')"><div class="icon">➕</div><span data-i18n="nav_add">Kiritish</span></div>
+        <div class="nav-item" id="nav-other" onclick="switchTab('other')"><div class="icon">💼</div><span data-i18n="nav_other">Xizmatlar</span></div>
+        <div class="nav-item" id="nav-report" onclick="switchTab('report')"><div class="icon">📊</div><span data-i18n="nav_report">Hisobot</span></div>
     </nav>
 
     <script src="js/config.js"></script>
+    <script src="js/i18n.js"></script>
     <script src="js/profiles.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/credit.js"></script>

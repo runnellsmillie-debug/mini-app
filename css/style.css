@@ -1769,9 +1769,96 @@ body:not(.dark-mode) .cat-btn span[style*="color: #fff"] {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     padding-bottom: 14px;
     border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sidebar-icon-btn {
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color var(--transition), background var(--transition), color var(--transition);
+}
+
+.sidebar-icon-btn.active,
+.sidebar-icon-btn:active {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.sidebar-settings-panel {
+    margin-bottom: 14px;
+    padding: 12px;
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+.sidebar-settings-panel.hidden {
+    display: none;
+}
+
+.settings-icon-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.settings-flag-btn,
+.settings-theme-btn {
+    flex: 1;
+    min-height: 44px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-card);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color var(--transition), box-shadow var(--transition), transform 0.12s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-flag-btn.active,
+.settings-theme-btn.active {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-soft);
+    transform: scale(1.02);
+}
+
+.settings-flag-btn:active,
+.settings-theme-btn:active {
+    transform: scale(0.97);
+}
+
+#admin-reset-btn {
+    width: 100%;
+    margin-top: 4px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--danger) 40%, var(--border-color));
+    background: color-mix(in srgb, var(--danger) 8%, var(--bg-card));
+    color: var(--danger);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 .sidebar-head h3 {

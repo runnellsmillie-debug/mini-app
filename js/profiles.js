@@ -3,6 +3,26 @@
 // ==========================================
 
 window.PROTECTED_PROFILE_IDS = ["general", "home_profile"];
+
+window.getProfileSortRank = function(p) {
+    if (!p) return 99;
+    if (String(p.id).startsWith("creator_")) return 0;
+    if (p.id === "general") return 1;
+    if (p.id === "home_profile") return 2;
+    if (String(p.id).startsWith("user_") || p.role === "guest") return 3;
+    return 4;
+};
+
+window.getSortedProfiles = function() {
+    return (window.state.profiles || [])
+        .filter(p => !p.archived)
+        .sort((a, b) => {
+            const r = window.getProfileSortRank(a) - window.getProfileSortRank(b);
+            if (r !== 0) return r;
+            return (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
+        });
+};
+
 window.PIN_SESSION_KEY = "family_erp_unlocked";
 window.TAB_PERMISSIONS = {
     tab_home: { tab: "home", label: "Asosiy", icon: "🏠" },
@@ -410,7 +430,7 @@ window.renderAddProfileStrip = function() {
     const show = window.canAccessTab("add");
     strip.style.display = show ? "" : "none";
     if (!show) return;
-    const list = window.state.profiles.filter(p => !p.archived);
+    const list = window.getSortedProfiles ? window.getSortedProfiles() : window.state.profiles.filter(p => !p.archived);
     sel.innerHTML = list.map(p =>
         `<option value="${p.id}"${p.id === window.curProf ? " selected" : ""}>${p.icon} ${p.name}</option>`
     ).join("");
