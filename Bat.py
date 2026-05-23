@@ -252,6 +252,82 @@ async def auto_backup_scheduler():
         except Exception as e:
             logger.error(f"Auto-backup xatosi: {e}")
 
+# Asyncio loop — Flask thread dan Telegram xabar yuborish uchun
+main_loop = None
+
+def get_new_chat_messages(old_state, new_state):
+    old_chats = (old_state or {}).get("chats") or {}
+    new_chats = (new_state or {}).get("chats") or {}
+    found = []
+    for room, msgs in new_chats.items():
+        if not isinstance(msgs, list):
+            continue
+        old_ids = set()
+        for m in old_chats.get(room) or []:
+            if isinstance(m, dict) and m.get("id") is not None:
+                old_ids.add(m["id"])
+        for m in msgs:
+            if not isinstance(m, dict) or m.get("id") is None:
+                continue
+            if m["id"] not in old_ids:
+                found.append(m)
+    return found
+
+def get_chat_notify_targets(state, sender_uid):
+    sender_uid = str(sender_uid) if sender_uid else None
+    targets = set()
+    for p in state.get("profiles") or []:
+        uid = p.get("linked_uid")
+        if uid is None or uid == "":
+            continue
+        if sender_uid and str(uid) == sender_uid:
+            continue
+        try:
+            targets.add(int(uid))
+        except (TypeError, ValueError):
+            pass
+    return list(targets)
+
+async def send_chat_push(user_id, budget_id, sender_name, preview):
+    preview = (preview or "").strip()
+    if len(preview) > 120:
+        preview = preview[:120] + "…"
+    sender_name = sender_name or "Oilaviy chat"
+    text = f"💬 <b>Sizda yangi xabar bor</b>\n\n👤 {sender_name}"
+    if preview:
+        text += f"\n📝 {preview}"
+    text += "\n\nIlovani ochib o'qing."
+    try:
+        conn = sqlite3.connect('bot_data.db')
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT ozi_yaratgan_budget_id, taklif_budget_id FROM users WHERE user_id = ?",
+            (user_id,)
+        )
+        row = cursor.fetchone()
+        conn.close()
+        is_admin = row and row[0] == budget_id
+        url = webapp_url(budget_id, user_id, is_admin)
+        kb = InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(text="💬 Chatni ochish", web_app=WebAppInfo(url=url))
+        ]])
+        await bot.send_message(user_id, text, parse_mode="HTML", reply_markup=kb)
+    except Exception as e:
+        logger.warning(f"Chat push yuborilmadi ({user_id}): {e}")
+
+def schedule_chat_notifications(budget_id, old_state, new_state):
+    if not main_loop:
+        return
+    for msg in get_new_chat_messages(old_state, new_state):
+        sender_uid = msg.get("uid")
+        sender_name = msg.get("user") or "Foydalanuvchi"
+        preview = msg.get("text") or ""
+        for target_uid in get_chat_notify_targets(new_state, sender_uid):
+            asyncio.run_coroutine_threadsafe(
+                send_chat_push(target_uid, budget_id, sender_name, preview),
+                main_loop
+            )
+
 # ==========================================
 # 3. MIDDLEWARE (Aktivlik va Xavfsizlik nazorati)
 # ==========================================
@@ -321,9 +397,16 @@ def save_state(budget_id):
     new_state = request.json
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    cursor.execute("UPDATE budgets SET state_json = ? WHERE budget_id = ?", (json.dumps(new_state), budget_id))
+    cursor.execute("SELECT state_json FROM budgets WHERE budget_id = ?", (budget_id,))
+    row = cursor.fetchone()
+    old_state = load_state_json(row[0] if row and row[0] else None)
+    cursor.execute("UPDATE budgets SET state_json = ?", (json.dumps(new_state, ensure_ascii=False), budget_id))
     conn.commit()
     conn.close()
+    try:
+        schedule_chat_notifications(budget_id, old_state, new_state)
+    except Exception as e:
+        logger.error(f"Chat bildirishnoma xatosi: {e}")
     return jsonify({"status": "ok"})
 
 def run_flask():
@@ -889,6 +972,8 @@ async def catch_all_text(message: types.Message):
 # 8. BOTNI ISHGA TUSHIRISH
 # ==========================================
 async def main():
+    global main_loop
+    main_loop = asyncio.get_running_loop()
     await bot.delete_webhook(drop_pending_updates=True)
     asyncio.create_task(auto_backup_scheduler()) 
     await dp.start_polling(bot)
