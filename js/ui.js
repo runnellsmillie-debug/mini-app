@@ -88,13 +88,16 @@ window.switchTab = (id, silent) => {
     if (id !== "other" && window.el("back-btn") && !window.el("back-btn").classList.contains("hidden")) {
         window.closeBankSubView();
     }
+    if (id === "home") {
+        if (window.renderHomeTab) window.renderHomeTab();
+        if (window.updatePlanCats) window.updatePlanCats();
+    }
     if (id === "add") {
         window.checkAccess();
         if (window.initAddKeyboard) window.initAddKeyboard();
         if (window.focusAddAmount) window.focusAddAmount();
         if (window.syncAddLayout) window.syncAddLayout();
     }
-    if (id === "home" && window.updatePlanCats) window.updatePlanCats();
     if (id === "report" && window.renderReport) window.renderReport();
     if (id === "other") {
         if (window.renderServicesMenu) window.renderServicesMenu();

@@ -78,6 +78,7 @@
                     <option value="child_m">O'g'il bola</option>
                     <option value="child_f">Qiz bola</option>
                     <option value="relative">Yaqin qarindosh</option>
+                    <option value="spouse">Turmush o'rtog'i</option>
                     <option value="guest">Mehmon / Taklif</option>
                     <option value="home">Uy/Ro'zg'or</option>
                 </select>
@@ -198,11 +199,44 @@
 
 
     <div id="tab-home" class="tab-content">
-        <div class="balance-card-main">
+        <button type="button" id="home-finance-toggle" class="home-finance-toggle" onclick="window.toggleHomeFinancePanel()">
+            📊 <span data-i18n="finance_panel">Hisob-kitob</span>
+        </button>
+
+        <div class="balance-card-main home-balance-hero">
             <div class="balance-label" data-i18n="total_balance">Jami mavjud mablag'</div>
             <div id="main-total-balance">0 so'm</div>
         </div>
-        <button onclick="saveAndExit()" class="btn-primary btn-success">✅ Saqlash va chiqish (<span id="session-count">0</span>)</button>
+
+        <div id="home-balance-list" class="home-balance-list"></div>
+
+        <div id="home-finance-panel" class="home-finance-panel hidden"></div>
+
+        <div id="home-chat-strip" class="home-chat-strip hidden"></div>
+    </div>
+
+    <div id="modal-wallet-history" class="modal-layer hidden" onclick="closeModalOutside(event, 'modal-wallet-history')">
+        <div class="modal-box modal-box--wide" onclick="event.stopPropagation()">
+            <div class="modal-box__head">
+                <h3 id="wallet-history-title" style="margin:0;">Tarix</h3>
+                <button type="button" onclick="window.closeWalletHistory()" style="background:none;border:none;font-size:22px;color:var(--text-muted);">✕</button>
+            </div>
+            <div id="wallet-history-list" class="wallet-history-list"></div>
+        </div>
+    </div>
+
+    <div id="modal-profile-chat" class="modal-layer hidden">
+        <div class="modal-box modal-box--chat" onclick="event.stopPropagation()">
+            <div class="modal-box__head">
+                <h3 id="profile-chat-title" style="margin:0;">Chat</h3>
+                <button type="button" onclick="window.closeProfileChat()" style="background:none;border:none;font-size:22px;color:var(--text-muted);">✕</button>
+            </div>
+            <div id="profile-chat-messages" class="profile-chat-messages"></div>
+            <div class="profile-chat-compose">
+                <input type="text" id="profile-chat-input" class="input-text" placeholder="Xabar..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();window.sendProfileChat();}" />
+                <button type="button" class="profile-chat-send" onclick="window.sendProfileChat()">➤</button>
+            </div>
+        </div>
     </div>
 
 
@@ -489,6 +523,7 @@
     <script src="js/config.js"></script>
     <script src="js/i18n.js"></script>
     <script src="js/profiles.js"></script>
+    <script src="js/home.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/credit.js"></script>
     <script src="js/deposit.js"></script>

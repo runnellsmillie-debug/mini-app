@@ -100,6 +100,7 @@ async function postLoadInit() {
     if(window.syncDescDisplay) window.syncDescDisplay();
     if(window.setupAddCatDrag) window.setupAddCatDrag();
     if(window.syncAddLayout) window.syncAddLayout();
+    if(window.ensureHomeState) window.ensureHomeState();
     if(window.applyLang) window.applyLang();
     
     window.render();
@@ -1197,7 +1198,9 @@ window.getProfileBalance = function(profId) {
 window.updateHeaderBalance = function() {
     const balEl = window.el("header-balance");
     if (balEl) {
-        const bal = window.getProfileBalance();
+        const bal = window.getWalletBalance
+            ? window.getWalletBalance(window.curProf)
+            : window.getProfileBalance();
         balEl.textContent = window.formatM(bal);
         balEl.style.color = bal >= 0 ? "var(--primary)" : "var(--danger)";
     }
@@ -1210,8 +1213,11 @@ window.updateHeaderBalance = function() {
 };
 
 window.render = function() {
-    const tInc = window.state.incs.reduce((s,i)=>s+i.amount, 0), tExp = window.state.txs.reduce((s,t)=>s+t.amount, 0);
-    window.setTxt("main-total-balance", window.formatM(tInc - tExp));
+    if (window.renderHomeTab) window.renderHomeTab();
+    else {
+        const tInc = window.state.incs.reduce((s,i)=>s+i.amount, 0), tExp = window.state.txs.reduce((s,t)=>s+t.amount, 0);
+        window.setTxt("main-total-balance", window.formatM(tInc - tExp));
+    }
     window.updateHeaderBalance();
 
     const d = new Date(), tM = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0');
@@ -1226,6 +1232,7 @@ window.render = function() {
     window.setHtml("sched-list-container", sHtml || "<div style='text-align:center; color:var(--text-muted); font-size:13px; padding:10px;'>Majburiy to'lovlar yo'q.</div>"); 
     if(window.renderSchedSet) window.renderSchedSet();
 
+    if (window.curTab === "home" && window.renderHomeTab) window.renderHomeTab();
     if(window.curTab === "add") window.renderAddCats();
     if (window.headerTodayOpen) window.renderHeaderTodayPanel();
     if (window.headerNotifOpen) window.renderHeaderNotifPanel();

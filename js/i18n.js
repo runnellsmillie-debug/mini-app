@@ -47,7 +47,30 @@ window.I18N = {
         keep_one: "Kamida bitta qoldiring!",
         back: "Orqaga",
         rukun: "Rukun:",
-        notifications: "Xabarlar"
+        notifications: "Xabarlar",
+        me_label: "Men",
+        home_wallet_label: "Uy uchun",
+        relative: "Qarindosh",
+        finance_panel: "Hisob-kitob",
+        general_pool: "Umumiy summa",
+        transfer_from_general: "Umumiydan o'tkazish",
+        transfer_all: "Hammasini o'tkazish",
+        transfer_all_note: "Umumiydan hammasi",
+        deposit: "Kiritish",
+        withdraw: "Olish",
+        deposit_note: "Kiritildi",
+        withdraw_note: "Olindi",
+        amount: "Summa",
+        amount_required: "Summa kiriting!",
+        not_enough_balance: "Mablag' yetarli emas!",
+        admin_only_general: "Faqat admin umumiydan o'tkaza oladi",
+        transfer_done: "O'tkazildi",
+        saved_auto: "Saqlandi",
+        general_history: "Umumiy summa tarixi",
+        history_empty: "Tarix bo'sh",
+        chat_with: "Yozishish",
+        chat: "Chat",
+        chat_empty: "Xabarlar yo'q"
     },
     ru: {
         profiles: "Профили",
@@ -93,7 +116,30 @@ window.I18N = {
         keep_one: "Оставьте хотя бы один!",
         back: "Назад",
         rukun: "Раздел:",
-        notifications: "Уведомления"
+        notifications: "Уведомления",
+        me_label: "Я",
+        home_wallet_label: "Для дома",
+        relative: "Родственник",
+        finance_panel: "Учёт",
+        general_pool: "Общая сумма",
+        transfer_from_general: "Перевод из общего",
+        transfer_all: "Перевести всё",
+        transfer_all_note: "Всё из общего",
+        deposit: "Внести",
+        withdraw: "Снять",
+        deposit_note: "Внесено",
+        withdraw_note: "Снято",
+        amount: "Сумма",
+        amount_required: "Введите сумму!",
+        not_enough_balance: "Недостаточно средств!",
+        admin_only_general: "Только админ переводит из общего",
+        transfer_done: "Переведено",
+        saved_auto: "Сохранено",
+        general_history: "История общей суммы",
+        history_empty: "История пуста",
+        chat_with: "Переписка",
+        chat: "Чат",
+        chat_empty: "Нет сообщений"
     },
     en: {
         profiles: "Profiles",
@@ -139,7 +185,30 @@ window.I18N = {
         keep_one: "Keep at least one!",
         back: "Back",
         rukun: "Section:",
-        notifications: "Notifications"
+        notifications: "Notifications",
+        me_label: "Me",
+        home_wallet_label: "For home",
+        relative: "Relative",
+        finance_panel: "Finance",
+        general_pool: "General pool",
+        transfer_from_general: "Transfer from general",
+        transfer_all: "Transfer all",
+        transfer_all_note: "All from general",
+        deposit: "Deposit",
+        withdraw: "Withdraw",
+        deposit_note: "Deposited",
+        withdraw_note: "Withdrawn",
+        amount: "Amount",
+        amount_required: "Enter amount!",
+        not_enough_balance: "Insufficient balance!",
+        admin_only_general: "Only admin can transfer from general",
+        transfer_done: "Transferred",
+        saved_auto: "Saved",
+        general_history: "General history",
+        history_empty: "No history",
+        chat_with: "Chat with",
+        chat: "Chat",
+        chat_empty: "No messages"
     }
 };
 
@@ -175,13 +244,7 @@ window.applyLang = function() {
     if (modeExp) modeExp.textContent = window.t("expense");
     if (modeInc) modeInc.textContent = window.t("income");
 
-    const saveExitBtn = document.querySelector("#tab-home .btn-success");
-    if (saveExitBtn) {
-        const cnt = document.getElementById("session-count");
-        const n = cnt ? cnt.textContent : "0";
-        saveExitBtn.innerHTML = `✅ ${window.t("save_exit")} (<span id="session-count">${n}</span>)`;
-    }
-
+    if (window.renderHomeTab) window.renderHomeTab();
     if (window.syncSettingsUI) window.syncSettingsUI();
     if (window.renderSidebar) window.renderSidebar();
     if (window.renderAddCats) window.renderAddCats();
