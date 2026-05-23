@@ -369,16 +369,21 @@
             </div>
 
             <div id="plan-view-active" class="hidden plan-list-view">
-                <div class="plan-filters"><select id="filter-market" class="input-text" onchange="renderPlanned()"></select><select id="filter-cat" class="input-text" onchange="renderPlanned()"></select></div>
-                <div id="planned-list-active"></div>
+                <div class="plan-list-toolbar">
+                    <div class="plan-filters"><select id="filter-market" class="input-text plan-filter-select" onchange="renderPlanned()"></select><select id="filter-cat" class="input-text plan-filter-select" onchange="renderPlanned()"></select></div>
+                </div>
+                <div id="planned-list-active" class="plan-list-body"></div>
             </div>
 
             <div id="plan-view-skip" class="hidden plan-list-view">
-                <div id="planned-list-skipped"></div>
+                <div class="plan-list-toolbar">
+                    <div class="plan-filters"><select id="filter-market-skip" class="input-text plan-filter-select" onchange="renderPlanned()"></select><select id="filter-cat-skip" class="input-text plan-filter-select" onchange="renderPlanned()"></select></div>
+                </div>
+                <div id="planned-list-skipped" class="plan-list-body"></div>
             </div>
 
             <div id="plan-view-history" class="hidden plan-list-view">
-                <div id="planned-list-history"></div>
+                <div id="planned-list-history" class="plan-list-body"></div>
             </div>
 
         </div>

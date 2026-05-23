@@ -274,21 +274,22 @@ window.clickPlanProduct = function(rawName) {
 };
 
 window.updatePlanFilters = function() {
-    const fm = window.el("filter-market");
-    const fc = window.el("filter-cat");
-    const fmVal = fm ? fm.value : "all";
-    const fcVal = fc ? fc.value : "all";
-    if (fm) {
-        fm.innerHTML = `<option value="all">${window.t("filter_market")}: ${window.t("filter_all")}</option>`
-            + ["Bozor", "Korzinka", "Makro", "Uzum", "Do'kon"].map(m => `<option value="${m}">${window.tMarketName(m)}</option>`).join("");
-        if ([...fm.options].some(o => o.value === fmVal)) fm.value = fmVal;
-    }
-    if (fc) {
-        const cats = ["Oziq-ovqat", "Uy_Xojalik", "Kiyim"];
-        fc.innerHTML = `<option value="all">${window.t("filter_cat")}: ${window.t("filter_all")}</option>`
-            + cats.map(c => `<option value="${c}">${window.tCatName(c)}</option>`).join("");
-        if ([...fc.options].some(o => o.value === fcVal)) fc.value = fcVal;
-    }
+    const markets = ["Bozor", "Korzinka", "Makro", "Uzum", "Do'kon"];
+    const cats = ["Oziq-ovqat", "Uy_Xojalik", "Kiyim"];
+    const fill = (fm, fc, fmVal, fcVal) => {
+        if (fm) {
+            fm.innerHTML = `<option value="all">${window.t("filter_market")}: ${window.t("filter_all")}</option>`
+                + markets.map(m => `<option value="${m}">${window.tMarketName(m)}</option>`).join("");
+            if ([...fm.options].some(o => o.value === fmVal)) fm.value = fmVal;
+        }
+        if (fc) {
+            fc.innerHTML = `<option value="all">${window.t("filter_cat")}: ${window.t("filter_all")}</option>`
+                + cats.map(c => `<option value="${c}">${window.tCatName(c)}</option>`).join("");
+            if ([...fc.options].some(o => o.value === fcVal)) fc.value = fcVal;
+        }
+    };
+    fill(window.el("filter-market"), window.el("filter-cat"), window.val("filter-market"), window.val("filter-cat"));
+    fill(window.el("filter-market-skip"), window.el("filter-cat-skip"), window.val("filter-market-skip"), window.val("filter-cat-skip"));
 };
 
 window.planNotifOpen = false;
@@ -417,7 +418,10 @@ window.switchPlanTab = (tab) => {
         if (view) view.classList.toggle('hidden', t !== tab);
     });
     const onAdd = tab === 'add' && window.curBankSub === 'plan';
+    const onList = window.curBankSub === 'plan' && tab !== 'add';
     document.body.classList.toggle('on-plan-add-tab', onAdd);
+    document.body.classList.toggle('on-plan-list-tab', onList);
+    window.el('bank-sub-plan')?.classList.toggle('bank-sub-plan--list', onList);
     window.updatePlanTabCycleLabel(tab);
     if (tab === 'add') {
         window.renderPlanMarketChips();
@@ -430,6 +434,7 @@ window.switchPlanTab = (tab) => {
         window.ensurePlanAmountFocus();
     } else {
         document.body.classList.remove('on-plan-add-tab');
+        if (window.updatePlanFilters) window.updatePlanFilters();
         window.renderPlanned();
     }
     window.updatePlanBellBadge();
@@ -561,13 +566,26 @@ window.addPlannedItemManual = () => {
 };
 
 window.skipPlanItem = id => {
-    const i = window.state.plan.find(x => x.id == id);
-    if (i) { i.skip = true; window.save(); window.renderPlanned(); window.toast(window.t("plan_postponed")); }
+    window.openUniversalConfirm(window.t("plan_skip_confirm"), () => {
+        const i = window.state.plan.find(x => x.id == id);
+        if (i) { i.skip = true; window.save(); window.renderPlanned(); window.toast(window.t("plan_postponed")); }
+    });
 };
 
 window.unskipPlanItem = id => {
-    const i = window.state.plan.find(x => x.id == id);
-    if (i) { i.skip = false; window.save(); window.renderPlanned(); window.toast(window.t("plan_restored")); }
+    window.openUniversalConfirm(window.t("plan_unskip_confirm"), () => {
+        const i = window.state.plan.find(x => x.id == id);
+        if (i) { i.skip = false; window.save(); window.renderPlanned(); window.toast(window.t("plan_restored")); }
+    });
+};
+
+window.deletePlanItem = id => {
+    window.openUniversalConfirm(window.t("plan_remove_confirm"), () => {
+        window.state.plan = window.state.plan.filter(x => x.id != id);
+        window.save();
+        window.renderPlanned();
+        window.toast(window.t("plan_removed"));
+    });
 };
 
 window.permDelPlan = id => {
@@ -624,14 +642,43 @@ window.toggleHistoryDate = (dateId) => {
 
 window.renderPlanned = function() {
     const allUserPlans = window.state.plan.filter(x => x.prof === window.curProf || window.curProf === "general" || (window.curProf === "home_profile" && x.prof === "home_profile"));
-    const fc = window.val("filter-cat");
-    const fm = window.val("filter-market");
+    const onSkip = window.curPlanTab === "skip";
+    const fc = window.val(onSkip ? "filter-cat-skip" : "filter-cat");
+    const fm = window.val(onSkip ? "filter-market-skip" : "filter-market");
 
-    const renderGroupedList = (items, isSkippedMode = false, excludeUrgent = false) => {
+    const applyFilters = (items) => {
         let filtered = items;
-        if (excludeUrgent) filtered = filtered.filter(x => !x.urgent);
         if (fc && fc !== "all") filtered = filtered.filter(x => x.cat === fc);
         if (fm && fm !== "all") filtered = filtered.filter(x => x.market === fm);
+        return filtered;
+    };
+
+    const renderActiveItem = (x) => `
+        <div class="plan-item plan-item--flat${x.urgent ? " plan-item--urgent" : ""}">
+            <button type="button" class="plan-item__tap" onclick="openBuyModal(${x.id})">
+                <div class="plan-item__title">${x.urgent ? "❗ " : ""}${x.text}</div>
+                <div class="plan-item__meta">📍 ${window.tMarketName(x.market)} · ${window.formatM(x.price || 0)}</div>
+            </button>
+            <div class="plan-item-actions plan-item-actions--icons">
+                <button type="button" class="plan-icon-btn plan-icon-btn--later" onclick="skipPlanItem(${x.id})" title="${window.t("plan_later")}">⏳</button>
+                <button type="button" class="plan-icon-btn plan-icon-btn--del" onclick="deletePlanItem(${x.id})" title="${window.t("plan_remove")}">🗑️</button>
+            </div>
+        </div>`;
+
+    const renderSkipItem = (x) => `
+        <div class="plan-item plan-item--flat plan-item--skipped">
+            <div class="plan-item__body">
+                <div class="plan-item__title">${x.text}</div>
+                <div class="plan-item__meta">📍 ${window.tMarketName(x.market)} · ${window.formatM(x.price || 0)}</div>
+            </div>
+            <div class="plan-item-actions plan-item-actions--icons">
+                <button type="button" class="plan-icon-btn plan-icon-btn--return" onclick="unskipPlanItem(${x.id})" title="${window.t("plan_return")}">⤴️</button>
+            </div>
+        </div>`;
+
+    const renderGroupedList = (items, mode = "active", excludeUrgent = false) => {
+        let filtered = applyFilters(items);
+        if (excludeUrgent) filtered = filtered.filter(x => !x.urgent);
 
         let groups = {};
         let grandTotal = 0;
@@ -649,74 +696,45 @@ window.renderPlanned = function() {
             groups[cat].list.sort((a, b) => (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0) || b.id - a.id);
             html += `<div class="plan-group-box">
                 <div class="plan-group-head">
-                    <span>${window.CAT_ICONS[cat] || '📦'} ${window.tCatName(cat)}</span>
+                    <span>${window.CAT_ICONS[cat] || "📦"} ${window.tCatName(cat)}</span>
                     <span>${window.formatM(groups[cat].total)}</span>
                 </div>
-                ${groups[cat].list.map(x => `
-                    <div class="plan-item plan-item--flat${x.urgent ? " plan-item--urgent" : ""}">
-                        <div class="plan-item__body">
-                            <div class="plan-item__title">${x.urgent ? "❗ " : ""}${x.text}</div>
-                            <div class="plan-item__meta">📍 ${window.tMarketName(x.market)} · ${window.formatM(x.price || 0)}</div>
-                        </div>
-                        <div class="plan-item-actions">
-                            ${isSkippedMode ?
-                                `<button onclick="unskipPlanItem(${x.id})" class="btn-primary btn-primary--return">⤴️ ${window.t("plan_return")}</button>`
-                                :
-                                `<button onclick="openBuyModal(${x.id})" class="btn-primary btn-success">${window.t("plan_buy")}</button>
-                                 <button onclick="skipPlanItem(${x.id})" class="btn-primary btn-primary--ghost">⏳ ${window.t("plan_later")}</button>`
-                            }
-                        </div>
-                    </div>
-                `).join('')}
+                ${groups[cat].list.map(x => mode === "skip" ? renderSkipItem(x) : renderActiveItem(x)).join("")}
             </div>`;
         }
         return { html, grandTotal };
     };
 
+    const renderSummaryBar = (label, total, variant) =>
+        `<div class="plan-summary-bar plan-summary-bar--${variant}">
+            <span class="plan-summary-bar__lbl">${label}</span>
+            <span class="plan-summary-bar__val">${window.formatM(total)}</span>
+        </div>`;
+
     const renderUrgentStrip = (items) => {
-        let urgent = items.filter(x => x.urgent);
-        if (fc && fc !== "all") urgent = urgent.filter(x => x.cat === fc);
-        if (fm && fm !== "all") urgent = urgent.filter(x => x.market === fm);
+        let urgent = applyFilters(items.filter(x => x.urgent));
         urgent.sort((a, b) => (b.urgentAt || b.id) - (a.urgentAt || a.id));
         if (!urgent.length) return "";
-        return `<div class="plan-urgent-block">${urgent.map(x => `
-            <div class="plan-item plan-item--flat plan-item--urgent">
-                <div class="plan-item__body">
-                    <div class="plan-item__title">❗ ${x.text}</div>
-                    <div class="plan-item__meta">📍 ${window.tMarketName(x.market)} · ${window.formatM(x.price || 0)}</div>
-                </div>
-                <div class="plan-item-actions">
-                    <button onclick="openBuyModal(${x.id})" class="btn-primary btn-success">${window.t("plan_buy")}</button>
-                    <button onclick="skipPlanItem(${x.id})" class="btn-primary btn-primary--ghost">⏳ ${window.t("plan_later")}</button>
-                </div>
-            </div>
-        `).join("")}</div>`;
+        return `<div class="plan-urgent-block">${urgent.map(renderActiveItem).join("")}</div>`;
     };
 
     const activePool = allUserPlans.filter(x => !x.archived && !x.skip);
-    const activeData = renderGroupedList(activePool, false, true);
+    const activeData = renderGroupedList(activePool, "active", true);
     const urgentStrip = renderUrgentStrip(activePool);
-    let finalActiveHtml = urgentStrip;
-    if (activeData.grandTotal > 0 || urgentStrip) {
-        const totalAll = activePool.reduce((s, x) => s + (x.price || 0), 0);
-        if (totalAll > 0) {
-            finalActiveHtml += `<div class="plan-summary-banner plan-summary-banner--primary">
-                <div>${window.t("plan_total_expected")}</div>
-                <div>${window.formatM(totalAll)}</div>
-            </div>`;
-        }
-    }
-    window.setHtml("planned-list-active", finalActiveHtml + (activeData.html || (urgentStrip ? "" : `<div class='empty-state'>${window.t("plan_empty")}</div>`)));
+    const totalAll = applyFilters(activePool).reduce((s, x) => s + (x.price || 0), 0);
 
-    const skipData = renderGroupedList(allUserPlans.filter(x => !x.archived && x.skip), true);
+    let finalActiveHtml = "";
+    if (totalAll > 0) finalActiveHtml += renderSummaryBar(window.t("plan_total_expected"), totalAll, "primary");
+    finalActiveHtml += urgentStrip + (activeData.html || (urgentStrip ? "" : `<div class="plan-empty">${window.t("plan_empty")}</div>`));
+    window.setHtml("planned-list-active", finalActiveHtml);
+
+    const skipPool = allUserPlans.filter(x => !x.archived && x.skip);
+    const skipData = renderGroupedList(skipPool, "skip");
+    const skipTotal = applyFilters(skipPool).reduce((s, x) => s + (x.price || 0), 0);
     let finalSkipHtml = "";
-    if (skipData.grandTotal > 0) {
-        finalSkipHtml += `<div class="plan-summary-banner plan-summary-banner--warn">
-            <div>${window.t("plan_total_skipped")}</div>
-            <div>${window.formatM(skipData.grandTotal)}</div>
-        </div>`;
-    }
-    window.setHtml("planned-list-skipped", finalSkipHtml + (skipData.html || `<div class='empty-state'>${window.t("plan_skip_empty")}</div>`));
+    if (skipTotal > 0) finalSkipHtml += renderSummaryBar(window.t("plan_total_skipped"), skipTotal, "warn");
+    finalSkipHtml += skipData.html || `<div class="plan-empty">${window.t("plan_skip_empty")}</div>`;
+    window.setHtml("planned-list-skipped", finalSkipHtml);
 
     const historyItems = allUserPlans.filter(x => x.archived).sort((a, b) => b.id - a.id);
     let historyGroups = {};
@@ -728,29 +746,30 @@ window.renderPlanned = function() {
     });
 
     let htmlHistory = "";
-    for (let date in historyGroups) {
+    const historyDates = Object.keys(historyGroups).sort((a, b) => b.localeCompare(a));
+    for (let date of historyDates) {
         let safeDateId = window.slugify(date);
         htmlHistory += `<div class="plan-history-group">
-            <div onclick="toggleHistoryDate('${safeDateId}')" class="plan-history-head">
-                <div>📅 ${date} <span id="hist-arrow-${safeDateId}">▶</span></div>
-                <div>${window.formatM(historyGroups[date].total)}</div>
-            </div>
+            <button type="button" onclick="toggleHistoryDate('${safeDateId}')" class="plan-history-head">
+                <div class="plan-history-head__left">📅 ${date} <span id="hist-arrow-${safeDateId}" class="plan-history-head__arrow">▶</span></div>
+                <div class="plan-history-head__total">${window.formatM(historyGroups[date].total)}</div>
+            </button>
             <div id="hist-${safeDateId}" class="hidden plan-history-body">
                 ${historyGroups[date].list.map(x => `
                     <div class="plan-history-row">
-                        <div>
-                            <div style="font-size:13px;">${x.text}</div>
-                            <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">🏷️ ${window.tCatName(x.cat)} | 📍 ${window.tMarketName(x.market)}</div>
+                        <div class="plan-history-row__main">
+                            <div class="plan-history-row__title">${x.text}</div>
+                            <div class="plan-history-row__meta">${window.CAT_ICONS[x.cat] || "📦"} ${window.tCatName(x.cat)} · 📍 ${window.tMarketName(x.market)}</div>
                         </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:13px; font-weight:bold;">${window.formatM(x.buyPrice || x.price)}</div>
-                            <button onclick="permDelPlan(${x.id})" style="background:none; border:none; color:var(--danger); font-size:14px; cursor:pointer;">🗑️</button>
+                        <div class="plan-history-row__side">
+                            <div class="plan-history-row__price">${window.formatM(x.buyPrice || x.price)}</div>
+                            <button type="button" class="plan-icon-btn plan-icon-btn--del" onclick="permDelPlan(${x.id})" title="${window.t("plan_remove")}">🗑️</button>
                         </div>
                     </div>
                 `).join("")}
             </div>
         </div>`;
     }
-    window.setHtml("planned-list-history", htmlHistory || `<div class='empty-state'>${window.t("plan_history_empty")}</div>`);
+    window.setHtml("planned-list-history", htmlHistory || `<div class="plan-empty">${window.t("plan_history_empty")}</div>`);
     window.updatePlanBellBadge();
 };

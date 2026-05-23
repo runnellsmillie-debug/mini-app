@@ -179,6 +179,7 @@ window.openBankSubView = (type) => {
 window.closeBankSubView = () => {
     window.curBankSub = null;
     document.body.classList.remove('on-plan-add-tab');
+    document.body.classList.remove('on-plan-list-tab');
     document.body.classList.remove('on-plan-subview');
     if (window.closePlanPanels) window.closePlanPanels();
     window.el('plan-header-bar')?.classList.add('hidden');
