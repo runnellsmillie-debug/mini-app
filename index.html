@@ -246,26 +246,25 @@
     </div>
 
 
-    <div id="tab-add" class="tab-content hidden">
-        <div id="add-profile-strip" class="add-profile-strip">
-            <span class="add-profile-strip-label">Xarajat profili</span>
-            <select id="add-prof-switch" class="input-text" style="margin:0; flex:1;" onchange="window.selectProfileSafe(this.value)"></select>
-            <input type="text" id="add-prof-quick" class="input-text add-prof-quick-inp" list="profile-names-datalist" placeholder="Ism..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();window.setVal('profile-quick-input',this.value);window.quickSelectProfileByName();this.value='';}" />
+    <div id="tab-add" class="tab-content add-screen hidden">
+        <div class="add-body">
+            <div class="mode-selector mode-selector--dual add-mode-bar">
+                <button id="mode-exp" class="mode-btn mode-btn--active-exp" onclick="setAddMode('expense')">Chiqim</button>
+                <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">Kirim</button>
+            </div>
+            <div id="num-display" class="num-display num-display--add">0</div>
+            <div class="add-stay-hint" id="stay-hint"></div>
+            <div id="cats-header-container"></div>
+            <div id="cats-container"></div>
+            <input type="text" id="add-desc" class="input-text add-desc-input" placeholder="Izoh (ixtiyoriy)..." />
         </div>
-        <div class="mode-selector mode-selector--dual">
-            <button id="mode-exp" class="mode-btn mode-btn--active-exp" onclick="setAddMode('expense')">Chiqim</button>
-            <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">Kirim</button>
-        </div>
-        <div id="num-display" class="num-display">0</div>
-        <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-bottom: 10px; height: 16px;" id="stay-hint"></div>
-        <div id="cats-header-container"></div>
-        <div id="cats-container"></div>
-        <input type="text" id="add-desc" class="input-text" placeholder="Izoh yozing (ixtiyoriy)..." style="margin-top:5px; margin-bottom:10px;" />
-        <div class="num-grid">
-            <button class="num-btn" onclick="pressNum('1')">1</button><button class="num-btn" onclick="pressNum('2')">2</button><button class="num-btn" onclick="pressNum('3')">3</button>
-            <button class="num-btn" onclick="pressNum('4')">4</button><button class="num-btn" onclick="pressNum('5')">5</button><button class="num-btn" onclick="pressNum('6')">6</button>
-            <button class="num-btn" onclick="pressNum('7')">7</button><button class="num-btn" onclick="pressNum('8')">8</button><button class="num-btn" onclick="pressNum('9')">9</button>
-            <button class="num-btn" style="color:var(--danger);" onclick="pressNum('C')">C</button><button class="num-btn" onclick="pressNum('0')">0</button><button class="num-btn" onclick="pressNum('⌫')">⌫</button>
+        <div class="add-numpad-dock" aria-label="Raqamli klaviatura">
+            <div class="num-grid num-grid--add">
+                <button type="button" class="num-btn" onclick="pressNum('1')">1</button><button type="button" class="num-btn" onclick="pressNum('2')">2</button><button type="button" class="num-btn" onclick="pressNum('3')">3</button>
+                <button type="button" class="num-btn" onclick="pressNum('4')">4</button><button type="button" class="num-btn" onclick="pressNum('5')">5</button><button type="button" class="num-btn" onclick="pressNum('6')">6</button>
+                <button type="button" class="num-btn" onclick="pressNum('7')">7</button><button type="button" class="num-btn" onclick="pressNum('8')">8</button><button type="button" class="num-btn" onclick="pressNum('9')">9</button>
+                <button type="button" class="num-btn num-btn--clear" onclick="pressNum('C')">C</button><button type="button" class="num-btn" onclick="pressNum('0')">0</button><button type="button" class="num-btn" onclick="pressNum('⌫')">⌫</button>
+            </div>
         </div>
     </div>
 

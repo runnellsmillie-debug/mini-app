@@ -74,14 +74,11 @@ window.switchTab = (id, silent) => {
     if (id === "add") window.checkAccess();
     if (id === "home" && window.updatePlanCats) window.updatePlanCats();
     if (id === "report" && window.renderReport) window.renderReport();
-    if (id === "add") {
-        window.ctxSectionLabel = "Kiritish";
-        window.ctxDetailLabel = window.addMode === "income" ? "Kirim" : "Chiqim";
-    } else if (id !== "other" || !window.curBankSub) {
+    if (id !== "other" || !window.curBankSub) {
         window.ctxSectionLabel = "";
         window.ctxDetailLabel = "";
     }
-    if (window.renderAddProfileStrip) window.renderAddProfileStrip();
+    document.body.classList.toggle("on-add-tab", id === "add");
     if (window.updateSubViewContext) window.updateSubViewContext();
     if (window.render) window.render();
 };
@@ -135,7 +132,7 @@ window.updateSubViewContext = function(detail) {
             sep.classList.add("hidden");
         }
     }
-    const showBar = !!window.curBankSub || (window.curTab === "add" && window.ctxSectionLabel);
+    const showBar = !!window.curBankSub;
     bar.classList.toggle("hidden", !showBar);
     document.body.classList.toggle("has-ctx-bar", showBar);
 };

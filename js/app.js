@@ -385,8 +385,6 @@ window.setAddMode = m => {
     const exp = window.el("mode-exp"), inc = window.el("mode-inc");
     if (exp) { exp.classList.toggle("mode-btn--active-exp", m === "expense"); exp.classList.toggle("mode-btn--active", m === "expense"); }
     if (inc) { inc.classList.toggle("mode-btn--active-inc", m === "income"); inc.classList.toggle("mode-btn--active", m === "income"); }
-    window.ctxDetailLabel = m === "income" ? "Kirim" : "Chiqim";
-    if (window.curTab === "add" && window.updateSubViewContext) window.updateSubViewContext();
     window.setHtml("stay-hint",""); window.renderAddCats(); 
 };
 
@@ -415,9 +413,9 @@ window.renderAddCats = function() {
     }
 };
 
-window.clickMainCat = id => { const c = window.getCats().find(x=>x.id==id); if(c && c.subs?.length) { window.actMainCat = c; window.ctxDetailLabel = c.label; if(window.updateSubViewContext) window.updateSubViewContext(); window.renderAddCats(); window.setHtml("stay-hint",""); } else if(c) window.saveTx(c.label); };
-window.clickSubCat = id => { const s = window.actMainCat.subs.find(x=>x.id==id); if(s && s.items?.length) { window.actSubCat = s; window.ctxDetailLabel = s.label; if(window.updateSubViewContext) window.updateSubViewContext(); window.renderAddCats(); window.setHtml("stay-hint",""); } else if(s) window.saveTx(s.label); };
-window.backCat = () => { if(window.actSubCat) { window.actSubCat = null; window.ctxDetailLabel = window.actMainCat?.label || (window.addMode === "income" ? "Kirim" : "Chiqim"); } else { window.actMainCat = null; window.ctxDetailLabel = window.addMode === "income" ? "Kirim" : "Chiqim"; } if(window.updateSubViewContext) window.updateSubViewContext(); window.setHtml("stay-hint",""); window.renderAddCats(); };
+window.clickMainCat = id => { const c = window.getCats().find(x=>x.id==id); if(c && c.subs?.length) { window.actMainCat = c; window.renderAddCats(); window.setHtml("stay-hint",""); } else if(c) window.saveTx(c.label); };
+window.clickSubCat = id => { const s = window.actMainCat.subs.find(x=>x.id==id); if(s && s.items?.length) { window.actSubCat = s; window.renderAddCats(); window.setHtml("stay-hint",""); } else if(s) window.saveTx(s.label); };
+window.backCat = () => { if(window.actSubCat) window.actSubCat = null; else window.actMainCat = null; window.setHtml("stay-hint",""); window.renderAddCats(); };
 
 window.saveTx = (l, isDeepItem=false) => {
     const a = parseFloat(window.amtStr); if(!a || a<=0) return window.toast("Summa yo'q!", true); const d = new Date(), de = window.el("add-desc");
