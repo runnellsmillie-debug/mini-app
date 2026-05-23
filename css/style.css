@@ -1916,8 +1916,9 @@ body:not(.dark-mode) .cat-btn span[style*="color: #fff"] {
 #sidebar-profiles-list {
     display: flex;
     flex-direction: column;
-    gap: 0;
-    margin-top: 4px;
+    gap: 2px;
+    margin-top: 6px;
+    margin-bottom: 4px;
 }
 
 #admin-add-prof-btn {
@@ -1960,10 +1961,10 @@ body:not(.dark-mode) .cat-btn span[style*="color: #fff"] {
 .profile-row--compact {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 7px 8px;
-    margin-bottom: 4px;
-    border-radius: 10px;
+    gap: 10px;
+    padding: 9px 10px;
+    margin-bottom: 8px;
+    border-radius: 11px;
     border: 1px solid var(--border-color);
     background: var(--bg-main);
     transition: border-color 0.15s, background 0.15s, transform 0.1s;
@@ -2040,7 +2041,137 @@ body:not(.dark-mode) .cat-btn span[style*="color: #fff"] {
 .fs-perms-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
+}
+
+.perm-block {
+    border: 1px solid var(--border-color);
+    border-radius: 11px;
+    background: var(--bg-main);
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.perm-block--partial {
+    border-color: color-mix(in srgb, var(--primary) 45%, var(--border-color));
+}
+
+.perm-block--full {
+    border-color: color-mix(in srgb, var(--primary) 55%, var(--border-color));
+    box-shadow: 0 0 0 1px var(--primary-soft);
+}
+
+.perm-block__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 10px 10px 12px;
+    background: var(--bg-card);
+}
+
+.perm-block__check {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border: 2px solid var(--border-color);
+    border-radius: 7px;
+    background: transparent;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.perm-block__check--full {
+    border-color: var(--primary);
+    background: var(--primary);
+}
+
+.perm-block__check--partial {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+}
+
+.perm-block__title {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    padding: 4px 0;
+    cursor: pointer;
+    text-align: left;
+    color: var(--text);
+}
+
+.perm-block__icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.perm-block__label {
+    font-size: 13px;
+    font-weight: 600;
+    flex: 1;
+    min-width: 0;
+}
+
+.perm-block__count {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--bg-main);
+    padding: 2px 7px;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.perm-block--partial .perm-block__count {
+    color: var(--primary);
+    background: var(--primary-soft);
+}
+
+.perm-block--full .perm-block__count {
+    color: var(--primary);
+}
+
+.perm-block__chev {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: var(--bg-main);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.perm-block__body {
+    display: none;
+    padding: 8px 10px 10px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-main);
+}
+
+.perm-block--open .perm-block__body {
+    display: block;
+}
+
+.hidden-perm-chk {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
 }
 
 .fs-perm-group__title {

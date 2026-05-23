@@ -66,29 +66,137 @@ window.getAllPermissionGroups = function() {
     ];
 };
 
+window.getGroupCheckState = function(group, checkedSet) {
+    const ids = group.items.map(i => i.id);
+    const n = ids.filter(id => checkedSet.has(id)).length;
+    if (n === 0) return "none";
+    if (n === ids.length) return "all";
+    return "partial";
+};
+
+window.getProfilePermsChecked = function() {
+    return Array.from(document.querySelectorAll("#fs-perms-container .fs-perm-chk:checked")).map(c => c.value);
+};
+
+window.updatePermBlockHeaders = function() {
+    const box = document.getElementById("fs-perms-container");
+    if (!box) return;
+    const checked = new Set(window.getProfilePermsChecked());
+    box.querySelectorAll(".perm-block").forEach(block => {
+        const key = block.getAttribute("data-group");
+        const group = window.getAllPermissionGroups().find(g => g.key === key);
+        if (!group) return;
+        const state = window.getGroupCheckState(group, checked);
+        block.classList.toggle("perm-block--full", state === "all");
+        block.classList.toggle("perm-block--partial", state === "partial");
+        const chkBtn = block.querySelector(".perm-block__check");
+        if (chkBtn) {
+            chkBtn.classList.toggle("perm-block__check--full", state === "all");
+            chkBtn.classList.toggle("perm-block__check--partial", state === "partial");
+            chkBtn.textContent = state === "all" ? "✓" : "";
+        }
+        const count = block.querySelector(".perm-block__count");
+        if (count) {
+            const n = group.items.filter(i => checked.has(i.id)).length;
+            count.textContent = `${n}/${group.items.length}`;
+        }
+    });
+};
+
+window.bindProfilePermsUI = function() {
+    const box = document.getElementById("fs-perms-container");
+    if (!box || box._permBound) return;
+    box._permBound = true;
+
+    box.addEventListener("click", e => {
+        const expandBtn = e.target.closest("[data-action='expand']");
+        if (expandBtn) {
+            e.preventDefault();
+            const key = expandBtn.getAttribute("data-group");
+            const block = box.querySelector(`.perm-block[data-group="${key}"]`);
+            if (!block) return;
+            block.classList.toggle("perm-block--open");
+            const chev = block.querySelector(".perm-block__chev");
+            if (chev) chev.textContent = block.classList.contains("perm-block--open") ? "▲" : "▼";
+            if (window._permExpandedGroups) {
+                if (block.classList.contains("perm-block--open")) window._permExpandedGroups.add(key);
+                else window._permExpandedGroups.delete(key);
+            }
+            return;
+        }
+        const toggleBtn = e.target.closest("[data-action='toggle-group']");
+        if (toggleBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const key = toggleBtn.getAttribute("data-group");
+            const group = window.getAllPermissionGroups().find(g => g.key === key);
+            if (!group) return;
+            const checked = new Set(window.getProfilePermsChecked());
+            const state = window.getGroupCheckState(group, checked);
+            const turnOn = state !== "all";
+            group.items.forEach(item => {
+                if (turnOn) checked.add(item.id);
+                else checked.delete(item.id);
+            });
+            window.renderProfilePermsGrid([...checked]);
+        }
+    });
+
+    box.addEventListener("change", e => {
+        if (!e.target.classList.contains("fs-perm-chk")) return;
+        e.target.closest(".perm-chip")?.classList.toggle("perm-chip--on", e.target.checked);
+        window.updatePermBlockHeaders();
+    });
+};
+
 window.renderProfilePermsGrid = function(checkedIds) {
     const box = document.getElementById("fs-perms-container");
     if (!box) return;
-    const checked = new Set(checkedIds || []);
-    box.innerHTML = window.getAllPermissionGroups().map(group => `
-        <div class="fs-perm-group">
-            <div class="fs-perm-group__title">${group.label}</div>
-            <div class="fs-perm-grid">
-                ${group.items.map(item => `
-                    <label class="perm-chip${item.danger ? " perm-chip--danger" : ""}${checked.has(item.id) ? " perm-chip--on" : ""}">
-                        <input type="checkbox" class="fs-perm-chk" value="${item.id}"${checked.has(item.id) ? " checked" : ""}>
-                        <span class="perm-chip__icon">${item.icon}</span>
-                        <span class="perm-chip__lbl">${item.label}</span>
-                    </label>
-                `).join("")}
-            </div>
-        </div>
-    `).join("");
-    box.querySelectorAll(".fs-perm-chk").forEach(chk => {
-        chk.addEventListener("change", () => {
-            chk.closest(".perm-chip")?.classList.toggle("perm-chip--on", chk.checked);
-        });
+    if (!window._permExpandedGroups) window._permExpandedGroups = new Set();
+    box.querySelectorAll(".perm-block--open").forEach(b => {
+        const k = b.getAttribute("data-group");
+        if (k) window._permExpandedGroups.add(k);
     });
+    const checked = new Set(checkedIds || []);
+    const groupIcons = { tabs: "📱", services: "💼", shopping: "🛒", admin: "👑" };
+
+    box.innerHTML = window.getAllPermissionGroups().map(group => {
+        const state = window.getGroupCheckState(group, checked);
+        const expanded = window._permExpandedGroups.has(group.key) || state === "partial";
+        if (state === "partial") window._permExpandedGroups.add(group.key);
+        const nChecked = group.items.filter(i => checked.has(i.id)).length;
+        const checkCls = state === "all" ? " perm-block__check--full" : state === "partial" ? " perm-block__check--partial" : "";
+        const singleItem = group.items.length === 1;
+
+        return `
+        <div class="perm-block perm-block--${state}${expanded ? " perm-block--open" : ""}" data-group="${group.key}">
+            <div class="perm-block__head">
+                <button type="button" class="perm-block__check${checkCls}" data-action="toggle-group" data-group="${group.key}" aria-label="Toggle">${state === "all" ? "✓" : ""}</button>
+                <button type="button" class="perm-block__title${singleItem ? "" : ""}" data-action="${singleItem ? "toggle-group" : "expand"}" data-group="${group.key}">
+                    <span class="perm-block__icon">${groupIcons[group.key] || "📂"}</span>
+                    <span class="perm-block__label">${group.label}</span>
+                    ${singleItem ? "" : `<span class="perm-block__count">${nChecked}/${group.items.length}</span>`}
+                </button>
+                ${singleItem ? "" : `<button type="button" class="perm-block__chev" data-action="expand" data-group="${group.key}">${expanded ? "▲" : "▼"}</button>`}
+            </div>
+            ${singleItem ? "" : `
+            <div class="perm-block__body">
+                <div class="fs-perm-grid">
+                    ${group.items.map(item => `
+                        <label class="perm-chip${item.danger ? " perm-chip--danger" : ""}${checked.has(item.id) ? " perm-chip--on" : ""}">
+                            <input type="checkbox" class="fs-perm-chk" value="${item.id}"${checked.has(item.id) ? " checked" : ""}>
+                            <span class="perm-chip__icon">${item.icon}</span>
+                            <span class="perm-chip__lbl">${item.label}</span>
+                        </label>
+                    `).join("")}
+                </div>
+            </div>`}
+            ${singleItem ? `<input type="checkbox" class="fs-perm-chk hidden-perm-chk" value="${group.items[0].id}"${checked.has(group.items[0].id) ? " checked" : ""}>` : ""}
+        </div>`;
+    }).join("");
+
+    window.bindProfilePermsUI();
+    window.updatePermBlockHeaders();
 };
 
 window.DEFAULT_NEW_PROFILE_PERMS = [

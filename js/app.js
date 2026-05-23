@@ -186,6 +186,7 @@ window.openFullScreenModal = function(profId = null) {
         document.getElementById('fs-prof-role').value = 'child_f';
         perms = [...window.DEFAULT_NEW_PROFILE_PERMS];
     }
+    window._permExpandedGroups = new Set();
     if (window.renderProfilePermsGrid) window.renderProfilePermsGrid(perms);
 };
 
