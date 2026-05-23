@@ -1,7 +1,7 @@
 // ==========================================
 // BULUTLI SINXRONIZATSIYA VA API SOZLAMALARI
 // ==========================================
-const API_BASE = "https://mini-app-gkr9.onrender.com"; // Render manzili
+const API_BASE = window.API_BASE || "https://mini-app-1.onrender.com";
 const urlParams = new URLSearchParams(window.location.search);
 
 function parseBidFromHash() {
