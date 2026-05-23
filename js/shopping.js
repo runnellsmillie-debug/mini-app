@@ -97,6 +97,11 @@ window.focusPlanAmount = function() {
     window.syncPlanLayout();
 };
 
+window.ensurePlanAmountFocus = function() {
+    if (window.curBankSub !== "plan" || window.curPlanTab !== "add") return;
+    window.focusPlanAmount();
+};
+
 window.focusPlanName = function() {
     window.planKeypadMode = "name";
     const n = window.el("plan-kb-amount"), t = window.el("plan-kb-text");
@@ -190,6 +195,7 @@ window.renderPlanMarketChips = function() {
 window.selectPlanMarket = function(m) {
     window.setVal("plan-market", m);
     window.renderPlanMarketChips();
+    window.ensurePlanAmountFocus();
 };
 
 window.syncPlanSubcatSelect = function() {
@@ -246,18 +252,21 @@ window.clickPlanMainCat = function(cat) {
     window.setVal("smart-plan-cat", cat);
     window.syncPlanSubcatSelect();
     window.renderPlanAddCats();
+    window.ensurePlanAmountFocus();
 };
 
 window.clickPlanSubCat = function(sub) {
     window.planActSubCat = sub;
     window.setVal("smart-plan-subcat", sub);
     window.renderPlanAddCats();
+    window.ensurePlanAmountFocus();
 };
 
 window.backPlanCat = function() {
     if (window.planActSubCat) window.planActSubCat = null;
     else window.planActMainCat = null;
     window.renderPlanAddCats();
+    window.ensurePlanAmountFocus();
 };
 
 window.clickPlanProduct = function(rawName) {
@@ -418,7 +427,7 @@ window.switchPlanTab = (tab) => {
         window.syncPlanNameDisplay();
         window.syncPlanQtyDisplay();
         window.syncPlanLayout();
-        window.focusPlanAmount();
+        window.ensurePlanAmountFocus();
     } else {
         document.body.classList.remove('on-plan-add-tab');
         window.renderPlanned();
@@ -496,7 +505,7 @@ window.quickAddPlan = t => {
     window.syncPlanNameDisplay();
     window.syncPlanQtyDisplay();
     window.syncPlanAmountDisplay();
-    window.focusPlanName();
+    window.ensurePlanAmountFocus();
     window.toast(autoPrice > 0 ? window.t("plan_price_history") : window.t("plan_enter_price"));
 };
 
@@ -507,9 +516,15 @@ window.addPlannedItemManual = () => {
     const m = window.val("plan-market");
     let p = parseInt(window.planPriceStr || "0", 10) || window.getNum("plan-price");
 
-    if (!n) return window.toast(window.t("name_required"), true);
+    if (!n) {
+        window.focusPlanName();
+        return window.toast(window.t("name_required"), true);
+    }
     if (!p || p === 0) p = window.getHistoricalPrice(n);
-    if (!p) return window.toast(window.t("plan_enter_price"), true);
+    if (!p) {
+        window.ensurePlanAmountFocus();
+        return window.toast(window.t("plan_enter_price"), true);
+    }
 
     const urgentCb = window.el("plan-urgent-cb");
     const isUrgent = !!(urgentCb && urgentCb.checked);
@@ -542,7 +557,7 @@ window.addPlannedItemManual = () => {
     window.save();
     window.toast(isUrgent ? window.t("plan_added_urgent") : window.t("plan_added"));
     window.updatePlanBellBadge();
-    window.focusPlanAmount();
+    window.ensurePlanAmountFocus();
 };
 
 window.skipPlanItem = id => {

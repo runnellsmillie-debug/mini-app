@@ -683,9 +683,13 @@ body.on-plan-add-tab {
 }
 
 #plan-view-add {
-    --cat-main-h: 44px;
-    --cat-rukun-h: 34px;
-    --cat-item-h: 26px;
+    --plan-cat-row-h: 40px;
+    --plan-cat-item-row-h: 28px;
+    --plan-cat-grid-gap: 5px;
+    --plan-cat-grid-rows: 3;
+    --cat-main-h: var(--plan-cat-row-h);
+    --cat-rukun-h: var(--plan-cat-row-h);
+    --cat-item-h: var(--plan-cat-item-row-h);
 }
 
 .plan-amount-row {
@@ -905,8 +909,21 @@ body.on-plan-add-tab {
 
 #plan-view-add #plan-cats-container::-webkit-scrollbar { display: none; }
 
-#plan-view-add #plan-cats-container.cats-level--main {
-    max-height: none;
+#plan-view-add #plan-cats-container.cats-level--main,
+#plan-view-add #plan-cats-container.cats-level--rukun,
+#plan-view-add #plan-cats-container.cats-level--items {
+    flex: 0 0 auto;
+    height: calc(var(--plan-cat-row-h) * var(--plan-cat-grid-rows) + var(--plan-cat-grid-gap) * (var(--plan-cat-grid-rows) - 1));
+    max-height: calc(var(--plan-cat-row-h) * var(--plan-cat-grid-rows) + var(--plan-cat-grid-gap) * (var(--plan-cat-grid-rows) - 1));
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+#plan-view-add #plan-cats-container.cats-level--items {
+    height: calc(var(--plan-cat-item-row-h) * var(--plan-cat-grid-rows) + var(--plan-cat-grid-gap) * (var(--plan-cat-grid-rows) - 1));
+    max-height: calc(var(--plan-cat-item-row-h) * var(--plan-cat-grid-rows) + var(--plan-cat-grid-gap) * (var(--plan-cat-grid-rows) - 1));
 }
 
 #plan-view-add .plan-cats-hint {
@@ -942,14 +959,22 @@ body.on-plan-add-tab {
 
 #plan-view-add .cat-scroll--plan {
     display: grid;
-    gap: 6px;
+    gap: var(--plan-cat-grid-gap);
     padding: 0;
     align-content: start;
 }
 
-#plan-view-add .cat-grid--main { grid-template-columns: repeat(3, 1fr); grid-auto-rows: var(--cat-main-h); }
-#plan-view-add .cat-grid--rukun { grid-template-columns: repeat(3, 1fr); grid-auto-rows: var(--cat-rukun-h); }
-#plan-view-add .cat-grid--items { grid-template-columns: repeat(2, 1fr); grid-auto-rows: auto; gap: 5px; }
+#plan-view-add .cat-grid--main,
+#plan-view-add .cat-grid--rukun {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: var(--plan-cat-row-h);
+}
+
+#plan-view-add .cat-grid--items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: var(--plan-cat-item-row-h);
+    gap: var(--plan-cat-grid-gap);
+}
 
 #plan-view-add .cat-btn--plan {
     width: 100%;
@@ -967,28 +992,41 @@ body.on-plan-add-tab {
     position: relative;
 }
 
-#plan-view-add .cat-grid--main .cat-btn--plan { height: var(--cat-main-h); min-height: var(--cat-main-h); }
-#plan-view-add .cat-grid--rukun .cat-btn--plan { height: var(--cat-rukun-h); min-height: var(--cat-rukun-h); }
+#plan-view-add .cat-grid--main .cat-btn--plan,
+#plan-view-add .cat-grid--rukun .cat-btn--plan {
+    height: var(--plan-cat-row-h);
+    min-height: var(--plan-cat-row-h);
+    flex-direction: column;
+    justify-content: center;
+    padding: 3px 4px;
+    gap: 2px;
+}
+
 #plan-view-add .cat-grid--items .cat-btn--plan {
-    height: auto;
-    min-height: var(--cat-item-h);
+    height: var(--plan-cat-item-row-h);
+    min-height: var(--plan-cat-item-row-h);
     flex-direction: row;
     justify-content: flex-start;
-    padding: 4px 8px;
+    padding: 3px 8px;
     gap: 6px;
 }
 
-#plan-view-add .cat-grid--items .cat-btn--plan .cat-btn__icon { font-size: 14px; flex-shrink: 0; }
+#plan-view-add .cat-grid--main .cat-btn--plan .cat-btn__icon { font-size: 17px; }
+#plan-view-add .cat-grid--rukun .cat-btn--plan .cat-btn__icon { font-size: 15px; }
+#plan-view-add .cat-grid--items .cat-btn--plan .cat-btn__icon { font-size: 13px; flex-shrink: 0; }
+
+#plan-view-add .cat-grid--main .cat-btn--plan .cat-btn__label,
+#plan-view-add .cat-grid--rukun .cat-btn--plan .cat-btn__label {
+    font-size: 8px;
+    text-align: center;
+    -webkit-line-clamp: 2;
+}
 
 #plan-view-add .cat-grid--items .cat-btn--plan .cat-btn__label {
     font-size: 10px;
     text-align: left;
     -webkit-line-clamp: 1;
 }
-
-#plan-view-add .cat-btn--plan .cat-btn__icon { line-height: 1; }
-#plan-view-add .cat-grid--main .cat-btn--plan .cat-btn__icon { font-size: 18px; }
-#plan-view-add .cat-grid--rukun .cat-btn--plan .cat-btn__icon { font-size: 15px; }
 
 #plan-view-add .cat-btn--plan .cat-btn__label {
     font-size: 7px;
