@@ -244,11 +244,12 @@ window.setupServicesMenuDrag = function() {
     const wrap = window.el("services-menu-wrap");
     const menu = window.el("bank-main-menu");
     if (!wrap || !menu) return;
-    if (wrap.dataset.svcDrag === "3") return;
-    wrap.dataset.svcDrag = "3";
+    if (wrap.dataset.svcDrag === "4") return;
+    wrap.dataset.svcDrag = "4";
     let dragEl = null, pressTimer = null, pressTarget = null;
-    let startX = 0, startY = 0;
+    let startX = 0, startY = 0, scrollMode = false, lastScrollY = 0;
     const LONG_MS = 500, MOVE_PX = 14;
+    const scrollEl = wrap;
 
     const clearPress = () => {
         clearTimeout(pressTimer);
@@ -256,10 +257,16 @@ window.setupServicesMenuDrag = function() {
         pressTarget = null;
     };
 
+    const resetScroll = () => {
+        scrollMode = false;
+        lastScrollY = 0;
+    };
+
     const movedTooFar = (x, y) => Math.hypot(x - startX, y - startY) > MOVE_PX;
 
     const endDrag = () => {
         clearPress();
+        resetScroll();
         if (!dragEl) return;
         dragEl.classList.remove("dragging");
         const ids = Array.from(menu.querySelectorAll(".main-menu-btn[data-cat-id]")).map(b => b.getAttribute("data-cat-id"));
@@ -268,31 +275,62 @@ window.setupServicesMenuDrag = function() {
     };
 
     const beginLongPress = () => {
-        if (!pressTarget) return;
-        const target = pressTarget;
-        const id = target.getAttribute("data-cat-id");
         pressTimer = null;
+        if (!pressTarget) return;
         window._blockSvcTap = true;
         if (!window.serviceEditMode) window.enterServiceEditMode();
-        dragEl = menu.querySelector(`.main-menu-btn[data-cat-id="${id}"]`) || target;
-        dragEl?.classList.add("dragging");
         if (navigator.vibrate) navigator.vibrate(50);
+    };
+
+    const beginDragHold = () => {
+        pressTimer = null;
+        if (!pressTarget || !window.serviceEditMode) return;
+        const id = pressTarget.getAttribute("data-cat-id");
+        dragEl = menu.querySelector(`.main-menu-btn[data-cat-id="${id}"]`) || pressTarget;
+        dragEl?.classList.add("dragging");
+        if (navigator.vibrate) navigator.vibrate(30);
     };
 
     const onPressStart = (x, y, target) => {
         if (!target) return;
-        if (!window.serviceEditMode) {
-            pressTarget = target;
-            startX = x;
-            startY = y;
-            clearTimeout(pressTimer);
-            pressTimer = setTimeout(beginLongPress, LONG_MS);
-            return;
+        resetScroll();
+        pressTarget = target;
+        startX = x;
+        startY = y;
+        lastScrollY = y;
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(window.serviceEditMode ? beginDragHold : beginLongPress, LONG_MS);
+    };
+
+    const handleMove = (x, y, prevent) => {
+        if (scrollMode) {
+            scrollEl.scrollTop -= (y - lastScrollY);
+            lastScrollY = y;
+            return true;
         }
-        clearPress();
-        dragEl = target;
-        dragEl.classList.add("dragging");
-        if (navigator.vibrate) navigator.vibrate(30);
+        if (pressTimer && !dragEl) {
+            const dx = Math.abs(x - startX), dy = Math.abs(y - startY);
+            if (window.serviceEditMode && dy > MOVE_PX && dy > dx * 1.1) {
+                clearPress();
+                scrollMode = true;
+                lastScrollY = y;
+                return true;
+            }
+            if (!window.serviceEditMode && movedTooFar(x, y)) {
+                clearPress();
+                return false;
+            }
+        }
+        if (!dragEl) return false;
+        prevent();
+        const elemBelow = document.elementFromPoint(x, y);
+        const dropTarget = elemBelow ? elemBelow.closest(".main-menu-btn[data-cat-id]") : null;
+        if (dropTarget && dropTarget !== dragEl) {
+            const rect = dropTarget.getBoundingClientRect();
+            const next = (y - rect.top) / (rect.bottom - rect.top) > 0.5;
+            menu.insertBefore(dragEl, next ? dropTarget.nextSibling : dropTarget);
+        }
+        return true;
     };
 
     wrap.addEventListener("touchstart", e => {
@@ -313,40 +351,18 @@ window.setupServicesMenuDrag = function() {
 
     wrap.addEventListener("touchmove", e => {
         const touch = e.touches[0];
-        if (pressTimer && movedTooFar(touch.clientX, touch.clientY)) {
-            clearPress();
-            return;
-        }
-        if (!window.serviceEditMode || !dragEl) return;
-        e.preventDefault();
-        const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-        const dropTarget = elemBelow ? elemBelow.closest(".main-menu-btn[data-cat-id]") : null;
-        if (dropTarget && dropTarget !== dragEl) {
-            const rect = dropTarget.getBoundingClientRect();
-            const next = (touch.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-            menu.insertBefore(dragEl, next ? dropTarget.nextSibling : dropTarget);
+        if (handleMove(touch.clientX, touch.clientY, () => e.preventDefault())) {
+            if (scrollMode || dragEl) e.preventDefault();
         }
     }, { passive: false });
 
     wrap.addEventListener("pointermove", e => {
         if (e.pointerType !== "mouse") return;
-        if (pressTimer && movedTooFar(e.clientX, e.clientY)) {
-            clearPress();
-            return;
-        }
-        if (!window.serviceEditMode || !dragEl) return;
-        e.preventDefault();
-        const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
-        const dropTarget = elemBelow ? elemBelow.closest(".main-menu-btn[data-cat-id]") : null;
-        if (dropTarget && dropTarget !== dragEl) {
-            const rect = dropTarget.getBoundingClientRect();
-            const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-            menu.insertBefore(dragEl, next ? dropTarget.nextSibling : dropTarget);
-        }
+        handleMove(e.clientX, e.clientY, () => e.preventDefault());
     });
 
     const onPressEnd = () => {
-        setTimeout(() => { window._blockSvcTap = false; }, 350);
+        setTimeout(() => { window._blockSvcTap = false; }, 200);
         endDrag();
     };
 
@@ -362,7 +378,9 @@ window.setupServicesMenuDrag = function() {
     });
 
     wrap.addEventListener("click", e => {
-        if (window._blockSvcTap || window.serviceEditMode) {
+        if (e.target.closest(".cat-btn__hide") || e.target.closest(".add-cats-done")) return;
+        if (e.target.closest(".main-menu-btn--masked")) return;
+        if (window._blockSvcTap) {
             e.preventDefault();
             e.stopPropagation();
         }
