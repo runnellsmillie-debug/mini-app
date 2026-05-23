@@ -68,6 +68,7 @@ async function postLoadInit() {
         if (window.state.profiles.length > n) window.save(true);
     }
     ['txs','incs','debts','sched','plan','deps','credits','audit'].forEach(k => { if(!window.state[k]) window.state[k] = []; });
+    if (!window.state.catOrders) window.state.catOrders = {};
 
     if (window.isBudgetAdmin()) {
         if(document.getElementById('admin-add-prof-btn')) document.getElementById('admin-add-prof-btn').style.display = 'block';
@@ -92,6 +93,7 @@ async function postLoadInit() {
     if(window.syncPlanPriceDisplay) window.syncPlanPriceDisplay();
     if(window.initAddKeyboard) window.initAddKeyboard();
     if(window.syncDescDisplay) window.syncDescDisplay();
+    if(window.setupAddCatDrag) window.setupAddCatDrag();
     if(window.syncAddLayout) window.syncAddLayout();
     
     window.render();
@@ -384,11 +386,126 @@ window.saveAndExit = () => {
 // ==========================================
 window.setAddMode = m => { 
     window.addMode = m; window.actMainCat = null; window.actSubCat = null; 
+    window.addExpPanelOpen = false;
     const exp = window.el("mode-exp"), inc = window.el("mode-inc");
     if (exp) { exp.classList.toggle("mode-btn--active-exp", m === "expense"); exp.classList.toggle("mode-btn--active", m === "expense"); }
     if (inc) { inc.classList.toggle("mode-btn--active-inc", m === "income"); inc.classList.toggle("mode-btn--active", m === "income"); }
-    window.setHtml("stay-hint",""); window.renderAddCats();
+    window.setHtml("stay-hint",""); window.renderTodayExpPanel(); window.renderAddCats();
     if (window.focusAddAmount) window.focusAddAmount();
+};
+
+window.onModeExpClick = function() {
+    if (window.addMode !== "expense") {
+        window.setAddMode("expense");
+        return;
+    }
+    window.addExpPanelOpen = !window.addExpPanelOpen;
+    window.renderTodayExpPanel();
+    window.syncAddLayout();
+};
+
+window.getTodayExpense = function(profId) {
+    const p = profId || window.curProf;
+    const today = new Date().toISOString().slice(0, 10);
+    const match = x => x.date === today && (p === "general" || x.prof === p);
+    return window.state.txs.filter(match).reduce((s, t) => s + t.amount, 0);
+};
+
+window.renderTodayExpPanel = function() {
+    const panel = window.el("add-today-panel");
+    const list = window.el("add-today-list");
+    if (!panel || !list) return;
+    if (!window.addExpPanelOpen || window.addMode !== "expense") {
+        panel.classList.add("hidden");
+        const exp = window.el("mode-exp");
+        if (exp) exp.classList.remove("mode-btn--panel-open");
+        return;
+    }
+    panel.classList.remove("hidden");
+    const expBtn = window.el("mode-exp");
+    if (expBtn) expBtn.classList.add("mode-btn--panel-open");
+    const today = new Date().toISOString().slice(0, 10);
+    const txs = window.state.txs
+        .filter(x => x.date === today && (window.curProf === "general" || x.prof === window.curProf))
+        .sort((a, b) => b.amount - a.amount);
+    list.innerHTML = txs.length
+        ? txs.map(x => `<div class="add-today-row"><span class="add-today-desc">${(x.desc || x.subCat || x.cat || "").replace(/</g, "&lt;")}</span><span class="add-today-amt">${window.formatM(x.amount)}</span></div>`).join("")
+        : `<div class="add-today-empty">Bugun xarajat yo'q</div>`;
+};
+
+window.getAddCatLevel = function() {
+    if (window.addMode === "income") return "main";
+    if (window.actSubCat) return "items";
+    if (window.actMainCat) return "rukun";
+    return "main";
+};
+
+window.getCatOrderKey = function(level, parentId) {
+    return `${window.curProf}::${level}::${parentId || "root"}`;
+};
+
+window.applyCatOrder = function(items, level, parentId) {
+    if (!items || !items.length) return items;
+    const order = window.state.catOrders?.[window.getCatOrderKey(level, parentId)];
+    if (!order || !order.length) return items;
+    const map = new Map(items.map(c => [c.id, c]));
+    const sorted = order.filter(id => map.has(id)).map(id => map.get(id));
+    items.forEach(c => { if (!order.includes(c.id)) sorted.push(c); });
+    return sorted;
+};
+
+window.saveCatOrder = function(level, parentId, ids) {
+    if (!window.state.catOrders) window.state.catOrders = {};
+    window.state.catOrders[window.getCatOrderKey(level, parentId)] = ids;
+    window.save(true);
+};
+
+window.setupAddCatDrag = function() {
+    const cont = window.el("cats-container");
+    if (!cont || cont.dataset.dragSetup) return;
+    cont.dataset.dragSetup = "1";
+    let dragEl = null, pressTimer = null;
+
+    const endDrag = () => {
+        clearTimeout(pressTimer);
+        if (!dragEl) return;
+        dragEl.classList.remove("dragging");
+        const grid = cont.querySelector(".cat-scroll--add");
+        if (grid) {
+            const ids = Array.from(grid.querySelectorAll(".cat-btn--add[data-cat-id]")).map(b => b.getAttribute("data-cat-id"));
+            const level = grid.getAttribute("data-level") || "main";
+            const parent = grid.getAttribute("data-parent") || "root";
+            window.saveCatOrder(level, parent === "root" ? null : parent, ids);
+        }
+        dragEl = null;
+    };
+
+    cont.addEventListener("touchstart", e => {
+        const target = e.target.closest(".cat-btn--add[data-cat-id]");
+        if (!target || target.classList.contains("cat-btn--ghost")) return;
+        pressTimer = setTimeout(() => {
+            dragEl = target;
+            dragEl.classList.add("dragging");
+            if (navigator.vibrate) navigator.vibrate(50);
+        }, 500);
+    }, { passive: true });
+
+    cont.addEventListener("touchmove", e => {
+        if (!dragEl) { clearTimeout(pressTimer); return; }
+        e.preventDefault();
+        const touch = e.touches[0];
+        const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const dropTarget = elemBelow ? elemBelow.closest(".cat-btn--add[data-cat-id]") : null;
+        const grid = dragEl.parentElement;
+        if (dropTarget && dropTarget !== dragEl && grid) {
+            const rect = dropTarget.getBoundingClientRect();
+            const next = (touch.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+            grid.insertBefore(dragEl, next ? dropTarget.nextSibling : dropTarget);
+        }
+    }, { passive: false });
+
+    cont.addEventListener("touchend", endDrag);
+    cont.addEventListener("touchcancel", endDrag);
 };
 
 window.syncDescDisplay = () => {
@@ -446,15 +563,14 @@ window.pressTextKey = k => {
 
 window.initAddKeyboard = () => {
     const panel = window.el("add-kb-text");
-    if (!panel || panel.dataset.init) return;
-    panel.dataset.init = "1";
+    if (!panel || panel.dataset.init === "2") return;
+    panel.dataset.init = "2";
     const rows = [
         ["Q","W","E","R","T","Y","U","I","O","P"],
         ["A","S","D","F","G","H","J","K","L"],
-        ["Z","X","C","V","B","N","M","O'","G'"],
-        [".",",","-","!","?"]
+        ["Z","X","C","V","B","N","M","O'","G'"]
     ];
-    let html = '<div class="text-kb-grid">';
+    let html = '<div class="text-kb-grid text-kb-grid--add">';
     rows.forEach(row => {
         html += '<div class="text-kb-row">';
         row.forEach(k => {
@@ -464,6 +580,8 @@ window.initAddKeyboard = () => {
         html += "</div>";
     });
     html += `<div class="text-kb-row text-kb-row--bottom">
+        <button type="button" class="text-kb-key" onclick="window.pressTextKey(',')">,</button>
+        <button type="button" class="text-kb-key" onclick="window.pressTextKey('.')">.</button>
         <button type="button" class="text-kb-key text-kb-key--wide" onclick="window.pressTextKey(' ')">␣</button>
         <button type="button" class="text-kb-key" onclick="window.pressTextKey('⌫')">⌫</button>
         <button type="button" class="text-kb-key text-kb-key--mode" onclick="window.focusAddAmount()">123</button>
@@ -484,30 +602,39 @@ window.getCats = function() { return window.getCatsForProfile ? window.getCatsFo
 
 window.renderAddCats = function() {
     const cont = window.el("cats-container"), head = window.el("cats-header-container"); if(!cont || !head) return;
-    const mkBtn = (icon, label, onclick, extraCls = "") =>
-        `<button type="button" class="cat-btn cat-btn--add${extraCls ? " " + extraCls : ""}" onclick="${onclick}"><span class="cat-btn__icon">${icon}</span><span class="cat-btn__label">${label}</span></button>`;
-    const wrap = items => `<div class="cat-scroll--add">${items}</div>`;
+    const level = window.getAddCatLevel();
+    cont.className = `cats-level--${level}`;
+
+    const mkBtn = (id, icon, label, onclick, extraCls = "") =>
+        `<button type="button" class="cat-btn cat-btn--add${extraCls ? " " + extraCls : ""}" data-cat-id="${id || ""}" onclick="${onclick}"><span class="cat-btn__icon">${icon}</span><span class="cat-btn__label">${label}</span></button>`;
+    const wrap = (items, parentId) => `<div class="cat-scroll--add cat-grid--${level}" data-level="${level}" data-parent="${parentId || "root"}">${items}</div>`;
 
     if (window.addMode === "income") {
         head.innerHTML = "";
-        cont.innerHTML = wrap(window.INC_SOURCES.map(s => mkBtn(s.icon, s.label, `saveTx('${s.label}')`)).join(""));
+        const src = window.applyCatOrder(window.INC_SOURCES.map((s, i) => ({ ...s, id: "inc_" + i })), "main", "income");
+        cont.innerHTML = wrap(src.map(s => mkBtn(s.id, s.icon, s.label, `saveTx('${s.label.replace(/'/g, "\\'")}')`)).join(""), "income");
+        window.setupAddCatDrag();
+        window.syncAddLayout();
         return;
     }
 
-    const cats = window.getCats();
+    const cats = window.applyCatOrder(window.getCats(), "main", null);
     if (window.actSubCat) {
         head.innerHTML = `<div class="add-crumb"><span>${window.actMainCat.label} <b>›</b> ${window.actSubCat.label}</span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
-        cont.innerHTML = wrap(window.actSubCat.items.map(i => mkBtn(i.icon, i.label, `saveTx('${i.label}', true)`, "cat-btn--pick")).join(""));
+        const items = window.applyCatOrder(window.actSubCat.items, "items", window.actSubCat.id);
+        cont.innerHTML = wrap(items.map(i => mkBtn(i.id, i.icon, i.label, `saveTx('${i.label.replace(/'/g, "\\'")}', true)`, "cat-btn--pick")).join(""), window.actSubCat.id);
     } else if (window.actMainCat && window.actMainCat.subs && window.actMainCat.subs.length > 0) {
         head.innerHTML = `<div class="add-crumb"><span>Rukun: <b>${window.actMainCat.label}</b></span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
-        cont.innerHTML = wrap(window.actMainCat.subs.map(s => {
+        const subs = window.applyCatOrder(window.actMainCat.subs, "rukun", window.actMainCat.id);
+        cont.innerHTML = wrap(subs.map(s => {
             const f = s.items?.length > 0;
-            return mkBtn(s.icon, s.label + (f ? "" : " ✓"), f ? `clickSubCat('${s.id}')` : `saveTx('${s.label}')`);
-        }).join("") + mkBtn("⚙️", "Umumiy", `saveTx('${window.actMainCat.label}')`, "cat-btn--ghost"));
+            return mkBtn(s.id, s.icon, s.label + (f ? "" : " ✓"), f ? `clickSubCat('${s.id}')` : `saveTx('${s.label.replace(/'/g, "\\'")}')`);
+        }).join("") + mkBtn("umumiy", "⚙️", "Umumiy", `saveTx('${window.actMainCat.label.replace(/'/g, "\\'")}')`, "cat-btn--ghost"), window.actMainCat.id);
     } else {
-        head.innerHTML = "";
-        cont.innerHTML = wrap(cats.map(c => mkBtn(c.icon, c.label, `clickMainCat('${c.id}')`, "cat-btn--main")).join(""));
+        head.innerHTML = `<div class="add-cats-hint">Ushlab turing — joyini almashtirish</div>`;
+        cont.innerHTML = wrap(cats.map(c => mkBtn(c.id, c.icon, c.label, `clickMainCat('${c.id}')`, "cat-btn--main")).join(""), null);
     }
+    window.setupAddCatDrag();
     window.syncAddLayout();
 };
 
@@ -535,7 +662,10 @@ window.saveTx = (l, isDeepItem=false) => {
     if (window.syncDescDisplay) window.syncDescDisplay();
     if (window.focusAddAmount) window.focusAddAmount();
     window.save(); 
-    if(window.actSubCat||window.actMainCat) { window.setHtml("stay-hint", `✅ Oxirgi: <b style="color:var(--success);">${window.formatM(a)}</b>. Yana kiriting!`); window.renderAddCats(); } else window.setHtml("stay-hint", ""); window.toast("Saqlandi!");
+    if(window.actSubCat||window.actMainCat) { window.setHtml("stay-hint", `✅ Oxirgi: <b style="color:var(--success);">${window.formatM(a)}</b>. Yana kiriting!`); window.renderAddCats(); } else window.setHtml("stay-hint", ""); 
+    window.renderTodayExpPanel();
+    window.updateHeaderBalance();
+    window.toast("Saqlandi!");
 };
 
 window.renderReport = function() {
@@ -560,6 +690,8 @@ window.delItem = function(type, id) {
     else window.state.incs = window.state.incs.filter(x => x.id !== id);
     window.save(true);
     if (window.renderReport) window.renderReport();
+    window.renderTodayExpPanel();
+    window.updateHeaderBalance();
     window.toast("O'chirildi");
 };
 
@@ -575,10 +707,16 @@ window.getProfileBalance = function(profId) {
 
 window.updateHeaderBalance = function() {
     const el = window.el("header-balance");
-    if (!el) return;
-    const bal = window.getProfileBalance();
-    el.textContent = window.formatM(bal);
-    el.style.color = bal >= 0 ? "var(--primary)" : "var(--danger)";
+    if (el) {
+        const bal = window.getProfileBalance();
+        el.textContent = window.formatM(bal);
+        el.style.color = bal >= 0 ? "var(--primary)" : "var(--danger)";
+    }
+    const expEl = window.el("header-today-exp");
+    if (expEl) {
+        const todayExp = window.getTodayExpense();
+        expEl.textContent = "Bugun: " + window.formatM(todayExp);
+    }
 };
 
 window.render = function() {
@@ -598,7 +736,10 @@ window.render = function() {
     window.setHtml("sched-list-container", sHtml || "<div style='text-align:center; color:var(--text-muted); font-size:13px; padding:10px;'>Majburiy to'lovlar yo'q.</div>"); 
     if(window.renderSchedSet) window.renderSchedSet();
 
-    if(window.curTab === "add") window.renderAddCats();
+    if(window.curTab === "add") {
+        window.renderAddCats();
+        window.renderTodayExpPanel();
+    }
     
     if(window.curTab === "other") {
         const todayStr = new Date().toISOString().slice(0,10); const today = new Date();

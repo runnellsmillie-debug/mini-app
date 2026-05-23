@@ -180,7 +180,10 @@
             <span class="icon">☰</span>
             <span class="header-prof-wrap">
                 <span id="current-profile-name">Umumiy</span>
-                <span id="header-balance" class="header-balance">0</span>
+                <span class="header-stats">
+                    <span id="header-balance" class="header-balance">0</span>
+                    <span id="header-today-exp" class="header-today-exp">Bugun: 0</span>
+                </span>
             </span>
         </button>
         <button type="button" class="menu-btn hidden" id="back-btn" onclick="closeBankSubView()">
@@ -247,12 +250,16 @@
     <div id="tab-add" class="tab-content add-screen hidden">
         <div class="add-top-dock">
             <div class="mode-selector mode-selector--dual add-mode-bar">
-                <button id="mode-exp" class="mode-btn mode-btn--active-exp" onclick="setAddMode('expense')">Chiqim</button>
+                <button id="mode-exp" class="mode-btn mode-btn--active-exp" onclick="window.onModeExpClick()">Chiqim</button>
                 <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">Kirim</button>
             </div>
             <div class="add-amount-wrap">
                 <div id="num-display" class="num-display num-display--add" onclick="window.focusAddAmount()">0</div>
                 <div class="add-stay-hint" id="stay-hint"></div>
+            </div>
+            <div id="add-today-panel" class="add-today-panel hidden">
+                <div class="add-today-panel__head">Bugungi xarajatlar</div>
+                <div id="add-today-list" class="add-today-list"></div>
             </div>
             <div class="add-cats-zone">
                 <div id="cats-header-container"></div>

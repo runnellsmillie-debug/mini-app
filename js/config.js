@@ -26,6 +26,7 @@ window.amtStr = "";
 window.planPriceStr = "";
 window.descStr = "";
 window.keypadMode = "amount";
+window.addExpPanelOpen = false;
 window.actMainCat = null; 
 window.actSubCat = null;
 window.debtType = "take";
