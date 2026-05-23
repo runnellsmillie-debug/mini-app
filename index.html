@@ -240,14 +240,18 @@
 
     <div id="tab-add" class="tab-content add-screen hidden">
         <div class="add-body">
-            <div class="mode-selector mode-selector--dual add-mode-bar">
-                <button id="mode-exp" class="mode-btn mode-btn--active-exp" onclick="setAddMode('expense')">Chiqim</button>
-                <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">Kirim</button>
+            <div class="add-hero">
+                <div class="mode-selector mode-selector--dual add-mode-bar">
+                    <button id="mode-exp" class="mode-btn mode-btn--active-exp" onclick="setAddMode('expense')">Chiqim</button>
+                    <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">Kirim</button>
+                </div>
+                <div id="num-display" class="num-display num-display--add">0</div>
+                <div class="add-stay-hint" id="stay-hint"></div>
             </div>
-            <div id="num-display" class="num-display num-display--add">0</div>
-            <div class="add-stay-hint" id="stay-hint"></div>
-            <div id="cats-header-container"></div>
-            <div id="cats-container"></div>
+            <div class="add-cats-zone">
+                <div id="cats-header-container"></div>
+                <div id="cats-container"></div>
+            </div>
             <input type="text" id="add-desc" class="input-text add-desc-input" placeholder="Izoh (ixtiyoriy)..." />
         </div>
         <div class="add-numpad-dock" aria-label="Raqamli klaviatura">

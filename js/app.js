@@ -397,18 +397,34 @@ window.getCats = function() { return window.getCatsForProfile ? window.getCatsFo
 
 window.renderAddCats = function() {
     const cont = window.el("cats-container"), head = window.el("cats-header-container"); if(!cont || !head) return;
-    if (window.addMode === "income") { head.innerHTML = ""; cont.innerHTML = `<div class="cat-scroll-container">` + window.INC_SOURCES.map(s => `<button class="cat-btn" onclick="saveTx('${s.label}')"><span style="font-size:24px;">${s.icon}</span><span>${s.label}</span></button>`).join("") + `</div>`; return; }
-    
+    const mkBtn = (icon, label, onclick, extraCls = "") =>
+        `<button type="button" class="cat-btn cat-btn--add${extraCls ? " " + extraCls : ""}" onclick="${onclick}"><span class="cat-btn__icon">${icon}</span><span class="cat-btn__label">${label}</span></button>`;
+
+    if (window.addMode === "income") {
+        head.innerHTML = "";
+        cont.innerHTML = `<div class="cat-grid cat-grid--add">` + window.INC_SOURCES.map(s =>
+            mkBtn(s.icon, s.label, `saveTx('${s.label}')`)
+        ).join("") + `</div>`;
+        return;
+    }
+
     const cats = window.getCats();
     if (window.actSubCat) {
-        head.innerHTML = `<div class="breadcrumb-bar"><span style="color:var(--text-muted);">${window.actMainCat.label} <b style="color:var(--primary);">›</b> <b>${window.actSubCat.label}</b></span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
-        cont.innerHTML = `<div class="cat-scroll-container">` + window.actSubCat.items.map(i => `<button class="cat-btn" style="background:rgba(59, 130, 246, 0.15); border-color:var(--primary);" onclick="saveTx('${i.label}', true)"><span style="font-size:24px;">${i.icon}</span><span>${i.label}</span></button>`).join("") + `</div>`;
+        head.innerHTML = `<div class="add-crumb"><span>${window.actMainCat.label} <b>›</b> ${window.actSubCat.label}</span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
+        cont.innerHTML = `<div class="cat-grid cat-grid--add">` + window.actSubCat.items.map(i =>
+            mkBtn(i.icon, i.label, `saveTx('${i.label}', true)`, "cat-btn--pick")
+        ).join("") + `</div>`;
     } else if (window.actMainCat && window.actMainCat.subs && window.actMainCat.subs.length > 0) {
-        head.innerHTML = `<div class="breadcrumb-bar"><span style="color:var(--text-muted);">Rukun: <b>${window.actMainCat.label}</b></span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
-        cont.innerHTML = `<div class="cat-scroll-container">` + window.actMainCat.subs.map(s => { const f = s.items?.length>0; return `<button class="cat-btn" style="background:var(--bg-card);" onclick="${f ? `clickSubCat('${s.id}')` : `saveTx('${s.label}')`}"><span style="font-size:24px;">${s.icon}</span><span>${s.label} ${f?'':'✓'}</span></button>`; }).join("") + `<button class="cat-btn" style="background:var(--bg-card); border:1px dashed var(--text-muted);" onclick="saveTx('${window.actMainCat.label}')"><span style="font-size:24px;">⚙️</span><span>Umumiy</span></button></div>`;
+        head.innerHTML = `<div class="add-crumb"><span>Rukun: <b>${window.actMainCat.label}</b></span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
+        cont.innerHTML = `<div class="cat-grid cat-grid--add">` + window.actMainCat.subs.map(s => {
+            const f = s.items?.length > 0;
+            return mkBtn(s.icon, s.label + (f ? "" : " ✓"), f ? `clickSubCat('${s.id}')` : `saveTx('${s.label}')`);
+        }).join("") + mkBtn("⚙️", "Umumiy", `saveTx('${window.actMainCat.label}')`, "cat-btn--ghost") + `</div>`;
     } else {
-        head.innerHTML = "";
-        cont.innerHTML = `<div class="cat-scroll-container">` + cats.map(c => `<button class="cat-btn" style="background:${c.color||'var(--primary)'}18; border-color:${c.color||'var(--border-color)'}55;" onclick="clickMainCat('${c.id}')"><span>${c.icon}</span><span>${c.label}</span></button>`).join("") + `</div>`;
+        head.innerHTML = `<div class="add-cats-title">Kategoriyani tanlang</div>`;
+        cont.innerHTML = `<div class="cat-grid cat-grid--add">` + cats.map(c =>
+            mkBtn(c.icon, c.label, `clickMainCat('${c.id}')`, "cat-btn--main")
+        ).join("") + `</div>`;
     }
 };
 
