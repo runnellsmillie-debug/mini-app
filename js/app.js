@@ -42,6 +42,53 @@ window.getStateStorageKey = function(bid) {
     return id ? `family_erp_state_${id}` : "family_erp_state";
 };
 
+window.isOnSharedFamilyBudget = function() {
+    return window._invitedBudgetId != null
+        && window.currentBudgetId
+        && String(window.currentBudgetId) === String(window._invitedBudgetId);
+};
+
+window.isBudgetCreatorView = function() {
+    return window._ownBudgetId != null
+        && window.currentBudgetId
+        && String(window.currentBudgetId) === String(window._ownBudgetId);
+};
+
+window.getEmptyState = function() {
+    return {
+        txs: [], plan: [], sched: [], debts: [], incs: [], profiles: [], deps: [], credits: [],
+        audit: [], theme: "auto", lang: "uz", catOrders: {}, catHidden: {}, wallets: {},
+        walletLedger: [], chats: {}
+    };
+};
+
+window.applyCloudState = function(data) {
+    window.state = { ...window.getEmptyState(), ...data };
+    if (!window.state.profiles || !window.state.profiles.length) {
+        window.state.profiles = window.DEFAULT_PROFILES
+            ? window.DEFAULT_PROFILES.map(p => ({ ...p, permissions: [...(p.permissions || [])] }))
+            : [];
+    }
+    localStorage.setItem(window.getStateStorageKey(), JSON.stringify(window.state));
+    window._cloudLoadedAtStart = true;
+};
+
+window.fetchCloudState = async function(bid) {
+    bid = bid || window.currentBudgetId;
+    if (!bid) return null;
+    try {
+        const res = await fetch(`${API_BASE}/api/state/${bid}`);
+        if (!res.ok) return null;
+        const json = await res.json();
+        if (json.status === "ok" && json.data && Object.keys(json.data).length > 0) {
+            return json.data;
+        }
+    } catch (e) {
+        console.error("Bulutdan o'qish xatosi:", e);
+    }
+    return null;
+};
+
 window.migrateLegacyStorage = function() {
     const legacy = localStorage.getItem("family_erp_state") || localStorage.getItem("xarajat_pro_v8");
     if (!legacy || !window.currentBudgetId) return;
@@ -74,39 +121,38 @@ window.resolveBudgetFromServer = async function() {
 // 2. MA'LUMOTLARNI YUKLASH (Bulut va Kesh)
 // ==========================================
 window.initCloudData = async function() {
-    let loadedFromCloud = false;
+    window._cloudLoadedAtStart = false;
     await window.resolveBudgetFromServer();
     window.migrateLegacyStorage();
-    
-    // 1. Bulutdan qidiramiz
-    if (window.currentBudgetId) {
-        try {
-            let res = await fetch(`${API_BASE}/api/state/${window.currentBudgetId}`);
-            if (res.ok) {
-                let json = await res.json();
-                if (json.status === "ok" && Object.keys(json.data).length > 0) {
-                    window.state = { ...window.state, ...json.data };
-                    loadedFromCloud = true;
-                    localStorage.setItem(window.getStateStorageKey(), JSON.stringify(window.state));
-                    console.log("Ma'lumotlar bulutdan muvaffaqiyatli yuklandi.");
-                }
-            }
-        } catch(e) { 
-            console.error("Bulutga ulanishda xatolik:", e); 
-        }
+
+    const cloudState = await window.fetchCloudState();
+
+    if (cloudState) {
+        window.applyCloudState(cloudState);
+        postLoadInit();
+        return;
     }
-    
-    // 2. Agar bulutda bo'lmasa, shu hisob uchun telefon xotirasidan olamiz
-    if (!loadedFromCloud) {
+
+    const isCreator = window.isBudgetAdmin() || window.isBudgetCreatorView();
+
+    if (isCreator) {
         const raw = localStorage.getItem(window.getStateStorageKey())
-            || localStorage.getItem('family_erp_state')
-            || localStorage.getItem('xarajat_pro_v8');
-        if (raw) { 
-            try { window.state = { ...window.state, ...JSON.parse(raw) }; } catch(e) {} 
+            || localStorage.getItem("family_erp_state")
+            || localStorage.getItem("xarajat_pro_v8");
+        if (raw) {
+            try { window.state = { ...window.getEmptyState(), ...JSON.parse(raw) }; } catch (e) {}
         }
+        postLoadInit();
+        window.save(true);
+        return;
     }
-    
+
+    window.state = window.getEmptyState();
+    localStorage.removeItem(window.getStateStorageKey());
     postLoadInit();
+    if (window.toast) {
+        window.toast(window.t ? window.t("cloud_wait_creator") : "Yaratuvchi ma'lumotlari yuklanmoqda...", false);
+    }
 };
 
 window.updateBudgetInfo = function() {
@@ -152,11 +198,11 @@ window.getBudgetInfoHtml = function() {
 
 async function postLoadInit() {
     window.normalizeAllProfiles();
-    if (window.isBudgetAdmin()) {
+    if (window.isBudgetAdmin() && !window._cloudLoadedAtStart) {
         const n = window.state.profiles.length;
         window.ensureCreatorProfile();
         if (window.state.profiles.length > n) window.save(true);
-    } else if (window.tgUserId && window.ensureInvitedProfileLink) {
+    } else if (window.tgUserId && window.ensureInvitedProfileLink && !window._cloudLoadedAtStart) {
         window.ensureInvitedProfileLink();
     }
     ['txs','incs','debts','sched','plan','deps','credits','audit'].forEach(k => { if(!window.state[k]) window.state[k] = []; });
@@ -1433,31 +1479,28 @@ window.startAutoSync = function() {
     if (!window.currentBudgetId) return;
     setInterval(async () => {
         try {
-            let res = await fetch(`${API_BASE}/api/state/${window.currentBudgetId}`);
-            let json = await res.json();
-            if (json.status === "ok" && Object.keys(json.data).length > 0) {
-                let cloudDataStr = JSON.stringify(json.data);
-                let localDataStr = JSON.stringify(window.state);
-                if (cloudDataStr !== localDataStr) {
-                    const prevIds = new Set((window.state.txs || []).map(t => t.id));
-                    window.state = { ...window.state, ...json.data };
-                    localStorage.setItem(window.getStateStorageKey(), JSON.stringify(window.state));
-                    const me = window.tgUser;
-                    const fresh = (window.state.txs || []).filter(t => !prevIds.has(t.id) && (t.user || "Siz") !== me);
-                    if (typeof window.render === 'function') window.render();
-                    window.normalizeAllProfiles();
-                    if (typeof window.renderSidebar === 'function') window.renderSidebar();
-                    if (typeof window.updatePlanCats === 'function') window.updatePlanCats();
-                    if (typeof window.applyModulePermissions === 'function') window.applyModulePermissions();
-                    if (fresh.length) {
-                        window.updateHeaderNotifications();
-                        const t = fresh[0];
-                        window.toast(`🔔 ${t.user || "A'zo"}: ${window.formatM(t.amount)} — ${t.desc || t.cat || ""}`);
-                    }
+            const cloudState = await window.fetchCloudState();
+            if (!cloudState) return;
+            const cloudDataStr = JSON.stringify(cloudState);
+            const localDataStr = JSON.stringify(window.state);
+            if (cloudDataStr !== localDataStr) {
+                const prevIds = new Set((window.state.txs || []).map(t => t.id));
+                window.applyCloudState(cloudState);
+                const me = window.tgUser;
+                const fresh = (window.state.txs || []).filter(t => !prevIds.has(t.id) && (t.user || "Siz") !== me);
+                if (typeof window.render === "function") window.render();
+                window.normalizeAllProfiles();
+                if (typeof window.renderSidebar === "function") window.renderSidebar();
+                if (typeof window.updatePlanCats === "function") window.updatePlanCats();
+                if (typeof window.applyModulePermissions === "function") window.applyModulePermissions();
+                if (fresh.length) {
+                    window.updateHeaderNotifications();
+                    const t = fresh[0];
+                    window.toast(`🔔 ${t.user || "A'zo"}: ${window.formatM(t.amount)} — ${t.desc || t.cat || ""}`);
                 }
             }
-        } catch(e) {}
-    }, 3000); 
+        } catch (e) {}
+    }, 3000);
 };
 
 if(document.readyState==="loading") {

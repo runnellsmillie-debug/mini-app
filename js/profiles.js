@@ -278,29 +278,9 @@ window.ensureInvitedProfileLink = function() {
     if (!window.tgUserId || window.isBudgetAdmin()) return;
     const uid = String(window.tgUserId);
     const pid = `user_${uid}`;
-    let p = window.state.profiles.find(x => x.id === pid);
-    if (!p) {
-        const name = (window.tgFirstName || window.tgUser || "Mehmon").trim();
-        p = window.normalizeProfile({
-            id: pid,
-            name,
-            icon: "👤",
-            role: "guest",
-            age: null,
-            gender: "",
-            monthlyLimit: 0,
-            pinEnabled: false,
-            pinHash: "",
-            permissions: window.DEFAULT_NEW_PROFILE_PERMS || [],
-            linked_phone: "",
-            linked_uid: parseInt(uid, 10),
-            permsConfigured: false
-        });
-        window.state.profiles.push(p);
-        window.save(true);
-    } else if (!p.linked_uid) {
+    const p = window.state.profiles.find(x => x.id === pid);
+    if (p && !p.linked_uid) {
         p.linked_uid = parseInt(uid, 10);
-        window.save(true);
     }
 };
 

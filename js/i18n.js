@@ -91,7 +91,8 @@ window.I18N = {
         budget_type_invited: "Taklif hisobi",
         budget_id_hint: "Oilaviy hisob — ikkalangizda bir xil raqam bo'lishi kerak",
         budget_open_via_bot: "Botdan «🚀 Ilovaga kirish» tugmasi orqali oching",
-        budget_wrong_account: "Siz shaxsiy hisobdasiz! Botda «🤝 Taklif» tugmasini bosing"
+        budget_wrong_account: "Siz shaxsiy hisobdasiz! Botda «🤝 Taklif» tugmasini bosing",
+        cloud_wait_creator: "Bulutda ma'lumot yo'q. Admin kirguncha kuting"
     },
     ru: {
         profiles: "Профили",
@@ -181,7 +182,8 @@ window.I18N = {
         budget_type_invited: "Приглашённый счёт",
         budget_id_hint: "Семейный счёт — номер должен совпадать у обоих",
         budget_open_via_bot: "Откройте через кнопку «🚀 Войти» в боте",
-        budget_wrong_account: "Вы в личном счёте! Нажмите «🤝 Приглашение» в боте"
+        budget_wrong_account: "Вы в личном счёте! Нажмите «🤝 Приглашение» в боте",
+        cloud_wait_creator: "В облаке нет данных. Ждите входа админа"
     },
     en: {
         profiles: "Profiles",
@@ -271,7 +273,8 @@ window.I18N = {
         budget_type_invited: "Invited account",
         budget_id_hint: "Family account — both must show the same number",
         budget_open_via_bot: "Open via «🚀 Open app» button in the bot",
-        budget_wrong_account: "You're on personal account! Tap «🤝 Invite» in the bot"
+        budget_wrong_account: "You're on personal account! Tap «🤝 Invite» in the bot",
+        cloud_wait_creator: "No cloud data yet. Wait for admin to sign in"
     }
 };
 
