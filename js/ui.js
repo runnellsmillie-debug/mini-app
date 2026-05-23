@@ -222,7 +222,7 @@ window.renderServicesMenu = function() {
     if (head) {
         head.innerHTML = window.serviceEditMode
             ? `<div class="add-crumb add-crumb--edit"><span>↕️ Tartiblash rejimi</span><button type="button" class="back-link add-cats-done" onclick="window.exitServiceEditMode()">Tayyor</button></div>`
-            : `<div class="add-cats-hint">Ushlab turing — tartiblash rejimi</div>`;
+            : `<div class="add-cats-hint">Bo'sh joyni ushlang — tartiblash rejimi</div>`;
     }
 
     menu.classList.toggle("services-menu--edit", window.serviceEditMode);
@@ -241,9 +241,11 @@ window.renderServicesMenu = function() {
 };
 
 window.setupServicesMenuDrag = function() {
+    const wrap = window.el("services-menu-wrap");
     const menu = window.el("bank-main-menu");
-    if (!menu || menu.dataset.svcDrag === "1") return;
-    menu.dataset.svcDrag = "1";
+    if (!wrap || !menu) return;
+    if (wrap.dataset.svcDrag === "2") return;
+    wrap.dataset.svcDrag = "2";
     let dragEl = null, pressTimer = null;
 
     const clearPress = () => { clearTimeout(pressTimer); pressTimer = null; };
@@ -256,20 +258,28 @@ window.setupServicesMenuDrag = function() {
         dragEl = null;
     };
 
-    menu.addEventListener("touchstart", e => {
-        if (e.target.closest(".cat-btn__hide")) return;
+    wrap.addEventListener("touchstart", e => {
+        if (e.target.closest(".cat-btn__hide") || e.target.closest(".add-cats-done")) return;
+
+        if (!window.serviceEditMode) {
+            if (e.target.closest(".main-menu-btn")) return;
+            clearPress();
+            pressTimer = setTimeout(() => {
+                window.enterServiceEditMode();
+                if (navigator.vibrate) navigator.vibrate(50);
+            }, 500);
+            return;
+        }
+
         const target = e.target.closest(".main-menu-btn[data-cat-id]");
         if (!target) return;
         clearPress();
-        pressTimer = setTimeout(() => {
-            if (!window.serviceEditMode) window.enterServiceEditMode();
-            dragEl = target;
-            dragEl.classList.add("dragging");
-            if (navigator.vibrate) navigator.vibrate(50);
-        }, 500);
+        dragEl = target;
+        dragEl.classList.add("dragging");
+        if (navigator.vibrate) navigator.vibrate(30);
     }, { passive: true });
 
-    menu.addEventListener("touchmove", e => {
+    wrap.addEventListener("touchmove", e => {
         if (!window.serviceEditMode || !dragEl) { clearPress(); return; }
         e.preventDefault();
         const touch = e.touches[0];
@@ -282,12 +292,12 @@ window.setupServicesMenuDrag = function() {
         }
     }, { passive: false });
 
-    menu.addEventListener("touchend", endDrag);
-    menu.addEventListener("touchcancel", endDrag);
+    wrap.addEventListener("touchend", endDrag);
+    wrap.addEventListener("touchcancel", endDrag);
 
     document.addEventListener("touchstart", e => {
         if (!window.serviceEditMode) return;
-        if (e.target.closest("#bank-main-menu") || e.target.closest(".add-cats-done")) return;
+        if (e.target.closest("#services-menu-wrap") || e.target.closest(".add-cats-done")) return;
         if (e.target.closest("#tab-other")) window.exitServiceEditMode(true);
     }, { passive: true });
 };

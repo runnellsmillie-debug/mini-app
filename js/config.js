@@ -3,9 +3,29 @@
 // ==========================================
 
 window.PLAN_TAGS = {};
-window.SUBCAT_ICONS = { "Sabzavot_Kokat":"🥬", "Gosht_Tuxum":"🥩", "Meva_Poliz":"🍎", "Baqqollik":"🍚", "Sut_Non":"🥛", "Ichimlik":"🥤", "Tozalik":"🧼", "Kommunal":"🧾", "Bolalar":"🧸", "Kattalar":"👔", "Kanselyariya":"📓", "Yoqilgi":"⛽", "Ehtiyot_qism":"⚙️" };
-window.CAT_COLORS = { "Oziq-ovqat":"#FF6B6B", "Uy_Xojalik":"#FBBF24", "Kiyim":"#8B5CF6", "Talim":"#2196F3", "Avto":"#607D8B", "Oyinchoq":"#34D399" };
-window.CAT_ICONS = { "Oziq-ovqat":"🛒", "Uy_Xojalik":"🏠", "Kiyim":"👕", "Talim":"📚", "Avto":"🚗", "Oyinchoq":"🧸", "Oziq_ovqat":"🛒", "Kiyim":"👕", "Uy_Xojalik":"🏠", "Avto":"🚗" };
+window.SUBCAT_ICONS = {
+  "Sabzavot_Kokat":"🥬", "Gosht_Tuxum":"🥩", "Meva_Poliz":"🍎", "Baqqollik":"🍚", "Sut_Non":"🥛",
+  "Ichimlik":"🥤", "Ziravorlar":"🌿", "Muzlatilgan":"🧊", "Tozalik":"🧼", "Kommunal":"🧾",
+  "Ta'mirlash":"🔨", "Mebel":"🛋", "Bog'":"🌱", "Bolalar":"🧸", "Kattalar":"👔", "Aksessuarlar":"👜",
+  "Yoqilgi":"⛽", "Ehtiyot_qism":"⚙️", "Sug'urta":"📋", "Maktab":"📓", "Kurslar":"💻",
+  "Universitet":"🎓", "Kanselyariya":"📎", "Dori":"💊", "Shifokor":"👨‍⚕️", "Optika":"👓",
+  "Sport":"🏋️", "Chaqaloq":"🍼", "Oyinchoq":"🧸", "Bog'cha":"🏫", "Kosmetika":"💄",
+  "Salon":"💇", "Mobil":"📱", "Uy_aloqa":"☎️", "Texnika":"💻", "Sayohat":"✈️", "Oila":"🎬",
+  "Sport_dam":"⛷", "Katta":"🧊", "Kichik":"☕", "Uy_hayvoni":"🐱", "Qishloq":"🐄",
+  "Hujjat":"📄", "Soliq":"💰", "Xayriya":"🤲"
+};
+window.CAT_COLORS = {
+  "Oziq-ovqat":"#FF6B6B", "Uy_Xojalik":"#FBBF24", "Kiyim":"#8B5CF6", "Talim":"#2196F3",
+  "Avto":"#607D8B", "Oyinchoq":"#34D399", "Soglik":"#10B981", "Bolalar":"#F472B6",
+  "Go'zallik":"#EC4899", "Aloqa":"#6366F1", "Dam_Olish":"#0EA5E9", "Uy_Jihoz":"#A78BFA",
+  "Hayvonlar":"#84CC16", "Hujjat_Soliq":"#94A3B8"
+};
+window.CAT_ICONS = {
+  "Oziq-ovqat":"🛒", "Uy_Xojalik":"🏠", "Kiyim":"👕", "Talim":"📚", "Avto":"🚗",
+  "Oyinchoq":"🧸", "Soglik":"💊", "Bolalar":"👶", "Go'zallik":"💄", "Aloqa":"📱",
+  "Dam_Olish":"🏖", "Uy_Jihoz":"🔌", "Hayvonlar":"🐾", "Hujjat_Soliq":"📋",
+  "Oziq_ovqat":"🛒"
+};
 
 window.CATS_DATA = { general: [], child_m: [], child_f: [], home: [] };
 window.INC_SOURCES = [ { label: "Oylik maosh", icon: "💼" }, { label: "IMSOA foyda", icon: "💰" }, { label: "Qo'shimcha", icon: "🎁" } ];

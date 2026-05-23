@@ -641,11 +641,7 @@ window.filterCatItems = function(items, level, parentId) {
     if (window.catEditMode) {
         return [...list.filter(i => !isHidden(i.id)), ...list.filter(i => isHidden(i.id))];
     }
-    return list.filter(i => {
-        if (isHidden(i.id)) return false;
-        if (window.addMode === "income" || parentId === "income") return window.isIncItemUsed(i);
-        return window.isItemUsed(i, level);
-    });
+    return list.filter(i => !isHidden(i.id));
 };
 
 window.enterCatEditMode = function(level, parentId) {
@@ -680,13 +676,22 @@ window.onRestoreCatClick = function(e, id, level, parentId) {
 };
 
 window.setupAddCatDrag = function() {
+    const zone = window.el("add-cats-zone");
     const cont = window.el("cats-container");
-    if (!cont) return;
-    if (cont.dataset.dragSetup === "2") return;
-    cont.dataset.dragSetup = "2";
-    let dragEl = null, pressTimer = null, didDrag = false;
+    if (!zone || !cont) return;
+    if (zone.dataset.dragSetup === "3") return;
+    zone.dataset.dragSetup = "3";
+    let dragEl = null, pressTimer = null;
 
     const clearPress = () => { clearTimeout(pressTimer); pressTimer = null; };
+
+    const getGridMeta = () => {
+        const grid = cont.querySelector(".cat-scroll--add");
+        return {
+            level: grid?.getAttribute("data-level") || window.getAddCatLevel(),
+            parent: grid?.getAttribute("data-parent") || "root"
+        };
+    };
 
     const saveOrderFromGrid = (grid) => {
         if (!grid) return;
@@ -703,30 +708,34 @@ window.setupAddCatDrag = function() {
             saveOrderFromGrid(dragEl.closest(".cat-scroll--add"));
             dragEl = null;
         }
-        didDrag = false;
     };
 
-    cont.addEventListener("touchstart", e => {
-        if (e.target.closest(".cat-btn__hide")) return;
+    zone.addEventListener("touchstart", e => {
+        if (e.target.closest(".cat-btn__hide") || e.target.closest(".add-cats-done")) return;
+        if (e.target.closest(".back-link") && !e.target.closest(".add-cats-done")) return;
+
+        if (!window.catEditMode) {
+            if (e.target.closest(".cat-btn--add")) return;
+            const meta = getGridMeta();
+            clearPress();
+            pressTimer = setTimeout(() => {
+                window.enterCatEditMode(meta.level, meta.parent);
+                if (navigator.vibrate) navigator.vibrate(50);
+            }, 500);
+            return;
+        }
+
         const target = e.target.closest(".cat-btn--add[data-cat-id]");
         if (!target || target.classList.contains("cat-btn--ghost")) return;
-        const grid = target.closest(".cat-scroll--add");
-        const level = grid?.getAttribute("data-level") || "main";
-        const parent = grid?.getAttribute("data-parent") || "root";
         clearPress();
-        pressTimer = setTimeout(() => {
-            if (!window.catEditMode) window.enterCatEditMode(level, parent);
-            dragEl = target;
-            didDrag = false;
-            dragEl.classList.add("dragging");
-            if (navigator.vibrate) navigator.vibrate(50);
-        }, 500);
+        dragEl = target;
+        dragEl.classList.add("dragging");
+        if (navigator.vibrate) navigator.vibrate(30);
     }, { passive: true });
 
-    cont.addEventListener("touchmove", e => {
+    zone.addEventListener("touchmove", e => {
         if (!window.catEditMode || !dragEl) { clearPress(); return; }
         e.preventDefault();
-        didDrag = true;
         const touch = e.touches[0];
         const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
         const dropTarget = elemBelow ? elemBelow.closest(".cat-btn--add[data-cat-id]") : null;
@@ -738,13 +747,13 @@ window.setupAddCatDrag = function() {
         }
     }, { passive: false });
 
-    cont.addEventListener("touchend", endDrag);
-    cont.addEventListener("touchcancel", endDrag);
+    zone.addEventListener("touchend", endDrag);
+    zone.addEventListener("touchcancel", endDrag);
 
     document.addEventListener("touchstart", e => {
         if (!window.catEditMode) return;
-        if (e.target.closest("#cats-container") || e.target.closest(".add-cats-done")) return;
-        window.exitCatEditMode(true);
+        if (e.target.closest("#add-cats-zone") || e.target.closest(".add-cats-done")) return;
+        if (e.target.closest("#tab-add")) window.exitCatEditMode(true);
     }, { passive: true });
 };
 
@@ -874,7 +883,7 @@ window.renderAddCats = function() {
     const editHead = `<div class="add-crumb add-crumb--edit"><span>↕️ Tartiblash rejimi</span><button type="button" class="back-link add-cats-done" onclick="window.exitCatEditMode()">Tayyor</button></div>`;
 
     if (window.addMode === "income") {
-        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">Ushlab turing — tartiblash rejimi</div>`;
+        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">Bo'sh joyni ushlang — tartiblash rejimi</div>`;
         const src = window.filterCatItems(window.INC_SOURCES.map((s, i) => ({ ...s, id: "inc_" + i })), "main", "income");
         cont.innerHTML = wrap(src.map(s => mkBtn(s, `saveTx('${s.label.replace(/'/g, "\\'")}')`)).join(""), "income");
         window.syncAddLayout();
@@ -899,7 +908,7 @@ window.renderAddCats = function() {
         }
         cont.innerHTML = wrap(html, window.actMainCat.id);
     } else {
-        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">Ushlab turing — tartiblash rejimi</div>`;
+        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">Bo'sh joyni ushlang — tartiblash rejimi</div>`;
         cont.innerHTML = wrap(cats.map(c => mkBtn(c, `clickMainCat('${c.id}')`, "cat-btn--main")).join(""), null);
     }
     window.syncAddLayout();

@@ -1,22 +1,185 @@
 {
   "Oziq-ovqat": {
-    "Sabzavot_Kokat": ["🍅 Pomidor", "🥒 Bodring", "🥔 Kartoshka", "🧅 Piyoz", "🥕 Sabzi", "🥬 Ko'katlar", "🌶 Qalampir", "🧄 Sarimsoq"],
-    "Gosht_Tuxum": ["🥩 Mol go'shti", "🍖 Qo'y go'shti", "🍗 Tovuq", "🥚 Tuxum", "🐟 Baliq", "🥩 Qiyma"],
-    "Meva_Poliz": ["🍎 Olma", "🍇 Uzum", "🍉 Tarvuz", "🍈 Qovun", "🍌 Banan", "🍒 Gilos", "🍑 Shaftoli"],
-    "Baqqollik": ["🍚 Guruch", "🍝 Makaron", "🧂 Tuz", "🍬 Shakar", "🌻 Yog'", "🥫 Tomat", "🫘 Mosh"],
-    "Sut_Non": ["🍞 Non", "🥛 Sut", "🧀 Pishloq", "🧈 Sariyog'", "🥣 Qatiq", "🥛 Qaymoq"],
-    "Ichimlik": ["🥤 Choy", "🫖 Qora choy", "☕ Ko'k choy", "🧃 Sharbat", "💧 Mineral suv", "🥤 Kola/Fanta"]
+    "Sabzavot_Kokat": [
+      "🍅 Pomidor", "🥒 Bodring", "🥔 Kartoshka", "🧅 Piyoz", "🥕 Sabzi", "🥬 Ko'katlar",
+      "🌶 Qalampir", "🧄 Sarimsoq", "🍆 Baqlajon", "🥦 Brokkoli", "🫑 Bulg'or qalampiri",
+      "🥬 Karam", "🌿 Ukkor", "🍠 Batat", "🫘 Loviya", "🫛 No'xat", "🥗 Salat bargi"
+    ],
+    "Gosht_Tuxum": [
+      "🥩 Mol go'shti", "🍖 Qo'y go'shti", "🍗 Tovuq", "🥚 Tuxum", "🐟 Baliq", "🥩 Qiyma",
+      "🦆 Ordak", "🐑 Goshtli assorti", "🍗 Kabob uchun", "🥓 Kolbasa", "🌭 Sosiska"
+    ],
+    "Meva_Poliz": [
+      "🍎 Olma", "🍇 Uzum", "🍉 Tarvuz", "🍈 Qovun", "🍌 Banan", "🍒 Gilos",
+      "🍑 Shaftoli", "🍐 Nok", "🍊 Apelsin", "🍋 Limon", "🥝 Kiwi", "🫐 Anor"
+    ],
+    "Baqqollik": [
+      "🍚 Guruch", "🍝 Makaron", "🧂 Tuz", "🍬 Shakar", "🌻 Yog'", "🥫 Tomat pastasi",
+      "🫘 Mosh", "🫒 Zaytun moyi", "🌾 Un", "🥖 Xamir", "🍯 Asal", "🥜 Yeryong'oq",
+      "🫙 Bodom", "🍪 Pechenye", "🍫 Shokolad", "🥣 Yorma", "🌽 Maku", "🫓 Lavash"
+    ],
+    "Sut_Non": [
+      "🍞 Non", "🥖 Baton", "🥛 Sut", "🧀 Pishloq", "🧈 Sariyog'", "🥣 Qatiq",
+      "🥛 Qaymoq", "🧈 Margarin", "🍶 Kefir", "🧀 Tvorog", "🥯 Baget"
+    ],
+    "Ichimlik": [
+      "🥤 Choy", "🫖 Qora choy", "☕ Ko'k choy", "🧃 Sharbat", "💧 Mineral suv",
+      "🥤 Kola/Fanta", "⚡ Energetik", "🥛 Kakao", "🧃 Kompot", "☕ Qahva"
+    ],
+    "Ziravorlar": [
+      "🌶 Zira", "🧂 Qalampir", "🍃 Rayhon", "🌿 Ko'k ziravorlar", "🫚 Zanjabil",
+      "🧄 Zafar", "🥄 Qora murch", "🌶 Paprika", "🫙 Xmel-suneli"
+    ],
+    "Muzlatilgan": [
+      "🧊 Muzlatilgan sabzavot", "🍕 Muzlatilgan pizza", "🍗 Tovuq nuggets", "🐟 Muzlatilgan baliq",
+      "🍦 Muzqaymoq", "🥟 Pelmen", "🫛 Muzlatilgan no'xat"
+    ]
   },
   "Uy_Xojalik": {
-    "Tozalik": ["🧼 Sovun", "🧴 Idish yuvish geli", "🧻 Salfetka", "🧹 Kir yuvish kukuni", "🧽 Gubka", "🗑 Tish pastasi"],
-    "Kommunal": ["⚡ Elektr toki", "💧 Sovuq suv", "🔥 Tabiiy gaz", "🗑 Chiqindi", "🌐 Internet (Uzonline)"]
+    "Tozalik": [
+      "🧼 Sovun", "🧴 Idish yuvish geli", "🧻 Salfetka", "🧹 Kir yuvish kukuni", "🧽 Gubka",
+      "🪥 Tish pastasi", "🧴 Shampun", "🧴 Gel dush", "🧻 Tualet qog'ozi", "🗑 Axlat paketi",
+      "🧴 Oqartirgich", "🧴 Pol yuvish vositasi", "🪣 Vedro", "🧴 Oyna tozalash"
+    ],
+    "Kommunal": [
+      "⚡ Elektr toki", "💧 Sovuq suv", "🔥 Tabiiy gaz", "🗑 Chiqindi", "🌐 Internet (Uzonline)",
+      "📺 Kabel TV", "🏠 Ijara", "🔧 Uy-joy xizmati", "🛗 Lift xizmati"
+    ],
+    "Ta'mirlash": [
+      "🔨 Usta xizmati", "🪛 Asbob-uskunalar", "🪵 Qurilish materiali", "🎨 Bo'yoq",
+      "💡 Lampochka", "🔌 Elektr detali", "🚿 Santexnika", "🪟 Oyna almashtirish"
+    ],
+    "Mebel": [
+      "🛋 Divan", "🛏 Karavot", "🪑 Stul", "🗄 Shkaf", "🪞 Oyna", "🛏 Matras", "🪴 Javon"
+    ],
+    "Bog'": [
+      "🌱 Ko'chat", "🌿 O'g'it", "💧 Sug'orish", "✂️ Bog' asbobi", "🪴 Gorshoq", "🌻 Gul"
+    ]
   },
   "Kiyim": {
-    "Kattalar": ["👔 Ko'ylak", "👖 Shim", "👞 Poyabzal", "🧥 Kurtka", "🧦 Paypoq", "👗 Ayollar kiyimi"],
-    "Bolalar": ["👕 Mayka", "👟 Krossovka", "🧢 Bosh kiyim", "👖 Bolalar shimi", "🧸 Qishki kiyim"]
+    "Kattalar": [
+      "👔 Ko'ylak", "👖 Shim", "👞 Poyabzal", "🧥 Kurtka", "🧦 Paypoq", "👗 Ayollar kiyimi",
+      "🧣 Sharf", "🧤 Qo'lqop", "👟 Krossovka", "🎽 Sport kiyim", "🩳 Shortik", "🧢 Bosh kiyim"
+    ],
+    "Bolalar": [
+      "👕 Mayka", "👟 Krossovka", "🧢 Bosh kiyim", "👖 Bolalar shimi", "🧥 Qishki kiyim",
+      "👶 Chaqaloq kiyimi", "🎒 Maktab formasi", "👗 Qiz bolalar kiyimi"
+    ],
+    "Aksessuarlar": [
+      "👜 Sumka", "🕶 Ko'zoynak", "⌚ Soat", "💍 Zargarlik", "👓 Ko'zoynak", "🎀 Taqinchoq"
+    ]
   },
   "Avto": {
-    "Yoqilgi": ["⛽ Benzin (AI-80)", "⛽ Benzin (AI-92)", "⛽ Metan gaz", "⛽ Propan", "⚡ Zaryad (Byd/Jetour)"],
-    "Ehtiyot_qism": ["⚙️ Motor moyi", "🛞 Balon", "🪛 Kolodka", "🧹 Avtomoyka", "🛠 Usta xizmati"]
+    "Yoqilgi": [
+      "⛽ Benzin (AI-80)", "⛽ Benzin (AI-92)", "⛽ Benzin (AI-95)", "⛽ Metan gaz", "⛽ Propan",
+      "⚡ Zaryad (Byd/Jetour)", "🛢 Motor moyi sarf", "🧽 Yuvish"
+    ],
+    "Ehtiyot_qism": [
+      "⚙️ Motor moyi", "🛞 Balon", "🪛 Kolodka", "🧹 Avtomoyka", "🛠 Usta xizmati",
+      "🔋 Akkumulyator", "💡 Far lampochka", "🪟 Dvigatel filtri", "🛢 Antifriz", "🔧 Diagnostika"
+    ],
+    "Sug'urta": [
+      "📋 OSAGO", "📋 KASKO", "🅿️ To'xtash joyi", "🛣 Yo'l to'lovi", "🚗 Tex ko'rik"
+    ]
+  },
+  "Talim": {
+    "Maktab": [
+      "📓 Daftar", "✏️ Ruchka", "📏 Chizg'ich", "🎒 Ranets", "👟 Maktab poyabzali",
+      "📚 Darslik", "🖍 Ranglar", "📐 Geometriya to'plami", "🧮 Kalkulyator"
+    ],
+    "Kurslar": [
+      "💻 IT kurs", "🗣 Ingliz tili", "🎹 Musiqa kursi", "🥋 Sport seksiya", "🎨 San'at studiyasi",
+      "📖 Repetitor", "🏊 Suzish", "🤖 Robototexnika"
+    ],
+    "Universitet": [
+      "🎓 Kontrakt", "📚 O'quv materiali", "🏠 Yotoqxona", "🍽 Talaba ovqati", "💻 Noutbuk"
+    ],
+    "Kanselyariya": [
+      "📎 Skrepka", "📁 Papka", "🖨 Printer qog'ozi", "🖊 Marker", "📌 Qog'oz"
+    ]
+  },
+  "Soglik": {
+    "Dori": [
+      "💊 Dorilar", "🩹 Plastir", "🌡 Termometr", "💉 Vitamindlar", "🧴 Maz", "🩺 Shprits"
+    ],
+    "Shifokor": [
+      "👨‍⚕️ Terapevt", "🦷 Stomatolog", "👁 Okulist", "🧑‍⚕️ Analiz", "🏥 Klinika", "📋 Check-up"
+    ],
+    "Optika": [
+      "👓 Ko'zoynak", "🕶 Quyosh ko'zoynagi", "🔍 Linza", "🧴 Ko'z tomchisi"
+    ],
+    "Sport": [
+      "🏋️ Sport zal", "🧘 Yoga", "🏃 Yugurish", "⚽ Sport inventar"
+    ]
+  },
+  "Bolalar": {
+    "Chaqaloq": [
+      "🍼 Sut aralashmasi", "🧷 Taglik", "🍼 Idish", "🛁 Chaqaloq kosmetikasi", "🧸 Chaqaloq o'yinchoq"
+    ],
+    "Oyinchoq": [
+      "🧸 Ayiqcha", "🚗 Mashina", "🧩 Pazl", "🎮 O'yin", "🪆 Qo'g'irchoq", "⚽ To'p", "🎨 Ranglash"
+    ],
+    "Bog'cha": [
+      "🏫 Bog'cha to'lovi", "🍎 Bog'cha ovqati", "🎒 Bog'cha sumkasi", "👕 Bog'cha formasi"
+    ]
+  },
+  "Go'zallik": {
+    "Kosmetika": [
+      "💄 Pomada", "💅 Tirnoq", "🧴 Krema", "🧴 Parfyum", "🪮 Tarash", "💇 Soch bo'yog'i"
+    ],
+    "Salon": [
+      "💇 Soch olish", "💅 Manikyur", "🧖 Kosmetolog", "💆 Massaj", "🪒 Soqol xizmati"
+    ]
+  },
+  "Aloqa": {
+    "Mobil": [
+      "📱 Telefon to'lovi", "📶 Internet paket", "💳 Balans to'ldirish", "📞 Roaming"
+    ],
+    "Uy_aloqa": [
+      "☎️ Uy telefoni", "🌐 Wi-Fi router", "📡 Uy internet", "📺 IPTV"
+    ],
+    "Texnika": [
+      "📱 Telefon", "💻 Noutbuk", "🎧 Naushnik", "⌨️ Klaviatura", "🖱 Sichqoncha", "🔌 Zaryadchi"
+    ]
+  },
+  "Dam_Olish": {
+    "Sayohat": [
+      "✈️ Aviabileti", "🏨 Mehmonxona", "🚕 Taksi", "🎫 Muzey", "🗺 Ekskursiya", "🛂 Viza"
+    ],
+    "Oila": [
+      "🎬 Kino", "🎡 Park", "🍕 Restoran", "🎉 Tug'ilgan kun", "🎁 Sovg'a", "📸 Foto xizmat"
+    ],
+    "Sport_dam": [
+      "⛷ Dam olish bazasi", "🏊 Basseyn", "🎿 Qish sporti", "🏕 Piknik"
+    ]
+  },
+  "Uy_Jihoz": {
+    "Katta": [
+      "🧊 Muzlatgich", "🔥 Pech", "🌀 Changyutgich", "🧺 Kir yuvish mashinasi", "❄️ Konditsioner",
+      "📺 Televizor", "🔥 Gaz plita", "💨 Mikroto'lqin"
+    ],
+    "Kichik": [
+      "☕ Choynak", "🍞 Toster", "🧹 Changyutgich", "💡 Uflovchi soch", "🔌 Multivarka",
+      "🥤 Blender", "🫖 Termopot", "🧊 Ventilyator"
+    ]
+  },
+  "Hayvonlar": {
+    "Uy_hayvoni": [
+      "🐱 Mushuk ovqati", "🐶 It ovqati", "🐟 Baliq ovqati", "🦴 It o'yinchoq", "🧴 Veterinar"
+    ],
+    "Qishloq": [
+      "🐄 Chorva yem", "🐔 Parranda yem", "🥛 Sut mahsuloti sotib olish", "🐑 Qo'y boqish"
+    ]
+  },
+  "Hujjat_Soliq": {
+    "Hujjat": [
+      "📄 Pasport xizmati", "📋 Notarius", "🏛 Davlat boji", "📑 Shartnoma", "🪪 ID karta"
+    ],
+    "Soliq": [
+      "💰 Daromad solig'i", "🏠 Mulk solig'i", "🚗 Transport solig'i", "📊 Hisobot"
+    ],
+    "Xayriya": [
+      "🤲 Xayriya", "🕌 Masjid", "⛪ Cherkov", "🎗 Yordam"
+    ]
   }
 }
