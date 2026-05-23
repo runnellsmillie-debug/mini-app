@@ -80,6 +80,7 @@ window.switchTab = (id, silent) => {
     if (id === "home" && window.updatePlanCats) window.updatePlanCats();
     if (id === "report" && window.renderReport) window.renderReport();
     document.body.classList.toggle("on-add-tab", id === "add");
+    if (window.exitCatEditMode) window.exitCatEditMode(true);
     if (window.closeHeaderPanels) window.closeHeaderPanels();
     if (window.render) window.render();
 };

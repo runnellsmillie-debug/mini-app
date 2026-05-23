@@ -29,6 +29,9 @@ window.keypadMode = "amount";
 window.addExpPanelOpen = false;
 window.headerTodayOpen = false;
 window.headerNotifOpen = false;
+window.catEditMode = false;
+window.catEditLevel = null;
+window.catEditParent = null;
 window.actMainCat = null; 
 window.actSubCat = null;
 window.debtType = "take";
@@ -106,7 +109,9 @@ window.buildDetailedCategories = function() {
         Object.keys(window.PLAN_TAGS[catName]).forEach(subName => {
             let subLabel = subName.replace(/_/g, '/');
             let items = window.PLAN_TAGS[catName][subName].map(i => {
-                let iconMatch = i.match(/^(\p{Emoji})/u); return { id: 'i_'+Math.random(), label: i.replace(/^(\p{Emoji})\s*/u, '').trim(), icon: iconMatch?iconMatch[1]:"▪️" };
+                let iconMatch = i.match(/^(\p{Emoji})/u);
+                const itemLabel = i.replace(/^(\p{Emoji})\s*/u, '').trim();
+                return { id: 'i_'+window.slugify(subName+'_'+itemLabel), label: itemLabel, icon: iconMatch?iconMatch[1]:"▪️" };
             });
             catItem.subs.push({ id: 's_'+window.slugify(subName), label: subLabel, icon: window.SUBCAT_ICONS[subName]||"📁", items: items });
         });

@@ -69,6 +69,7 @@ async function postLoadInit() {
     }
     ['txs','incs','debts','sched','plan','deps','credits','audit'].forEach(k => { if(!window.state[k]) window.state[k] = []; });
     if (!window.state.catOrders) window.state.catOrders = {};
+    if (!window.state.catHidden) window.state.catHidden = {};
 
     if (window.isBudgetAdmin()) {
         if(document.getElementById('admin-add-prof-btn')) document.getElementById('admin-add-prof-btn').style.display = 'block';
@@ -390,6 +391,7 @@ window.saveAndExit = () => {
 // ==========================================
 window.setAddMode = m => { 
     window.addMode = m; window.actMainCat = null; window.actSubCat = null; 
+    window.exitCatEditMode(true);
     const exp = window.el("mode-exp"), inc = window.el("mode-inc");
     if (exp) { exp.classList.toggle("mode-btn--active-exp", m === "expense"); exp.classList.toggle("mode-btn--active", m === "expense"); exp.classList.remove("mode-btn--panel-open"); }
     if (inc) { inc.classList.toggle("mode-btn--active-inc", m === "income"); inc.classList.toggle("mode-btn--active", m === "income"); }
@@ -457,7 +459,10 @@ window.updateHeaderNotifications = function() {
             badge.classList.add("hidden");
         }
     }
-    if (bell) bell.classList.toggle("header-bell-btn--shake", unread.length > 0 && !window.headerNotifOpen);
+    if (bell) {
+        bell.classList.toggle("header-bell-btn--shake", unread.length > 0 && !window.headerNotifOpen);
+        bell.classList.toggle("header-bell-btn--unread", unread.length > 0);
+    }
 };
 
 window.renderHeaderTodayPanel = function() {
@@ -540,39 +545,145 @@ window.saveCatOrder = function(level, parentId, ids) {
     window.save(true);
 };
 
+window.getCatHiddenKey = function(level, parentId) {
+    return window.getCatOrderKey(level, parentId);
+};
+
+window.isCatHidden = function(id, level, parentId) {
+    if (!id) return false;
+    const list = window.state.catHidden?.[window.getCatHiddenKey(level, parentId)] || [];
+    return list.includes(id);
+};
+
+window.hideCatItem = function(id, level, parentId) {
+    if (!id || id === "umumiy") return;
+    if (!window.state.catHidden) window.state.catHidden = {};
+    const key = window.getCatHiddenKey(level, parentId);
+    if (!window.state.catHidden[key]) window.state.catHidden[key] = [];
+    if (!window.state.catHidden[key].includes(id)) window.state.catHidden[key].push(id);
+    window.save(true);
+    window.renderAddCats();
+};
+
+window.getUsedLabels = function() {
+    const cats = new Set(), subs = new Set(), items = new Set();
+    const profMatch = tx => window.curProf === "general" || tx.prof === window.curProf;
+    window.state.txs.filter(profMatch).forEach(tx => {
+        if (tx.cat) cats.add(tx.cat.trim().toLowerCase());
+        const sub = (tx.subCat || "").trim().toLowerCase();
+        if (sub) {
+            subs.add(sub);
+            sub.split("›").forEach(p => { const t = p.trim(); if (t) items.add(t); });
+        }
+        if (tx.desc) items.add(tx.desc.trim().toLowerCase());
+    });
+    return { cats, subs, items };
+};
+
+window.hasProfileTxs = function() {
+    return window.state.txs.some(x => window.curProf === "general" || x.prof === window.curProf);
+};
+
+window.isItemUsed = function(item, level) {
+    if (!window.hasProfileTxs()) return true;
+    if (item.id === "boshqa" || item.id === "umumiy") return true;
+    const lbl = (item.label || "").replace(" ✓", "").trim().toLowerCase();
+    const u = window.getUsedLabels();
+    if (level === "main") return u.cats.has(lbl);
+    if (level === "rukun") {
+        return u.subs.has(lbl) || [...u.items, ...u.subs].some(s => s.includes(lbl));
+    }
+    if (level === "items") {
+        return u.items.has(lbl) || [...u.subs, ...u.items].some(s => s.includes(lbl));
+    }
+    return true;
+};
+
+window.filterCatItems = function(items, level, parentId) {
+    let list = window.applyCatOrder([...items], level, parentId);
+    const isHidden = id => window.isCatHidden(id, level, parentId);
+    if (window.catEditMode) {
+        return [...list.filter(i => !isHidden(i.id)), ...list.filter(i => isHidden(i.id))];
+    }
+    return list.filter(i => {
+        if (isHidden(i.id)) return false;
+        return window.isItemUsed(i, level);
+    });
+};
+
+window.enterCatEditMode = function(level, parentId) {
+    window.catEditMode = true;
+    window.catEditLevel = level;
+    window.catEditParent = parentId === "root" ? null : parentId;
+    window.el("add-cats-zone")?.classList.add("cats-zone--edit");
+    window.renderAddCats();
+    window.toast("Tartiblash rejimi");
+};
+
+window.exitCatEditMode = function(silent) {
+    if (!window.catEditMode) return;
+    window.catEditMode = false;
+    window.catEditLevel = null;
+    window.catEditParent = null;
+    window.el("add-cats-zone")?.classList.remove("cats-zone--edit");
+    window.renderAddCats();
+    if (!silent) window.toast("Tayyor");
+};
+
+window.onHideCatClick = function(e, id, level, parentId) {
+    e.stopPropagation();
+    e.preventDefault();
+    window.hideCatItem(id, level, parentId === "root" ? null : parentId);
+};
+
 window.setupAddCatDrag = function() {
     const cont = window.el("cats-container");
-    if (!cont || cont.dataset.dragSetup) return;
-    cont.dataset.dragSetup = "1";
-    let dragEl = null, pressTimer = null;
+    if (!cont) return;
+    if (cont.dataset.dragSetup === "2") return;
+    cont.dataset.dragSetup = "2";
+    let dragEl = null, pressTimer = null, didDrag = false;
+
+    const clearPress = () => { clearTimeout(pressTimer); pressTimer = null; };
+
+    const saveOrderFromGrid = (grid) => {
+        if (!grid) return;
+        const ids = Array.from(grid.querySelectorAll(".cat-btn--add[data-cat-id]")).map(b => b.getAttribute("data-cat-id"));
+        const level = grid.getAttribute("data-level") || "main";
+        const parent = grid.getAttribute("data-parent") || "root";
+        window.saveCatOrder(level, parent === "root" ? null : parent, ids);
+    };
 
     const endDrag = () => {
-        clearTimeout(pressTimer);
-        if (!dragEl) return;
-        dragEl.classList.remove("dragging");
-        const grid = cont.querySelector(".cat-scroll--add");
-        if (grid) {
-            const ids = Array.from(grid.querySelectorAll(".cat-btn--add[data-cat-id]")).map(b => b.getAttribute("data-cat-id"));
-            const level = grid.getAttribute("data-level") || "main";
-            const parent = grid.getAttribute("data-parent") || "root";
-            window.saveCatOrder(level, parent === "root" ? null : parent, ids);
+        clearPress();
+        if (dragEl) {
+            dragEl.classList.remove("dragging");
+            saveOrderFromGrid(dragEl.closest(".cat-scroll--add"));
+            dragEl = null;
         }
-        dragEl = null;
+        didDrag = false;
     };
 
     cont.addEventListener("touchstart", e => {
+        if (e.target.closest(".cat-btn__hide")) return;
         const target = e.target.closest(".cat-btn--add[data-cat-id]");
         if (!target || target.classList.contains("cat-btn--ghost")) return;
+        const grid = target.closest(".cat-scroll--add");
+        const level = grid?.getAttribute("data-level") || "main";
+        const parent = grid?.getAttribute("data-parent") || "root";
+        clearPress();
         pressTimer = setTimeout(() => {
+            if (!window.catEditMode) window.enterCatEditMode(level, parent);
             dragEl = target;
+            didDrag = false;
             dragEl.classList.add("dragging");
             if (navigator.vibrate) navigator.vibrate(50);
         }, 500);
     }, { passive: true });
 
     cont.addEventListener("touchmove", e => {
-        if (!dragEl) { clearTimeout(pressTimer); return; }
+        if (!window.catEditMode || !dragEl) { clearPress(); return; }
         e.preventDefault();
+        didDrag = true;
         const touch = e.touches[0];
         const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
         const dropTarget = elemBelow ? elemBelow.closest(".cat-btn--add[data-cat-id]") : null;
@@ -586,6 +697,12 @@ window.setupAddCatDrag = function() {
 
     cont.addEventListener("touchend", endDrag);
     cont.addEventListener("touchcancel", endDrag);
+
+    document.addEventListener("touchstart", e => {
+        if (!window.catEditMode) return;
+        if (e.target.closest("#cats-container") || e.target.closest(".add-cats-done")) return;
+        window.exitCatEditMode(true);
+    }, { passive: true });
 };
 
 window.syncDescDisplay = () => {
@@ -681,46 +798,90 @@ window.pressNum = v => {
 window.getCats = function() { return window.getCatsForProfile ? window.getCatsForProfile() : (window.CATS_DATA.general || []); };
 
 window.renderAddCats = function() {
-    const cont = window.el("cats-container"), head = window.el("cats-header-container"); if(!cont || !head) return;
+    const cont = window.el("cats-container"), head = window.el("cats-header-container"), zone = window.el("add-cats-zone");
+    if(!cont || !head) return;
     const level = window.getAddCatLevel();
     cont.className = `cats-level--${level}`;
+    zone?.classList.toggle("cats-zone--edit", !!window.catEditMode);
 
-    const mkBtn = (id, icon, label, onclick, extraCls = "") =>
-        `<button type="button" class="cat-btn cat-btn--add${extraCls ? " " + extraCls : ""}" data-cat-id="${id || ""}" onclick="${onclick}"><span class="cat-btn__icon">${icon}</span><span class="cat-btn__label">${label}</span></button>`;
-    const wrap = (items, parentId) => `<div class="cat-scroll--add cat-grid--${level}" data-level="${level}" data-parent="${parentId || "root"}">${items}</div>`;
+    const parentForLevel = () => {
+        if (window.actSubCat) return window.actSubCat.id;
+        if (window.actMainCat) return window.actMainCat.id;
+        if (window.addMode === "income") return "income";
+        return null;
+    };
+    const parentId = parentForLevel();
+
+    const mkBtn = (item, onclick, extraCls = "") => {
+        const id = item.id || "";
+        const hidden = window.isCatHidden(id, level, parentId);
+        const maskedCls = hidden ? " cat-btn--masked" : "";
+        const wiggleCls = window.catEditMode && !hidden && !extraCls.includes("ghost") ? " cat-btn--wiggle" : "";
+        const editCls = window.catEditMode ? " cat-btn--edit" : "";
+        const hideBtn = window.catEditMode && id && id !== "umumiy"
+            ? `<span class="cat-btn__hide" onclick="window.onHideCatClick(event,'${id}','${level}','${parentId || "root"}')">✕</span>`
+            : "";
+        const action = window.catEditMode ? "" : ` onclick="${onclick}"`;
+        return `<button type="button" class="cat-btn cat-btn--add${extraCls ? " " + extraCls : ""}${maskedCls}${wiggleCls}${editCls}" data-cat-id="${id}"${action}>${hideBtn}<span class="cat-btn__icon">${item.icon}</span><span class="cat-btn__label">${item.label}</span></button>`;
+    };
+    const wrap = (html, pId) => `<div class="cat-scroll--add cat-grid--${level}" data-level="${level}" data-parent="${pId || "root"}">${html}</div>`;
+
+    const editHead = `<div class="add-crumb add-crumb--edit"><span>↕️ Tartiblash rejimi</span><button type="button" class="back-link add-cats-done" onclick="window.exitCatEditMode()">Tayyor</button></div>`;
 
     if (window.addMode === "income") {
-        head.innerHTML = "";
-        const src = window.applyCatOrder(window.INC_SOURCES.map((s, i) => ({ ...s, id: "inc_" + i })), "main", "income");
-        cont.innerHTML = wrap(src.map(s => mkBtn(s.id, s.icon, s.label, `saveTx('${s.label.replace(/'/g, "\\'")}')`)).join(""), "income");
-        window.setupAddCatDrag();
+        head.innerHTML = window.catEditMode ? editHead : "";
+        let src = window.applyCatOrder(window.INC_SOURCES.map((s, i) => ({ ...s, id: "inc_" + i })), "main", "income");
+        const isHidden = id => window.isCatHidden(id, "main", "income");
+        if (window.catEditMode) src = [...src.filter(s => !isHidden(s.id)), ...src.filter(s => isHidden(s.id))];
+        else src = src.filter(s => !isHidden(s.id));
+        cont.innerHTML = wrap(src.map(s => mkBtn(s, `saveTx('${s.label.replace(/'/g, "\\'")}')`)).join(""), "income");
         window.syncAddLayout();
         return;
     }
 
-    const cats = window.applyCatOrder(window.getCats(), "main", null);
+    const cats = window.filterCatItems(window.getCats(), "main", null);
     if (window.actSubCat) {
-        head.innerHTML = `<div class="add-crumb"><span>${window.actMainCat.label} <b>›</b> ${window.actSubCat.label}</span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
-        const items = window.applyCatOrder(window.actSubCat.items, "items", window.actSubCat.id);
-        cont.innerHTML = wrap(items.map(i => mkBtn(i.id, i.icon, i.label, `saveTx('${i.label.replace(/'/g, "\\'")}', true)`, "cat-btn--pick")).join(""), window.actSubCat.id);
+        head.innerHTML = window.catEditMode ? editHead : `<div class="add-crumb"><span>${window.actMainCat.label} <b>›</b> ${window.actSubCat.label}</span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
+        const items = window.filterCatItems(window.actSubCat.items, "items", window.actSubCat.id);
+        cont.innerHTML = wrap(items.map(i => mkBtn(i, `saveTx('${i.label.replace(/'/g, "\\'")}', true)`, "cat-btn--pick")).join(""), window.actSubCat.id);
     } else if (window.actMainCat && window.actMainCat.subs && window.actMainCat.subs.length > 0) {
-        head.innerHTML = `<div class="add-crumb"><span>Rukun: <b>${window.actMainCat.label}</b></span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
-        const subs = window.applyCatOrder(window.actMainCat.subs, "rukun", window.actMainCat.id);
-        cont.innerHTML = wrap(subs.map(s => {
+        head.innerHTML = window.catEditMode ? editHead : `<div class="add-crumb"><span>Rukun: <b>${window.actMainCat.label}</b></span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
+        let subs = window.filterCatItems(window.actMainCat.subs, "rukun", window.actMainCat.id);
+        let html = subs.map(s => {
             const f = s.items?.length > 0;
-            return mkBtn(s.id, s.icon, s.label + (f ? "" : " ✓"), f ? `clickSubCat('${s.id}')` : `saveTx('${s.label.replace(/'/g, "\\'")}')`);
-        }).join("") + mkBtn("umumiy", "⚙️", "Umumiy", `saveTx('${window.actMainCat.label.replace(/'/g, "\\'")}')`, "cat-btn--ghost"), window.actMainCat.id);
+            const lbl = s.label + (f ? "" : " ✓");
+            return mkBtn({ ...s, label: lbl }, f ? `clickSubCat('${s.id}')` : `saveTx('${s.label.replace(/'/g, "\\'")}')`);
+        }).join("");
+        if (!window.catEditMode || !window.isCatHidden("umumiy", "rukun", window.actMainCat.id)) {
+            html += mkBtn({ id: "umumiy", icon: "⚙️", label: "Umumiy" }, `saveTx('${window.actMainCat.label.replace(/'/g, "\\'")}')`, "cat-btn--ghost");
+        }
+        cont.innerHTML = wrap(html, window.actMainCat.id);
     } else {
-        head.innerHTML = `<div class="add-cats-hint">Ushlab turing — joyini almashtirish</div>`;
-        cont.innerHTML = wrap(cats.map(c => mkBtn(c.id, c.icon, c.label, `clickMainCat('${c.id}')`, "cat-btn--main")).join(""), null);
+        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">Ushlab turing — tartiblash rejimi</div>`;
+        cont.innerHTML = wrap(cats.map(c => mkBtn(c, `clickMainCat('${c.id}')`, "cat-btn--main")).join(""), null);
     }
-    window.setupAddCatDrag();
     window.syncAddLayout();
 };
 
-window.clickMainCat = id => { const c = window.getCats().find(x=>x.id==id); if(c && c.subs?.length) { window.actMainCat = c; window.renderAddCats(); window.setHtml("stay-hint",""); } else if(c) window.saveTx(c.label); };
-window.clickSubCat = id => { const s = window.actMainCat.subs.find(x=>x.id==id); if(s && s.items?.length) { window.actSubCat = s; window.renderAddCats(); window.setHtml("stay-hint",""); } else if(s) window.saveTx(s.label); };
-window.backCat = () => { if(window.actSubCat) window.actSubCat = null; else window.actMainCat = null; window.setHtml("stay-hint",""); window.renderAddCats(); };
+window.clickMainCat = id => {
+    if (window.catEditMode) return;
+    const c = window.getCats().find(x=>x.id==id);
+    if(c && c.subs?.length) { window.actMainCat = c; window.renderAddCats(); window.setHtml("stay-hint",""); }
+    else if(c) window.saveTx(c.label);
+};
+window.clickSubCat = id => {
+    if (window.catEditMode) return;
+    const s = window.actMainCat.subs.find(x=>x.id==id);
+    if(s && s.items?.length) { window.actSubCat = s; window.renderAddCats(); window.setHtml("stay-hint",""); }
+    else if(s) window.saveTx(s.label);
+};
+window.backCat = () => {
+    window.exitCatEditMode(true);
+    if(window.actSubCat) window.actSubCat = null;
+    else window.actMainCat = null;
+    window.setHtml("stay-hint","");
+    window.renderAddCats();
+};
 
 window.saveTx = (l, isDeepItem=false) => {
     const a = parseFloat(window.amtStr); if(!a || a<=0) return window.toast("Summa yo'q!", true); const d = new Date();

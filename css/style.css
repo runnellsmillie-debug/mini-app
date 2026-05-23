@@ -159,7 +159,7 @@ body {
     display: flex;
     gap: 8px;
     align-items: stretch;
-    padding-right: 30px;
+    padding-right: 36px;
 }
 
 .header-stat-btn {
@@ -215,21 +215,28 @@ body {
 
 .header-bell-btn {
     position: absolute;
-    top: -6px;
+    top: -8px;
     right: 0;
-    width: 28px;
-    height: 28px;
+    width: 34px;
+    height: 34px;
     border: 1px solid var(--border-color);
     background: var(--bg-card);
     border-radius: 50%;
-    font-size: 14px;
+    font-size: 17px;
     line-height: 1;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: var(--shadow-sm);
-    transition: transform 0.15s;
+    transition: transform 0.15s, background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.header-bell-btn--unread {
+    background: var(--danger-soft);
+    border-color: var(--danger);
+    color: var(--danger);
+    box-shadow: 0 0 0 2px rgba(239, 83, 80, 0.2);
 }
 
 .header-bell-btn--shake {
@@ -246,15 +253,15 @@ body {
 
 .header-bell-badge {
     position: absolute;
-    top: -4px;
-    right: -4px;
-    min-width: 16px;
-    height: 16px;
+    top: -5px;
+    right: -5px;
+    min-width: 18px;
+    height: 18px;
     padding: 0 4px;
-    border-radius: 8px;
+    border-radius: 9px;
     background: var(--danger);
     color: #fff;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 800;
     display: flex;
     align-items: center;
@@ -938,6 +945,7 @@ body.on-add-tab {
 }
 
 #tab-add .cat-btn--add {
+    position: relative;
     border: 1px solid var(--border-color);
     background: var(--bg-main);
     display: flex;
@@ -945,15 +953,68 @@ body.on-add-tab {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s, filter 0.2s;
+}
+
+#tab-add .cat-btn--wiggle {
+    animation: catWiggle 0.32s ease-in-out infinite;
+}
+
+@keyframes catWiggle {
+    0%, 100% { transform: rotate(-1.2deg) scale(1); }
+    50% { transform: rotate(1.2deg) scale(1.02); }
+}
+
+#tab-add .cat-btn--masked {
+    opacity: 0.4;
+    filter: grayscale(1);
+    animation: none !important;
+}
+
+#tab-add .cat-btn--edit {
+    cursor: grab;
 }
 
 #tab-add .cat-btn--add.dragging {
-    opacity: 0.85;
-    transform: scale(1.04);
+    opacity: 0.9;
+    transform: scale(1.05);
     box-shadow: var(--shadow);
     z-index: 5;
-    position: relative;
+    animation: none !important;
+}
+
+.cat-btn__hide {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background: var(--danger);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 17px;
+    text-align: center;
+    z-index: 3;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.cat-btn__hide:active {
+    transform: scale(0.92);
+    background: #c62828;
+}
+
+.cats-zone--edit {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
+.add-crumb--edit span {
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 11px;
 }
 
 #tab-add .cat-btn--add .cat-btn__label {
