@@ -458,21 +458,19 @@ body.on-add-tab {
     top: calc(var(--header-h) + var(--safe-top));
     bottom: calc(var(--nav-h) + var(--add-bottom-stack-h) + var(--safe-bottom));
     z-index: 850;
-    padding: 6px 12px 4px;
+    padding: 4px 12px 2px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     overflow: hidden;
     background: var(--bg-main);
 }
 
 .add-amount-wrap {
-    flex: 1;
-    min-height: 0;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 4px;
+    gap: 2px;
 }
 
 #tab-add .add-mode-bar {
@@ -492,11 +490,11 @@ body.on-add-tab {
 
 #tab-add .num-display--add {
     flex-shrink: 0;
-    font-size: clamp(30px, 9vw, 40px);
+    font-size: clamp(28px, 8vw, 36px);
     font-weight: 800;
-    padding: 14px 16px;
+    padding: 10px 14px;
     margin: 0;
-    min-height: 58px;
+    min-height: 50px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -522,14 +520,15 @@ body.on-add-tab {
 }
 
 #tab-add .add-cats-zone {
-    flex-shrink: 0;
+    flex: 1;
+    min-height: 158px;
     display: flex;
     flex-direction: column;
     gap: 4px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    padding: 8px;
+    padding: 8px 10px 10px;
 }
 
 #tab-add #cats-header-container {
@@ -537,9 +536,10 @@ body.on-add-tab {
 }
 
 #tab-add #cats-container {
-    flex-shrink: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
+    flex: 1;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
 }
@@ -549,23 +549,22 @@ body.on-add-tab {
 }
 
 #tab-add .cat-scroll--add {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 8px;
-    padding: 2px 0 4px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    padding: 0;
+    align-content: start;
 }
 
 #tab-add .cat-btn--add {
-    flex-shrink: 0;
-    width: 76px;
-    min-width: 76px;
-    height: 78px;
-    min-height: 78px;
-    padding: 8px 6px;
-    gap: 5px;
-    font-size: 10px;
-    border-radius: 12px;
+    width: 100%;
+    min-width: 0;
+    height: 60px;
+    min-height: 60px;
+    padding: 6px 4px;
+    gap: 3px;
+    font-size: 9px;
+    border-radius: 10px;
     border: 1px solid var(--border-color);
     background: var(--bg-main);
     display: flex;
@@ -575,16 +574,16 @@ body.on-add-tab {
 }
 
 #tab-add .cat-btn--add .cat-btn__icon {
-    font-size: 22px;
+    font-size: 18px;
     line-height: 1;
 }
 
 #tab-add .cat-btn--add .cat-btn__label {
     color: var(--text) !important;
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.15;
     font-weight: 600;
-    font-size: 9px;
+    font-size: 8px;
 }
 
 #tab-add .cat-btn--pick {
@@ -604,7 +603,7 @@ body.on-add-tab {
     gap: 8px;
     font-size: 11px;
     color: var(--text-muted);
-    padding-bottom: 4px;
+    padding-bottom: 2px;
 }
 
 #tab-add .add-crumb b { color: var(--primary); }
@@ -631,8 +630,8 @@ body.on-add-tab {
 }
 
 .add-desc-dock {
-    margin: 0 12px 6px;
-    padding: 10px 12px;
+    margin: 0 12px 4px;
+    padding: 8px 12px;
     font-size: 13px;
     border-radius: var(--radius-sm);
     background: var(--bg-card);
