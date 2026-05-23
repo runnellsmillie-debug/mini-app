@@ -81,7 +81,7 @@ window.confirmInterest = () => {
     const d=window.state.deps.find(x=>x.id==window.curDepId); if(!d) return; 
     d.profits = (d.profits||0) + a; 
     if(d.cap) { d.amount += a; } 
-    else { window.state.incs.unshift({id:Date.now(), amount:a, desc:`Foiz: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:window.tgUser, prof:"general"}); } 
+    else { window.state.incs.unshift({id:Date.now(), amount:a, desc:`Foiz: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:window.tgUser, prof:"general"}); if(window.creditIncomeToReserve) window.creditIncomeToReserve(a, `Foiz: ${d.name}`); } 
     window.closeModal('modal-dep-interest'); window.save(); window.toast("Hisoblandi!"); 
 };
 
@@ -102,7 +102,8 @@ window.openDepScheduleModal = id => {
 window.closeDep = id => { 
     window.initCloseActionOld(() => { 
         const d=window.state.deps.find(x=>x.id==id); if(!d) return; 
-        window.state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Omonat qaytdi: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:window.tgUser, prof:"general"}); 
+        window.state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Omonat qaytdi: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:window.tgUser, prof:"general"});
+        if(window.creditIncomeToReserve) window.creditIncomeToReserve(d.amount, `Omonat qaytdi: ${d.name}`); 
         d.archived = true; d.closeDate = new Date().toISOString().slice(0,10); 
         window.save(); window.switchDepTab('arxiv'); window.toast("Yopildi!"); 
     }); 

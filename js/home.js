@@ -41,6 +41,20 @@ window.getGrandTotalBalance = function() {
     return window.getProfilesWalletSum() + window.getReserveBalance();
 };
 
+window.creditIncomeToReserve = function(amount, note) {
+    amount = parseFloat(amount) || 0;
+    if (amount <= 0) return;
+    window.ensureHomeState();
+    window.state.wallets.general = window.getWalletBalance("general") + amount;
+    window.addWalletLedger({
+        type: "income",
+        fromProf: null,
+        toProf: "general",
+        amount,
+        note: note || (window.t ? window.t("income_to_reserve") : "Kirim")
+    });
+};
+
 window.getRelationLabel = function(p) {
     if (!p) return "";
     if (p.relationLabel) return p.relationLabel;
@@ -57,14 +71,29 @@ window.getTotalWalletBalance = function() {
     return window.getGrandTotalBalance();
 };
 
-window.openHomeFinanceFullscreen = function() {
-    window.renderHomeFinancePanel();
+window.openProfileFinance = function(profId) {
+    if (!window.canManageWallet || !window.canManageWallet(profId)) {
+        return window.toast(window.t("wallet_no_access"), true);
+    }
+    window._homeFinanceProf = profId;
+    window.renderHomeFinancePanel(profId);
     window.updateHomeFinanceSummary();
     const m = window.el("modal-home-finance");
+    const title = window.el("home-finance-fs-title");
+    if (title) {
+        if (profId === "general") title.textContent = window.t("reserve_fund");
+        else {
+            const p = window.state.profiles.find(x => x.id === profId);
+            title.textContent = p ? `${p.icon} ${p.name}` : window.t("finance_panel");
+        }
+    }
     if (m) m.style.display = "flex";
 };
 
+window.openHomeFinanceFullscreen = window.openProfileFinance;
+
 window.closeHomeFinanceFullscreen = function() {
+    window._homeFinanceProf = null;
     const m = window.el("modal-home-finance");
     if (m) m.style.display = "none";
 };
@@ -142,6 +171,7 @@ window.transferWallet = function(fromId, toId, amount, note) {
     });
     window.save(true);
     window.renderHomeTab();
+    window.refreshHomeFinanceIfOpen();
     window.updateHomeFinanceSummary();
     window.updateHeaderBalance();
     window.toast(window.t("transfer_done"));
@@ -157,6 +187,10 @@ window.transferAllFromGeneral = function(toId) {
 window.depositToWallet = function(profId, amount, note) {
     amount = parseFloat(amount) || 0;
     if (amount <= 0) return window.toast(window.t("amount_required"), true);
+    if (!window.canManageWallet(profId)) return window.toast(window.t("wallet_no_access"), true);
+    if (profId === "general" && !window.isBudgetAdmin()) {
+        return window.toast(window.t("admin_only_general"), true);
+    }
     window.ensureHomeState();
     window.state.wallets[profId] = window.getWalletBalance(profId) + amount;
     window.addWalletLedger({
@@ -168,6 +202,7 @@ window.depositToWallet = function(profId, amount, note) {
     });
     window.save(true);
     window.renderHomeTab();
+    window.refreshHomeFinanceIfOpen();
     window.updateHomeFinanceSummary();
     window.updateHeaderBalance();
     window.toast(window.t("saved_auto"));
@@ -176,6 +211,10 @@ window.depositToWallet = function(profId, amount, note) {
 window.withdrawFromWallet = function(profId, amount, note) {
     amount = parseFloat(amount) || 0;
     if (amount <= 0) return window.toast(window.t("amount_required"), true);
+    if (!window.canManageWallet(profId)) return window.toast(window.t("wallet_no_access"), true);
+    if (profId === "general" && !window.isBudgetAdmin()) {
+        return window.toast(window.t("admin_only_general"), true);
+    }
     const bal = window.getWalletBalance(profId);
     if (bal < amount) return window.toast(window.t("not_enough_balance"), true);
     window.ensureHomeState();
@@ -189,6 +228,7 @@ window.withdrawFromWallet = function(profId, amount, note) {
     });
     window.save(true);
     window.renderHomeTab();
+    window.refreshHomeFinanceIfOpen();
     window.updateHomeFinanceSummary();
     window.updateHeaderBalance();
     window.toast(window.t("saved_auto"));
@@ -253,16 +293,18 @@ window.closeWalletHistory = function() {
     if (window.closeModal) window.closeModal("modal-wallet-history");
 };
 
-window.renderHomeFinancePanel = function() {
+window.renderHomeFinancePanel = function(profId) {
     const panel = window.el("home-finance-panel");
     if (!panel) return;
+    profId = profId || window._homeFinanceProf;
+    if (!profId) return;
     const isAdmin = window.isBudgetAdmin();
     const profiles = (window.getSortedProfiles ? window.getSortedProfiles() : window.state.profiles)
         .filter(p => !p.archived && p.id !== "general");
 
     let html = "";
 
-    if (isAdmin) {
+    if (profId === "general" && isAdmin) {
         html += `
         <div class="wallet-mgmt-block wallet-mgmt-block--general">
             <div class="wallet-mgmt-block__head">
@@ -286,9 +328,12 @@ window.renderHomeFinancePanel = function() {
                 <button type="button" class="wallet-action-btn wallet-action-btn--out" onclick="window.withdrawFromWallet('general', window.getNum('wallet-reserve-amt'))" title="${window.t("withdraw")}">−</button>
             </div>
         </div>`;
-    }
-
-    profiles.forEach(p => {
+    } else {
+        const p = window.state.profiles.find(x => x.id === profId);
+        if (!p || !window.canManageWallet(profId)) {
+            panel.innerHTML = `<div class="wallet-ledger-empty">${window.t("wallet_no_access")}</div>`;
+            return;
+        }
         html += `
         <div class="wallet-mgmt-block">
             <div class="wallet-mgmt-block__head">
@@ -302,9 +347,63 @@ window.renderHomeFinancePanel = function() {
                 <button type="button" class="wallet-action-btn wallet-action-btn--out" onclick="window.withdrawFromWallet('${p.id}', window.getNum('wallet-amt-${p.id}'))" title="${window.t("withdraw")}">−</button>
             </div>
         </div>`;
-    });
+    }
 
     panel.innerHTML = html;
+};
+
+window.initHomeBalancePress = function(el, profId) {
+    if (!el || el._homePressInit) return;
+    el._homePressInit = true;
+    let timer = null;
+    let longDone = false;
+    let startX = 0, startY = 0;
+
+    const clearTimer = () => {
+        if (timer) { clearTimeout(timer); timer = null; }
+        el.classList.remove("home-balance-cell--hold");
+        el.classList.remove("home-finance-card__reserve--hold");
+    };
+
+    el.addEventListener("pointerdown", e => {
+        if (!window.canManageWallet(profId)) return;
+        longDone = false;
+        startX = e.clientX;
+        startY = e.clientY;
+        el.classList.add(profId === "general" ? "home-finance-card__reserve--hold" : "home-balance-cell--hold");
+        clearTimer();
+        timer = setTimeout(() => {
+            timer = null;
+            longDone = true;
+            el.classList.remove("home-balance-cell--hold");
+            el.classList.remove("home-finance-card__reserve--hold");
+            if (navigator.vibrate) navigator.vibrate(40);
+            window.openProfileFinance(profId);
+        }, 500);
+    });
+
+    el.addEventListener("pointermove", e => {
+        if (!timer) return;
+        if (Math.hypot(e.clientX - startX, e.clientY - startY) > 12) clearTimer();
+    });
+
+    el.addEventListener("pointerup", () => clearTimer());
+    el.addEventListener("pointercancel", clearTimer);
+    el.addEventListener("click", e => {
+        if (longDone) { e.preventDefault(); longDone = false; }
+    });
+};
+
+window.bindHomeFinancePress = function() {
+    const reserve = window.el("home-reserve-row");
+    if (reserve) window.initHomeBalancePress(reserve, "general");
+};
+
+window.refreshHomeFinanceIfOpen = function() {
+    const m = window.el("modal-home-finance");
+    if (m && m.style.display === "flex" && window._homeFinanceProf) {
+        window.renderHomeFinancePanel(window._homeFinanceProf);
+    }
 };
 
 window.renderHomeChatStrip = function() {
@@ -370,12 +469,13 @@ window.sendProfileChat = function() {
         id: Date.now(),
         text,
         user: window.tgUser || "Siz",
-        uid: window.tgUserId || null,
+        uid: window.tgUserId ? String(window.tgUserId) : null,
         time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })
     });
     inp.value = "";
     window.save(true);
     window.renderProfileChatMessages();
+    if (window.updateHeaderNotifications) window.updateHeaderNotifications();
 };
 
 window.renderHomeTab = function() {
@@ -389,14 +489,22 @@ window.renderHomeTab = function() {
     const grid = window.el("home-balance-grid");
     if (grid) {
         const rows = window.getHomeBalanceRows();
-        grid.innerHTML = rows.map(r => `
-            <div class="home-balance-cell">
+        grid.innerHTML = rows.map(r => {
+            const canManage = window.canManageWallet && window.canManageWallet(r.id);
+            return `
+            <div class="home-balance-cell${canManage ? " home-balance-cell--interactive" : ""}" data-prof-id="${r.id}">
                 <span class="home-balance-cell__icon">${r.icon}</span>
                 <span class="home-balance-cell__lbl">${r.label.replace(/</g, "&lt;")}</span>
                 <span class="home-balance-cell__amt">${window.formatM(r.amount)}</span>
-            </div>
-        `).join("");
+            </div>`;
+        }).join("");
+        grid.querySelectorAll(".home-balance-cell[data-prof-id]").forEach(cell => {
+            const pid = cell.getAttribute("data-prof-id");
+            if (pid) window.initHomeBalancePress(cell, pid);
+        });
     }
+
+    window.bindHomeFinancePress();
 
     window.updateHomeFinanceSummary();
     window.renderHomeChatStrip();

@@ -1441,6 +1441,13 @@ body.dark-mode .home-finance-card {
     border: 1px solid rgba(255,255,255,0.2);
     font-size: 12px;
     position: relative;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.home-finance-card__reserve--hold,
+.home-balance-cell--hold {
+    background: rgba(255,255,255,0.22);
+    transform: scale(0.98);
 }
 
 .home-finance-card__reserve-lbl { opacity: 0.85; font-weight: 500; }
@@ -1454,28 +1461,34 @@ body.dark-mode .home-finance-card {
 }
 
 .home-balance-cell {
-    background: rgba(255,255,255,0.95);
-    color: var(--text);
+    background: rgba(255,255,255,0.1);
+    color: #fff;
     border-radius: 10px;
-    padding: 8px 8px 7px;
-    min-height: 58px;
+    padding: 8px 10px 7px;
+    min-height: 56px;
     display: flex;
     flex-direction: column;
     gap: 2px;
+    border: 1px solid rgba(255,255,255,0.16);
+    transition: background 0.2s, transform 0.15s, border-color 0.2s;
+}
+
+.home-balance-cell--interactive {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body.dark-mode .home-balance-cell {
-    background: rgba(12, 16, 28, 0.88);
-    color: var(--text);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.12);
 }
 
-.home-balance-cell__icon { font-size: 14px; line-height: 1; }
+.home-balance-cell__icon { font-size: 14px; line-height: 1; opacity: 0.95; }
 .home-balance-cell__lbl {
     font-size: 9px;
     font-weight: 500;
     line-height: 1.25;
-    opacity: 0.85;
+    opacity: 0.82;
     flex: 1;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -1486,8 +1499,9 @@ body.dark-mode .home-balance-cell {
 .home-balance-cell__amt {
     font-size: 11px;
     font-weight: 800;
-    color: var(--primary);
+    color: rgba(255,255,255,0.95);
     margin-top: auto;
+    letter-spacing: -0.01em;
 }
 
 .home-finance-fs__summary {
@@ -2626,6 +2640,59 @@ body:not(.dark-mode) .cat-btn span[style*="color: #fff"] {
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 8px;
 }
+
+.fs-section-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin: -4px 0 10px;
+    line-height: 1.4;
+}
+
+.fs-wallet-manage {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.wallet-manage-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-main);
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.wallet-manage-chip input { display: none; }
+
+.wallet-manage-chip--on {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.wallet-manage-empty {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 8px 0;
+}
+
+.header-float-section {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px 0 4px;
+    margin-top: 4px;
+}
+
+.header-float-section:first-child { margin-top: 0; }
 
 /* ——— Tags ——— */
 .tags-wrapper {

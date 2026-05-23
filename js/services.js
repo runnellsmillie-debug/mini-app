@@ -39,10 +39,10 @@ window.saveDebt = () => {
     if(!n||!a) return window.toast("Kam!", true); 
     window.state.debts.unshift({id:Date.now(), name:n, amount:a, type:window.debtType, start:s, due:e, archived:false}); 
     if(window.debtType === "take") window.state.txs.unshift({id:Date.now()+1, amount:a, desc:`Qarz berildi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:window.tgUser, prof:"general"}); 
-    else window.state.incs.unshift({id:Date.now()+1, amount:a, desc:`Qarz olindi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:window.tgUser, prof:"general"}); 
+    else { window.state.incs.unshift({id:Date.now()+1, amount:a, desc:`Qarz olindi: ${n}`, cat:"Qarz", date:s, time:"00:00", user:window.tgUser, prof:"general"}); if(window.creditIncomeToReserve) window.creditIncomeToReserve(a, `Qarz olindi: ${n}`); } 
     window.setVal("debt-name",""); window.el("debt-amount").value=""; 
     window.save(); window.toast("Saqlandi!"); 
 };
 
-window.closeDebt = id => { window.initCloseActionOld(() => { const d=window.state.debts.find(x=>x.id==id); if(!d) return; const t=new Date().toISOString().slice(0,10); if(d.type==="take") window.state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz qaytdi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:window.tgUser, prof:"general"}); else window.state.txs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz to'landi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:window.tgUser, prof:"general"}); d.archived = true; d.closeDate = t; window.save(); window.toast("Uzildi!"); }); };
+window.closeDebt = id => { window.initCloseActionOld(() => { const d=window.state.debts.find(x=>x.id==id); if(!d) return; const t=new Date().toISOString().slice(0,10); if(d.type==="take") { window.state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz qaytdi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:window.tgUser, prof:"general"}); if(window.creditIncomeToReserve) window.creditIncomeToReserve(d.amount, `Qarz qaytdi: ${d.name}`); } else window.state.txs.unshift({id:Date.now(), amount:d.amount, desc:`Qarz to'landi: ${d.name}`, cat:"Qarz", date:t, time:"00:00", user:window.tgUser, prof:"general"}); d.archived = true; d.closeDate = t; window.save(); window.toast("Uzildi!"); }); };
 window.permDelDebt = id => { window.state.debts=window.state.debts.filter(x=>x.id!=id); window.save(); window.toast("O'chirildi!"); };

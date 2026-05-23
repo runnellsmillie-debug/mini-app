@@ -179,6 +179,7 @@ window.openFullScreenModal = function(profId = null) {
             perms = p.permissions || [];
             if (window.el('fs-prof-phone')) window.el('fs-prof-phone').value = p.linked_phone || '';
             if (window.el('fs-prof-uid')) window.el('fs-prof-uid').value = p.linked_uid ? String(p.linked_uid) : '';
+            if (window.renderWalletManageGrid) window.renderWalletManageGrid(profId, p.walletManage || []);
         }
     } else {
         document.getElementById('fs-prof-title').innerText = window.t ? window.t("new_profile") : "Yangi profil";
@@ -186,6 +187,7 @@ window.openFullScreenModal = function(profId = null) {
         document.getElementById('fs-prof-emoji').value = '👤';
         document.getElementById('fs-prof-role').value = 'child_f';
         perms = [...window.DEFAULT_NEW_PROFILE_PERMS];
+        if (window.renderWalletManageGrid) window.renderWalletManageGrid(null, []);
     }
     window._permExpandedGroups = new Set();
     if (window.renderProfilePermsGrid) window.renderProfilePermsGrid(perms);
@@ -211,6 +213,7 @@ window.saveFullScreenProfile = function() {
     let age = ageVal !== '' ? parseInt(ageVal, 10) : null;
     let monthlyLimit = window.getNum ? window.getNum('fs-prof-limit') : (parseInt((window.val('fs-prof-limit') || '').replace(/\s/g, ''), 10) || 0);
     let perms = Array.from(document.querySelectorAll('.fs-perm-chk:checked')).map(chk => chk.value);
+    let walletManage = window.getWalletManageChecked ? window.getWalletManageChecked() : [];
     let pinEnabled = window.el('fs-prof-pin-enabled')?.checked;
     let pinRaw = (window.val('fs-prof-pin') || '').replace(/\D/g, '');
 
@@ -222,6 +225,7 @@ window.saveFullScreenProfile = function() {
 
     const build = (base) => window.normalizeProfile({
         ...base, name, icon, role, age, monthlyLimit, permissions: perms,
+        walletManage,
         permsConfigured: true,
         pinEnabled: !!pinEnabled,
         pinHash: pinRaw.length === 4 ? window.hashPin(pinRaw) : (base?.pinHash || ""),
@@ -432,8 +436,45 @@ window.getNotifSeenIds = function() {
     catch { return new Set(); }
 };
 
+window.getChatSeenIds = function(profId) {
+    try { return new Set(JSON.parse(localStorage.getItem("chat_notif_seen_" + profId) || "[]")); }
+    catch { return new Set(); }
+};
+
+window.saveChatSeenIds = function(profId, ids) {
+    localStorage.setItem("chat_notif_seen_" + profId, JSON.stringify([...ids].slice(-300)));
+};
+
+window.getMyLinkedProfiles = function() {
+    const me = window.tgUserId ? String(window.tgUserId) : "";
+    if (!me) return [];
+    return window.state.profiles.filter(p => !p.archived && p.linked_uid && String(p.linked_uid) === me);
+};
+
+window.getUnreadChatNotifs = function() {
+    const me = window.tgUserId ? String(window.tgUserId) : "";
+    if (!me) return [];
+    const unread = [];
+    window.getMyLinkedProfiles().forEach(p => {
+        const seen = window.getChatSeenIds(p.id);
+        (window.state.chats?.[p.id] || []).forEach(m => {
+            if (String(m.uid || "") !== me && !seen.has(m.id)) {
+                unread.push({ ...m, profId: p.id, profName: p.name, profIcon: p.icon, kind: "chat" });
+            }
+        });
+    });
+    return unread.sort((a, b) => b.id - a.id);
+};
+
 window.saveNotifSeenIds = function(ids) {
     localStorage.setItem("family_notif_seen", JSON.stringify([...ids].slice(-500)));
+};
+
+window.fmtHeaderChatRow = function(m) {
+    const title = (m.text || "").replace(/</g, "&lt;");
+    const user = (m.user || "Siz").replace(/</g, "&lt;");
+    const prof = `${m.profIcon || "👤"} ${(m.profName || "").replace(/</g, "&lt;")}`;
+    return `<div class="header-float-row header-float-row--chat"><div class="header-float-row__main"><div class="header-float-row__title">💬 ${title}</div><div class="header-float-row__meta">${prof} · 👤 ${user}${m.time ? " · " + m.time : ""}</div></div></div>`;
 };
 
 window.getFamilyNotifTxs = function() {
@@ -450,8 +491,14 @@ window.getUnreadFamilyNotifTxs = function() {
     return window.getFamilyNotifTxs().filter(x => !seen.has(x.id));
 };
 
+window.getAllUnreadNotifs = function() {
+    const txUnread = window.getUnreadFamilyNotifTxs().map(x => ({ ...x, kind: "expense" }));
+    const chatUnread = window.getUnreadChatNotifs();
+    return [...chatUnread, ...txUnread].sort((a, b) => b.id - a.id);
+};
+
 window.updateHeaderNotifications = function() {
-    const unread = window.getUnreadFamilyNotifTxs();
+    const unread = window.getAllUnreadNotifs();
     const badge = window.el("header-bell-badge");
     const bell = window.el("header-bell-btn");
     if (badge) {
@@ -480,10 +527,20 @@ window.renderHeaderTodayPanel = function() {
 window.renderHeaderNotifPanel = function() {
     const list = window.el("header-notif-list");
     if (!list) return;
+    const chats = window.getUnreadChatNotifs();
     const txs = window.getFamilyNotifTxs();
-    list.innerHTML = txs.length
-        ? txs.map(x => window.fmtHeaderTxRow(x)).join("")
-        : `<div class="header-float-empty">Boshqa a'zolardan xarajat yo'q</div>`;
+    const parts = [];
+    if (chats.length) {
+        parts.push(`<div class="header-float-section">${window.t ? window.t("chat_messages") : "Chat xabarlari"}</div>`);
+        parts.push(chats.map(x => window.fmtHeaderChatRow(x)).join(""));
+    }
+    if (txs.length) {
+        parts.push(`<div class="header-float-section">${window.t ? window.t("family_expenses") : "Oilaviy xarajatlar"}</div>`);
+        parts.push(txs.map(x => window.fmtHeaderTxRow(x)).join(""));
+    }
+    list.innerHTML = parts.length
+        ? parts.join("")
+        : `<div class="header-float-empty">${window.t ? window.t("notif_empty") : "Xabar yo'q"}</div>`;
 };
 
 window.closeHeaderPanels = function() {
@@ -518,6 +575,11 @@ window.toggleHeaderNotifPanel = function() {
     const seen = window.getNotifSeenIds();
     window.getFamilyNotifTxs().forEach(x => seen.add(x.id));
     window.saveNotifSeenIds(seen);
+    window.getMyLinkedProfiles().forEach(p => {
+        const chatSeen = window.getChatSeenIds(p.id);
+        (window.state.chats?.[p.id] || []).forEach(m => chatSeen.add(m.id));
+        window.saveChatSeenIds(p.id, chatSeen);
+    });
     window.updateHeaderNotifications();
 };
 
@@ -1144,6 +1206,7 @@ window.saveTx = (l, isDeepItem=false) => {
         if (lim.level === "danger") return window.toast("Oylik limit tugagan!", true);
         window.state.txs.unshift(i);
     } else window.state.incs.unshift(i);
+    if (window.creditIncomeToReserve) window.creditIncomeToReserve(a, note || l);
     window.logAudit(window.addMode === 'expense' ? 'expense' : 'income', i.desc, { amount: a, cat: realCat });
     window.sessionData.push({ amount: a, category: `${i.desc} [${window.tgUser}]`, type: window.addMode==='expense'?'minus':'plus' });
     const sc = document.getElementById('session-count');

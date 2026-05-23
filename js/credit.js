@@ -145,7 +145,8 @@ window.saveCreditAction = () => {
     const hg = window.el("credit-grace-check").checked; const gd = hg ? parseInt(window.val("credit-grace-dur")) : 0, gr = hg ? parseFloat(window.val("credit-grace-rate")) : 0, gt = window.val("credit-grace-type");
 
     window.state.credits.push({ id:Date.now(), name:n, bankIcon: bankObj.icon, typeIcon: crObj.icon, initAmt:actualLoan, totalCost: a+ins, start:startDate, payDay:pd, duration:d, rate:r, type:tp, graceDur:gd, graceRate:gr, graceType:gt, schedule:window.tempSchedule, extraPrincipalPaid:0, archived:false, closedDate:null });
-    window.state.incs.unshift({id:Date.now()+1, amount:actualLoan, desc:`Kredit: ${n}`, cat:"Kredit", date:startDate, time:"00:00", user:window.tgUser, prof:"general"}); 
+    window.state.incs.unshift({id:Date.now()+1, amount:actualLoan, desc:`Kredit: ${n}`, cat:"Kredit", date:startDate, time:"00:00", user:window.tgUser, prof:"general"});
+    if(window.creditIncomeToReserve) window.creditIncomeToReserve(actualLoan, `Kredit: ${n}`); 
     
     window.setVal("credit-bank",""); window.setVal("credit-type-name",""); window.el("credit-amount").value=""; window.setVal("credit-duration",""); window.el("credit-initial-fee").value=""; window.el("credit-insurance-fee").value=""; window.el("credit-grace-check").checked = false; window.toggleGraceFields(); window.el("credit-analysis-box").innerHTML = "<div style='font-size:11px; color:var(--text-muted); text-align:center;'>Tahlil uchun bank va summani kiriting...</div>"; 
     window.switchCrTab('aktiv'); window.save(); window.toast("Muvaffaqiyatli Saqlandi!");

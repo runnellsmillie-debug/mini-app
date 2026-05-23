@@ -223,6 +223,7 @@ window.normalizeProfile = function(p) {
         pinEnabled: !!p.pinEnabled,
         pinHash: p.pinHash || "",
         permissions: window.normalizeProfilePermissions(p),
+        walletManage: Array.isArray(p.walletManage) ? [...p.walletManage] : [],
         permsConfigured: !!p.permsConfigured,
         linked_phone: p.linked_phone || "",
         linked_uid: p.linked_uid != null && p.linked_uid !== "" ? String(p.linked_uid) : null,
@@ -336,6 +337,51 @@ window.hasPermission = function(perm, prof) {
     const perms = p.permissions || [];
     if (perms.includes("admin_all")) return true;
     return perms.includes(perm);
+};
+
+window.canManageWallet = function(targetProfId, viewerProf) {
+    const viewer = viewerProf || window.getActiveProfile();
+    if (!targetProfId) return false;
+    if (targetProfId === "general") {
+        return window.isBudgetAdmin() || window.hasPermission("admin_all", viewer);
+    }
+    if (window.isBudgetAdmin() || window.hasPermission("admin_all", viewer)) return true;
+    if (viewer && viewer.id === targetProfId) return true;
+    return (viewer?.walletManage || []).includes(targetProfId);
+};
+
+window.getWalletManageProfiles = function(excludeProfId) {
+    return (window.getSortedProfiles ? window.getSortedProfiles() : window.state.profiles.filter(p => !p.archived))
+        .filter(p => p.id !== "general" && p.id !== excludeProfId);
+};
+
+window.renderWalletManageGrid = function(editingProfId, selectedIds) {
+    const box = document.getElementById("fs-wallet-manage-container");
+    if (!box) return;
+    const selected = new Set(selectedIds || []);
+    const profiles = window.getWalletManageProfiles(editingProfId);
+    if (!profiles.length) {
+        box.innerHTML = `<div class="wallet-manage-empty">${window.t ? window.t("wallet_manage_none") : "Boshqa profil yo'q"}</div>`;
+        return;
+    }
+    box.innerHTML = profiles.map(p => `
+        <label class="wallet-manage-chip${selected.has(p.id) ? " wallet-manage-chip--on" : ""}">
+            <input type="checkbox" class="fs-wallet-chk" value="${p.id}"${selected.has(p.id) ? " checked" : ""}>
+            <span class="wallet-manage-chip__icon">${p.icon || "👤"}</span>
+            <span class="wallet-manage-chip__lbl">${(p.name || "").replace(/</g, "&lt;")}</span>
+        </label>
+    `).join("");
+    if (!box._walletBound) {
+        box._walletBound = true;
+        box.addEventListener("change", e => {
+            if (!e.target.classList.contains("fs-wallet-chk")) return;
+            e.target.closest(".wallet-manage-chip")?.classList.toggle("wallet-manage-chip--on", e.target.checked);
+        });
+    }
+};
+
+window.getWalletManageChecked = function() {
+    return Array.from(document.querySelectorAll("#fs-wallet-manage-container .fs-wallet-chk:checked")).map(c => c.value);
 };
 
 window.hashPin = function(pin) {

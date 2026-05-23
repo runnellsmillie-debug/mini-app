@@ -119,6 +119,10 @@
             <h4 class="fs-section-title" data-i18n="permissions">Ruxsatlar</h4>
             <div id="fs-perms-container" class="fs-perms-container"></div>
 
+            <h4 class="fs-section-title" data-i18n="perm_wallets">Pul boshqaruvi</h4>
+            <p class="fs-section-hint" data-i18n="perm_wallets_hint">Qaysi profil hamyonlarini boshqarishi mumkin</p>
+            <div id="fs-wallet-manage-container" class="fs-wallet-manage"></div>
+
             <button onclick="saveFullScreenProfile()" class="btn-primary btn-success" style="width:100%; margin-top:20px; font-size:15px; padding:13px;">✅ <span data-i18n="save_profile">Profilni saqlash</span></button>
             <button onclick="deleteFullScreenProfile()" class="btn-primary" style="width:100%; margin-top:10px; font-size:14px; background:transparent; color:var(--danger); border:1px solid var(--danger);">🗑 Profilni o'chirish</button>
         </div>
@@ -157,7 +161,7 @@
         <div id="header-today-list" class="header-float-panel__body"></div>
     </div>
     <div id="header-notif-panel" class="header-float-panel hidden">
-        <div class="header-float-panel__head" data-i18n="family_expenses">Oilaviy xarajatlar</div>
+        <div class="header-float-panel__head" data-i18n="family_notifications">Oilaviy xabarlar</div>
         <div id="header-notif-list" class="header-float-panel__body"></div>
     </div>
     <div id="header-panel-overlay" class="header-panel-overlay hidden" onclick="window.closeHeaderPanels()"></div>
@@ -200,12 +204,11 @@
 
     <div id="tab-home" class="tab-content">
         <div id="home-finance-card" class="home-finance-card">
-            <button type="button" class="home-finance-card__gear" onclick="window.openHomeFinanceFullscreen()" data-i18n-aria="finance_panel" aria-label="Hisob-kitob">📊</button>
             <div class="home-finance-card__hero">
                 <div class="home-finance-card__label" data-i18n="available_balance">Mavjud mablag'</div>
                 <div id="main-total-balance" class="home-finance-card__total">0 so'm</div>
             </div>
-            <div class="home-finance-card__reserve">
+            <div id="home-reserve-row" class="home-finance-card__reserve" data-prof-id="general">
                 <span class="home-finance-card__reserve-lbl" data-i18n="reserve_fund">Zaxira pul</span>
                 <strong id="home-reserve-balance" class="home-finance-card__reserve-val">0 so'm</strong>
             </div>
@@ -217,7 +220,7 @@
 
     <div id="modal-home-finance" class="modal-fullscreen">
         <div class="modal-fs-header">
-            <h3 style="margin:0; color:var(--primary);" data-i18n="finance_panel">Hisob-kitob</h3>
+            <h3 style="margin:0; color:var(--primary);" id="home-finance-fs-title" data-i18n="finance_panel">Hisob-kitob</h3>
             <button type="button" onclick="window.closeHomeFinanceFullscreen()" style="background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;">✕</button>
         </div>
         <div class="modal-fs-body home-finance-fs">

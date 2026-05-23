@@ -74,7 +74,15 @@ window.I18N = {
         available_balance: "Mavjud mablag'",
         reserve_fund: "Zaxira pul",
         grand_total: "Umumiy pul",
-        transfer_from_reserve: "Zaxiradan o'tkazish"
+        transfer_from_reserve: "Zaxiradan o'tkazish",
+        perm_wallets: "Pul boshqaruvi",
+        perm_wallets_hint: "Qaysi profil hamyonlarini boshqarishi mumkin",
+        wallet_manage_none: "Boshqa profil yo'q",
+        wallet_no_access: "Bu hamyonni boshqarishga ruxsat yo'q",
+        income_to_reserve: "Kirim (zaxira)",
+        family_notifications: "Oilaviy xabarlar",
+        chat_messages: "Chat xabarlari",
+        notif_empty: "Xabar yo'q"
     },
     ru: {
         profiles: "Профили",
@@ -147,7 +155,15 @@ window.I18N = {
         available_balance: "Доступные средства",
         reserve_fund: "Резерв",
         grand_total: "Всего",
-        transfer_from_reserve: "Перевод из резерва"
+        transfer_from_reserve: "Перевод из резерва",
+        perm_wallets: "Управление кошельками",
+        perm_wallets_hint: "Какими профилями может управлять",
+        wallet_manage_none: "Нет других профилей",
+        wallet_no_access: "Нет доступа к этому кошельку",
+        income_to_reserve: "Доход (резерв)",
+        family_notifications: "Семейные уведомления",
+        chat_messages: "Сообщения чата",
+        notif_empty: "Нет сообщений"
     },
     en: {
         profiles: "Profiles",
@@ -220,7 +236,15 @@ window.I18N = {
         available_balance: "Available funds",
         reserve_fund: "Reserve",
         grand_total: "Grand total",
-        transfer_from_reserve: "Transfer from reserve"
+        transfer_from_reserve: "Transfer from reserve",
+        perm_wallets: "Wallet management",
+        perm_wallets_hint: "Which profile wallets can be managed",
+        wallet_manage_none: "No other profiles",
+        wallet_no_access: "No access to this wallet",
+        income_to_reserve: "Income (reserve)",
+        family_notifications: "Family notifications",
+        chat_messages: "Chat messages",
+        notif_empty: "No messages"
     }
 };
 
@@ -266,5 +290,10 @@ window.applyLang = function() {
     if (fsModal?.style.display === "flex" && window.renderProfilePermsGrid) {
         const perms = Array.from(document.querySelectorAll(".fs-perm-chk:checked")).map(c => c.value);
         window.renderProfilePermsGrid(perms);
+        const profId = document.getElementById("fs-prof-id")?.value;
+        if (window.renderWalletManageGrid) {
+            const wm = window.getWalletManageChecked ? window.getWalletManageChecked() : [];
+            window.renderWalletManageGrid(profId || null, wm);
+        }
     }
 };
