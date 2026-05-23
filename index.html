@@ -307,51 +307,60 @@
                 <button id="plan-tab-history" class="mode-btn" onclick="switchPlanTab('history')">✅ <span data-i18n="plan_tab_history">Tarix</span></button>
             </div>
 
-            <div id="plan-view-add" class="plan-add-panel">
+            <div id="plan-view-add" class="plan-add-screen">
+                <div class="plan-top-dock">
+                    <div class="plan-amount-wrap">
+                        <div class="plan-price-label" data-i18n="plan_est_price">Taxminiy summa</div>
+                        <div id="plan-num-display" class="num-display num-display--plan" onclick="window.focusPlanAmount()">0</div>
+                        <div class="plan-stay-hint" id="plan-stay-hint"></div>
+                    </div>
+                    <div id="plan-market-chips" class="plan-market-chips"></div>
+                    <div class="plan-cats-zone" id="plan-cats-zone">
+                        <div id="plan-cats-header-container"></div>
+                        <div id="plan-cats-container"></div>
+                    </div>
+                </div>
+                <div class="plan-bottom-stack" id="plan-bottom-stack">
+                    <div class="plan-meta-dock">
+                        <div class="plan-name-row">
+                            <input type="text" id="plan-name" class="input-text plan-meta-input" data-i18n-placeholder="plan_product_ph" placeholder="Mahsulot nomi..." onclick="window.focusPlanName()" />
+                            <input type="text" id="plan-qty" class="input-text plan-meta-input plan-meta-input--qty" data-i18n-placeholder="plan_qty_ph" placeholder="Soni" inputmode="numeric" onclick="window.focusPlanName()" />
+                        </div>
+                        <button type="button" onclick="addPlannedItemManual()" class="btn-primary btn-success plan-save-btn">➕ <span data-i18n="plan_save_btn">Ro'yxatga saqlash</span></button>
+                    </div>
+                    <div class="plan-numpad-dock" data-i18n-aria="keyboard" aria-label="Klaviatura">
+                        <div id="plan-kb-amount" class="plan-kb-panel">
+                            <div class="num-grid num-grid--add">
+                                <button type="button" class="num-btn" onclick="pressPlanNum('1')">1</button><button type="button" class="num-btn" onclick="pressPlanNum('2')">2</button><button type="button" class="num-btn" onclick="pressPlanNum('3')">3</button>
+                                <button type="button" class="num-btn" onclick="pressPlanNum('4')">4</button><button type="button" class="num-btn" onclick="pressPlanNum('5')">5</button><button type="button" class="num-btn" onclick="pressPlanNum('6')">6</button>
+                                <button type="button" class="num-btn" onclick="pressPlanNum('7')">7</button><button type="button" class="num-btn" onclick="pressPlanNum('8')">8</button><button type="button" class="num-btn" onclick="pressPlanNum('9')">9</button>
+                                <button type="button" class="num-btn num-btn--clear" onclick="pressPlanNum('C')">C</button><button type="button" class="num-btn" onclick="pressPlanNum('0')">0</button><button type="button" class="num-btn" onclick="pressPlanNum('⌫')">⌫</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <select id="smart-plan-cat" class="hidden" onchange="window.selectPlanCat(this.value)"></select>
-
-                <div id="plan-cat-chips" class="plan-cat-chips"></div>
-
-                <div class="plan-fields-compact">
-                    <select id="smart-plan-subcat" class="input-text" onchange="renderSmartTags()" style="margin:0;"></select>
-                    <div id="smart-tags-container" class="tags-wrapper"></div>
-                    <div class="plan-name-row">
-                        <input type="text" id="plan-name" class="input-text" data-i18n-placeholder="plan_product_ph" placeholder="Mahsulot nomi..." style="margin:0; flex:2;" />
-                        <input type="text" id="plan-qty" class="input-text" data-i18n-placeholder="plan_qty_ph" placeholder="Soni" style="margin:0; flex:1;" />
-                    </div>
-                    <select id="plan-market" class="input-text" style="margin:0;">
-                        <option value="Bozor">Bozor</option>
-                        <option value="Korzinka">Korzinka</option>
-                        <option value="Makro">Makro</option>
-                        <option value="Uzum">Uzum</option>
-                        <option value="Do'kon">Do'kon</option>
-                    </select>
-                </div>
-
-                <div class="plan-price-block">
-                    <div class="plan-price-label" data-i18n="plan_est_price">Taxminiy summa</div>
-                    <div id="plan-num-display" class="num-display num-display--plan">0</div>
-                    <input type="hidden" id="plan-price" value="" />
-                    <div class="num-grid num-grid--compact">
-                        <button type="button" class="num-btn" onclick="pressPlanNum('1')">1</button><button type="button" class="num-btn" onclick="pressPlanNum('2')">2</button><button type="button" class="num-btn" onclick="pressPlanNum('3')">3</button>
-                        <button type="button" class="num-btn" onclick="pressPlanNum('4')">4</button><button type="button" class="num-btn" onclick="pressPlanNum('5')">5</button><button type="button" class="num-btn" onclick="pressPlanNum('6')">6</button>
-                        <button type="button" class="num-btn" onclick="pressPlanNum('7')">7</button><button type="button" class="num-btn" onclick="pressPlanNum('8')">8</button><button type="button" class="num-btn" onclick="pressPlanNum('9')">9</button>
-                        <button type="button" class="num-btn" style="color:var(--danger);" onclick="pressPlanNum('C')">C</button><button type="button" class="num-btn" onclick="pressPlanNum('0')">0</button><button type="button" class="num-btn" onclick="pressPlanNum('⌫')">⌫</button>
-                    </div>
-                    <button type="button" onclick="addPlannedItemManual()" class="btn-primary btn-success" style="margin-top:8px;">➕ <span data-i18n="plan_save_btn">Ro'yxatga saqlash</span></button>
-                </div>
+                <select id="smart-plan-subcat" class="hidden"></select>
+                <select id="plan-market" class="hidden">
+                    <option value="Bozor">Bozor</option>
+                    <option value="Korzinka">Korzinka</option>
+                    <option value="Makro">Makro</option>
+                    <option value="Uzum">Uzum</option>
+                    <option value="Do'kon">Do'kon</option>
+                </select>
+                <input type="hidden" id="plan-price" value="" />
             </div>
 
-            <div id="plan-view-active" class="hidden">
-                <div style="display:flex; gap:8px; margin-bottom: 12px;"><select id="filter-market" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;"><option value="all">Manzil: Barcha</option><option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option></select><select id="filter-cat" class="input-text" onchange="renderPlanned()" style="flex:1; margin:0;"><option value="all">Toifa: Barcha</option><option value="Oziq-ovqat">Oziq-ovqat</option><option value="Uy_Xojalik">Xo'jalik</option><option value="Kiyim">Kiyim</option></select></div>
+            <div id="plan-view-active" class="hidden plan-list-view">
+                <div class="plan-filters"><select id="filter-market" class="input-text" onchange="renderPlanned()"></select><select id="filter-cat" class="input-text" onchange="renderPlanned()"></select></div>
                 <div id="planned-list-active"></div>
             </div>
 
-            <div id="plan-view-skip" class="hidden">
+            <div id="plan-view-skip" class="hidden plan-list-view">
                 <div id="planned-list-skipped"></div>
             </div>
 
-            <div id="plan-view-history" class="hidden">
+            <div id="plan-view-history" class="hidden plan-list-view">
                 <div id="planned-list-history"></div>
             </div>
 

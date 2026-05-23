@@ -913,6 +913,7 @@ window.applyLang = function() {
     const kbDock = document.querySelector(".add-numpad-dock");
     if (kbDock) kbDock.setAttribute("aria-label", window.t("keyboard"));
     if (window.syncPlanUi) window.syncPlanUi();
+    if (window.renderPlanAddCats && window.curBankSub === "plan") window.renderPlanAddCats();
     if (window.renderPlanned && window.curBankSub === "plan") window.renderPlanned();
     const fsModal = document.getElementById("modal-profile-fs");
     if (fsModal?.style.display === "flex" && window.renderProfilePermsGrid) {

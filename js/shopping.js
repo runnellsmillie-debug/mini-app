@@ -12,18 +12,157 @@ window.tMarketName = function(m) {
     return map[lang]?.[m] || m;
 };
 
+window.planActMainCat = null;
+window.planActSubCat = null;
+window.planKeypadMode = "amount";
+
 window.syncPlanUi = function() {
     const phMap = { "plan-name": "plan_product_ph", "plan-qty": "plan_qty_ph" };
     Object.entries(phMap).forEach(([id, key]) => {
         const el = window.el(id);
         if (el) el.placeholder = window.t(key);
     });
-    const priceLbl = document.querySelector(".plan-price-label");
+    const priceLbl = document.querySelector("#plan-view-add .plan-price-label");
     if (priceLbl) priceLbl.textContent = window.t("plan_est_price");
-    const saveBtn = document.querySelector("#plan-view-add .btn-success span[data-i18n='plan_save_btn']");
-    if (saveBtn) saveBtn.textContent = window.t("plan_save_btn");
     if (window.updatePlanFilters) window.updatePlanFilters();
     if (window.updatePlanCats) window.updatePlanCats();
+    if (window.renderPlanMarketChips) window.renderPlanMarketChips();
+};
+
+window.syncPlanLayout = function() {
+    requestAnimationFrame(() => {
+        const stack = window.el("plan-bottom-stack");
+        if (!stack) return;
+        const h = Math.ceil(stack.getBoundingClientRect().height);
+        if (h > 0) document.documentElement.style.setProperty("--plan-bottom-stack-h", h + "px");
+    });
+};
+
+window.focusPlanAmount = function() {
+    window.planKeypadMode = "amount";
+    const nd = window.el("plan-num-display");
+    document.querySelectorAll(".plan-meta-input").forEach(el => el.classList.remove("plan-input--active"));
+    if (nd) nd.classList.add("num-display--active");
+    window.syncPlanLayout();
+};
+
+window.focusPlanName = function() {
+    window.planKeypadMode = "name";
+    const nd = window.el("plan-num-display");
+    if (nd) nd.classList.remove("num-display--active");
+    window.syncPlanLayout();
+};
+
+window.getAllowedPlanCats = function() {
+    const p = window.state.profiles.find(x => x.id === window.curProf);
+    let c = Object.keys(window.PLAN_TAGS || {});
+    if (p?.id === "home_profile") c = ["Oziq-ovqat", "Uy_Xojalik"];
+    else if (p && p.age != null && p.age <= 6) c = ["Oyinchoq", "Bolalar", "Talim", "Kiyim", "Oziq-ovqat"].filter(x => c.includes(x) || c.some(k => k.includes(x.split("_")[0])));
+    else if (p && p.age != null && p.age < 16) c = ["Kiyim", "Talim", "Oyinchoq", "Oziq-ovqat"].filter(x => c.includes(x));
+    if (p && p.permissions && p.permissions.length && !p.permissions.includes("admin_all")) {
+        const allow = [];
+        if (p.permissions.includes("shop_food")) allow.push("Oziq-ovqat", "Uy_Xojalik");
+        if (p.permissions.includes("shop_clothes")) allow.push("Kiyim");
+        if (p.permissions.includes("shop_school")) allow.push("Talim");
+        if (allow.length) c = c.filter(x => allow.some(a => x.includes(a) || a.includes(x)));
+    }
+    if (!c.length) c = Object.keys(window.PLAN_TAGS || {});
+    return c;
+};
+
+window.planItemIcon = function(raw) {
+    const m = String(raw).match(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}]/u);
+    return m ? m[0] : "🏷️";
+};
+
+window.renderPlanMarketChips = function() {
+    const wrap = window.el("plan-market-chips");
+    if (!wrap) return;
+    const markets = ["Bozor", "Korzinka", "Makro", "Uzum", "Do'kon"];
+    let cur = window.val("plan-market") || "Bozor";
+    if (!markets.includes(cur)) cur = "Bozor";
+    window.setVal("plan-market", cur);
+    wrap.innerHTML = markets.map(m => {
+        const active = m === cur ? " plan-market-chip--active" : "";
+        return `<button type="button" class="plan-market-chip${active}" onclick="window.selectPlanMarket('${m.replace(/'/g, "\\'")}')">${window.tMarketName(m)}</button>`;
+    }).join("");
+};
+
+window.selectPlanMarket = function(m) {
+    window.setVal("plan-market", m);
+    window.renderPlanMarketChips();
+};
+
+window.syncPlanSubcatSelect = function() {
+    const cat = window.planActMainCat;
+    const subEl = window.el("smart-plan-subcat");
+    if (!subEl) return;
+    subEl.innerHTML = "";
+    if (cat && window.PLAN_TAGS[cat]) {
+        Object.keys(window.PLAN_TAGS[cat]).forEach(s => {
+            subEl.innerHTML += `<option value="${s}">${s}</option>`;
+        });
+    }
+};
+
+window.renderPlanAddCats = function() {
+    const cont = window.el("plan-cats-container");
+    const head = window.el("plan-cats-header-container");
+    if (!cont || !head) return;
+
+    const cats = window.getAllowedPlanCats();
+    const mkBtn = (icon, label, onclick, extraCls = "") =>
+        `<button type="button" class="cat-btn cat-btn--plan${extraCls ? " " + extraCls : ""}" onclick="${onclick}"><span class="cat-btn__icon">${icon}</span><span class="cat-btn__label">${label}</span></button>`;
+    const wrap = (html, level) => `<div class="cat-scroll--plan cat-grid--${level}">${html}</div>`;
+
+    if (window.planActSubCat && window.planActMainCat) {
+        const items = (window.PLAN_TAGS[window.planActMainCat] && window.PLAN_TAGS[window.planActMainCat][window.planActSubCat]) || [];
+        head.innerHTML = `<div class="add-crumb"><span>${window.tCatName(window.planActMainCat)} <b>›</b> ${window.tSubcatName(window.planActSubCat)}</span><button type="button" class="back-link" onclick="window.backPlanCat()">${window.t("back")}</button></div>`;
+        cont.className = "cats-level--items";
+        cont.innerHTML = wrap(items.map(t => {
+            const esc = t.replace(/'/g, "\\'");
+            return mkBtn(window.planItemIcon(t), window.tItemName(t), `window.clickPlanProduct('${esc}')`, "cat-btn--pick");
+        }).join("") || `<div class="plan-cats-hint">${window.t("quick_tags_none")}</div>`, "items");
+    } else if (window.planActMainCat) {
+        const subs = window.PLAN_TAGS[window.planActMainCat] ? Object.keys(window.PLAN_TAGS[window.planActMainCat]) : [];
+        head.innerHTML = `<div class="add-crumb"><span>${window.t("rukun")} <b>${window.tCatName(window.planActMainCat)}</b></span><button type="button" class="back-link" onclick="window.backPlanCat()">${window.t("back")}</button></div>`;
+        cont.className = "cats-level--rukun";
+        cont.innerHTML = wrap(subs.map(s => {
+            const esc = s.replace(/'/g, "\\'");
+            return mkBtn(window.SUBCAT_ICONS?.[s] || "📦", window.tSubcatName(s), `window.clickPlanSubCat('${esc}')`);
+        }).join(""), "rukun");
+    } else {
+        head.innerHTML = `<div class="plan-cats-hint">${window.t("sort_hint")}</div>`;
+        cont.className = "cats-level--main";
+        cont.innerHTML = wrap(cats.map(c => {
+            const esc = c.replace(/'/g, "\\'");
+            return mkBtn(window.CAT_ICONS[c] || "📦", window.tCatName(c), `window.clickPlanMainCat('${esc}')`, "cat-btn--main");
+        }).join(""), "main");
+    }
+};
+
+window.clickPlanMainCat = function(cat) {
+    window.planActMainCat = cat;
+    window.planActSubCat = null;
+    window.setVal("smart-plan-cat", cat);
+    window.syncPlanSubcatSelect();
+    window.renderPlanAddCats();
+};
+
+window.clickPlanSubCat = function(sub) {
+    window.planActSubCat = sub;
+    window.setVal("smart-plan-subcat", sub);
+    window.renderPlanAddCats();
+};
+
+window.backPlanCat = function() {
+    if (window.planActSubCat) window.planActSubCat = null;
+    else window.planActMainCat = null;
+    window.renderPlanAddCats();
+};
+
+window.clickPlanProduct = function(rawName) {
+    window.quickAddPlan(rawName);
 };
 
 window.updatePlanFilters = function() {
@@ -60,80 +199,49 @@ window.switchPlanTab = (tab) => {
             }
         }
     });
-    if (tab !== 'add') window.renderPlanned();
+    const onAdd = tab === 'add' && window.curBankSub === 'plan';
+    document.body.classList.toggle('on-plan-add-tab', onAdd);
+    if (tab === 'add') {
+        window.renderPlanMarketChips();
+        window.renderPlanAddCats();
+        window.syncPlanLayout();
+        window.focusPlanAmount();
+    } else {
+        window.renderPlanned();
+    }
 };
 
 window.selectPlanCat = (cat) => {
-    window.setVal("smart-plan-cat", cat);
-    window.renderPlanCatChips();
-    window.updateSmartTags();
-};
-
-window.renderPlanCatChips = () => {
-    const wrap = window.el("plan-cat-chips");
-    const sel = window.el("smart-plan-cat");
-    if (!wrap || !sel) return;
-    const cur = window.val("smart-plan-cat");
-    const opts = Array.from(sel.options).map(o => o.value);
-    wrap.innerHTML = opts.map(c => {
-        const label = window.tCatName(c);
-        const icon = window.CAT_ICONS[c] || "📦";
-        const active = c === cur ? " plan-cat-chip--active" : "";
-        return `<button type="button" class="plan-cat-chip${active}" onclick="window.selectPlanCat('${c.replace(/'/g, "\\'")}')">${icon} ${label}</button>`;
-    }).join("");
+    window.clickPlanMainCat(cat);
 };
 
 window.updatePlanCats = () => {
     const cEl = window.el("smart-plan-cat");
     if (!cEl) return;
-    const p = window.state.profiles.find(x => x.id === window.curProf);
-    let c = Object.keys(window.PLAN_TAGS || {});
-    if (p?.id === "home_profile") c = ["Oziq-ovqat", "Uy_Xojalik"];
-    else if (p && p.age != null && p.age <= 6) c = ["Oyinchoq", "Bolalar", "Talim", "Kiyim", "Oziq-ovqat"].filter(x => c.includes(x) || c.some(k => k.includes(x.split('_')[0])));
-    else if (p && p.age != null && p.age < 16) c = ["Kiyim", "Talim", "Oyinchoq", "Oziq-ovqat"].filter(x => c.includes(x));
-    if (p && p.permissions && p.permissions.length && !p.permissions.includes("admin_all")) {
-        const allow = [];
-        if (p.permissions.includes("shop_food")) allow.push("Oziq-ovqat", "Uy_Xojalik");
-        if (p.permissions.includes("shop_clothes")) allow.push("Kiyim");
-        if (p.permissions.includes("shop_school")) allow.push("Talim");
-        if (allow.length) c = c.filter(x => allow.some(a => x.includes(a) || a.includes(x)));
-    }
-    if (!c.length) c = Object.keys(window.PLAN_TAGS || {});
+    const c = window.getAllowedPlanCats();
     const prev = window.val("smart-plan-cat");
     cEl.innerHTML = c.map(x => `<option value="${x}">${window.tCatName(x)}</option>`).join("");
-    if (prev && c.includes(prev)) window.setVal("smart-plan-cat", prev);
-    else if (c.length) window.selectPlanCat(c[0]);
-    window.renderPlanCatChips();
-    window.updateSmartTags();
+    if (window.planActMainCat && c.includes(window.planActMainCat)) {
+        window.setVal("smart-plan-cat", window.planActMainCat);
+    } else if (prev && c.includes(prev)) {
+        window.planActMainCat = prev;
+        window.planActSubCat = null;
+        window.setVal("smart-plan-cat", prev);
+    } else {
+        window.planActMainCat = null;
+        window.planActSubCat = null;
+        if (c.length) window.setVal("smart-plan-cat", c[0]);
+    }
+    window.syncPlanSubcatSelect();
+    if (window.planActSubCat) window.setVal("smart-plan-subcat", window.planActSubCat);
+    window.renderPlanAddCats();
+    window.renderPlanMarketChips();
 };
 
-window.updateSmartTags = () => {
-    const cat = window.val("smart-plan-cat");
-    const subEl = window.el("smart-plan-subcat");
-    if (!cat || !subEl) return;
-    subEl.innerHTML = "";
-    if (window.PLAN_TAGS[cat]) {
-        window.show("smart-plan-subcat");
-        Object.keys(window.PLAN_TAGS[cat]).forEach(s => {
-            subEl.innerHTML += `<option value="${s}">${window.tSubcatName(s)}</option>`;
-        });
-    } else window.hide("smart-plan-subcat");
-    window.renderSmartTags();
-};
+window.updateSmartTags = () => { window.syncPlanSubcatSelect(); };
 
-window.renderSmartTags = () => {
-    const c = window.val("smart-plan-cat");
-    const s = window.val("smart-plan-subcat");
-    const cont = window.el("smart-tags-container");
-    if (!cont) return;
-    cont.innerHTML = "";
-    if (window.PLAN_TAGS[c] && window.PLAN_TAGS[c][s]) {
-        window.PLAN_TAGS[c][s].forEach(t => {
-            const lbl = window.tItemName(t);
-            cont.innerHTML += `<div class="smart-tag" onclick="window.quickAddPlan('${t.replace(/'/g, "\\'")}')">${lbl}</div>`;
-        });
-    } else cont.innerHTML = `<span style='color:var(--text-muted); font-size:12px;'>${window.t("quick_tags_none")}</span>`;
-};
+window.renderSmartTags = () => {};
+window.renderPlanCatChips = () => {};
 
 window.getHistoricalPrice = (name) => {
     const pastItems = window.state.plan.filter(x => x.archived && x.text.toLowerCase().includes(name.toLowerCase()) && (x.buyPrice || x.price));
@@ -154,19 +262,14 @@ window.syncPlanPriceDisplay = () => {
 };
 
 window.pressPlanNum = v => {
+    window.focusPlanAmount();
     if (v === "C") window.planPriceStr = "";
     else if (v === "⌫") window.planPriceStr = window.planPriceStr.slice(0, -1);
     else if (window.planPriceStr.length < 12) window.planPriceStr += v;
     window.syncPlanPriceDisplay();
 };
 
-window.focusPlanPrice = () => {
-    const disp = window.el("plan-num-display");
-    if (disp) {
-        disp.classList.add("num-display--active");
-        setTimeout(() => disp.scrollIntoView({ behavior: "smooth", block: "nearest" }), 80);
-    }
-};
+window.focusPlanPrice = () => window.focusPlanAmount();
 
 window.quickAddPlan = t => {
     const ni = window.el("plan-name");
@@ -174,20 +277,20 @@ window.quickAddPlan = t => {
     let autoPrice = window.getHistoricalPrice(t);
     if (ni) {
         ni.value = window.tItemName(t);
-        ni.style.borderColor = "var(--success)";
-        setTimeout(() => { ni.style.borderColor = "var(--border-color)"; }, 600);
+        ni.classList.add("plan-input--active");
+        setTimeout(() => ni.classList.remove("plan-input--active"), 600);
     }
     if (qi) qi.value = "";
     window.planPriceStr = autoPrice > 0 ? String(autoPrice) : "";
     window.syncPlanPriceDisplay();
-    window.focusPlanPrice();
+    window.focusPlanAmount();
     window.toast(autoPrice > 0 ? window.t("plan_price_history") : window.t("plan_enter_price"));
 };
 
 window.addPlannedItemManual = () => {
     const n = window.val("plan-name").trim();
     const q = window.val("plan-qty").trim();
-    const c = window.val("smart-plan-cat");
+    const c = window.planActMainCat || window.val("smart-plan-cat");
     const m = window.val("plan-market");
     let p = parseInt(window.planPriceStr || "0", 10) || window.getNum("plan-price");
 
@@ -209,8 +312,10 @@ window.addPlannedItemManual = () => {
     window.setVal("plan-qty", "");
     window.planPriceStr = "";
     window.syncPlanPriceDisplay();
+    window.setHtml("plan-stay-hint", `✅ ${window.t("last_entry_hint").replace("{amount}", `<b style="color:var(--success);">${window.formatM(p)}</b>`)}`);
     window.save();
     window.toast(window.t("plan_added"));
+    window.focusPlanAmount();
 };
 
 window.skipPlanItem = id => {
@@ -305,16 +410,16 @@ window.renderPlanned = function() {
                 </div>
                 ${groups[cat].list.map(x => `
                     <div class="plan-item plan-item--flat">
-                        <div style="flex:1;">
-                            <div style="font-weight:600; font-size:14px;">${x.text}</div>
-                            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">📍 ${window.tMarketName(x.market)} | 💰 ${window.formatM(x.price || 0)}</div>
+                        <div class="plan-item__body">
+                            <div class="plan-item__title">${x.text}</div>
+                            <div class="plan-item__meta">📍 ${window.tMarketName(x.market)} · ${window.formatM(x.price || 0)}</div>
                         </div>
-                        <div style="display:flex; gap:5px; flex-direction:column;">
+                        <div class="plan-item-actions">
                             ${isSkippedMode ?
-                                `<button onclick="unskipPlanItem(${x.id})" class="btn-primary" style="width:auto; padding:5px 15px; font-size:11px; margin:0; background:transparent; border:1px dashed var(--success); color:var(--success);">⤴️ ${window.t("plan_return")}</button>`
+                                `<button onclick="unskipPlanItem(${x.id})" class="btn-primary btn-primary--return">⤴️ ${window.t("plan_return")}</button>`
                                 :
-                                `<button onclick="openBuyModal(${x.id})" class="btn-primary btn-success" style="width:auto; padding:5px 15px; font-size:12px; margin:0;">${window.t("plan_buy")}</button>
-                                 <button onclick="skipPlanItem(${x.id})" class="btn-primary" style="width:auto; padding:4px 15px; font-size:11px; margin:0; background:var(--bg-card); border:1px solid var(--warning); color:var(--warning);">⏳ ${window.t("plan_later")}</button>`
+                                `<button onclick="openBuyModal(${x.id})" class="btn-primary btn-success">${window.t("plan_buy")}</button>
+                                 <button onclick="skipPlanItem(${x.id})" class="btn-primary btn-primary--ghost">⏳ ${window.t("plan_later")}</button>`
                             }
                         </div>
                     </div>

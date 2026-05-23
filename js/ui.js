@@ -164,6 +164,7 @@ window.openBankSubView = (type) => {
 
 window.closeBankSubView = () => {
     window.curBankSub = null;
+    document.body.classList.remove('on-plan-add-tab');
     ['plan', 'sched', 'credit', 'dep', 'debt'].forEach(s => { if(window.el('bank-sub-'+s)) window.el('bank-sub-'+s).classList.add('hidden'); });
     window.el('bank-main-menu').classList.remove('hidden');
     window.el('back-btn').classList.add('hidden');
