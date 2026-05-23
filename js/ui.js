@@ -79,8 +79,12 @@ window.switchTab = (id, silent) => {
     }
     if (id === "home" && window.updatePlanCats) window.updatePlanCats();
     if (id === "report" && window.renderReport) window.renderReport();
+    if (id === "other") {
+        if (window.renderServicesMenu) window.renderServicesMenu();
+    }
     document.body.classList.toggle("on-add-tab", id === "add");
     if (window.exitCatEditMode) window.exitCatEditMode(true);
+    if (window.exitServiceEditMode) window.exitServiceEditMode(true);
     if (window.closeHeaderPanels) window.closeHeaderPanels();
     if (window.render) window.render();
 };
@@ -108,6 +112,7 @@ window.closeBankSubViewIfDenied = function() {
 };
 
 window.openBankSubView = (type) => {
+    if (window.serviceEditMode) return;
     const perm = window.SUBVIEW_PERM[type];
     if (perm && !window.hasPermission(perm)) return window.toast("Bu bo'limga ruxsat yo'q", true);
 
@@ -162,43 +167,132 @@ window.switchDepTab = (tab) => {
     if((tab==='aktiv' || tab==='arxiv') && window.render) window.render();
 };
 
-window.initDragAndDrop = function() {
-    const menu = window.el('bank-main-menu'); if(!menu) return;
+window.SERVICE_ITEMS = [
+    { id: "plan", icon: "🛒", label: "Bozorlik ro'yxati" },
+    { id: "sched", icon: "📅", label: "Rejali to'lovlar" },
+    { id: "credit", icon: "💳", label: "Kreditlar bo'limi" },
+    { id: "dep", icon: "🏦", label: "Omonatlar bo'limi" },
+    { id: "debt", icon: "🤝", label: "Qarzlar bo'limi" }
+];
+
+window.migrateServiceMenuOrder = function() {
+    try {
+        const old = JSON.parse(localStorage.getItem("menu_order_v1") || "null");
+        const key = window.getCatOrderKey("services", null);
+        if (old?.length && !window.state.catOrders?.[key]) {
+            if (!window.state.catOrders) window.state.catOrders = {};
+            window.state.catOrders[key] = old;
+            window.save(true);
+        }
+    } catch (e) {}
+};
+
+window.enterServiceEditMode = function() {
+    window.serviceEditMode = true;
+    window.renderServicesMenu();
+    window.toast("Tartiblash rejimi");
+};
+
+window.exitServiceEditMode = function(silent) {
+    if (!window.serviceEditMode) return;
+    window.serviceEditMode = false;
+    window.renderServicesMenu();
+    if (!silent) window.toast("Tayyor");
+};
+
+window.renderServicesMenu = function() {
+    const menu = window.el("bank-main-menu");
+    const head = window.el("services-menu-head");
+    if (!menu) return;
+    window.migrateServiceMenuOrder();
+
+    const p = window.getActiveProfile ? window.getActiveProfile() : null;
+    let items = window.SERVICE_ITEMS.filter(it => {
+        const perm = window.SUBVIEW_PERM?.[it.id];
+        return !perm || window.hasPermission(perm, p);
+    });
+    items = window.applyCatOrder(items, "services", null);
+    const isHidden = id => window.isCatHidden(id, "services", null);
+    if (window.serviceEditMode) {
+        items = [...items.filter(i => !isHidden(i.id)), ...items.filter(i => isHidden(i.id))];
+    } else {
+        items = items.filter(i => !isHidden(i.id));
+    }
+
+    if (head) {
+        head.innerHTML = window.serviceEditMode
+            ? `<div class="add-crumb add-crumb--edit"><span>↕️ Tartiblash rejimi</span><button type="button" class="back-link add-cats-done" onclick="window.exitServiceEditMode()">Tayyor</button></div>`
+            : `<div class="add-cats-hint">Ushlab turing — tartiblash rejimi</div>`;
+    }
+
+    menu.classList.toggle("services-menu--edit", window.serviceEditMode);
+    menu.innerHTML = items.map(item => {
+        const hidden = isHidden(item.id);
+        const wiggle = window.serviceEditMode && !hidden ? " main-menu-btn--wiggle" : "";
+        const masked = hidden ? " main-menu-btn--masked" : "";
+        const hideBtn = window.serviceEditMode
+            ? `<span class="cat-btn__hide${hidden ? " cat-btn__hide--restore" : ""}" onclick="window.onHideCatClick(event,'${item.id}','services','root')">${hidden ? "↩" : "×"}</span>`
+            : "";
+        const click = window.serviceEditMode
+            ? (hidden ? ` onclick="window.onRestoreCatClick(event,'${item.id}','services','root')"` : "")
+            : ` onclick="openBankSubView('${item.id}')"`;
+        return `<div class="main-menu-btn${wiggle}${masked}" data-id="${item.id}" data-cat-id="${item.id}"${click}>${hideBtn}<span class="icon">${item.icon}</span><span class="text">${item.label}</span>${window.serviceEditMode ? "" : `<span class="drag-handle">≡</span>`}</div>`;
+    }).join("");
+};
+
+window.setupServicesMenuDrag = function() {
+    const menu = window.el("bank-main-menu");
+    if (!menu || menu.dataset.svcDrag === "1") return;
+    menu.dataset.svcDrag = "1";
     let dragEl = null, pressTimer = null;
 
-    const savedOrder = JSON.parse(localStorage.getItem('menu_order_v1'));
-    if(savedOrder) { savedOrder.forEach(id => { const item = menu.querySelector(`[data-id="${id}"]`); if(item) menu.appendChild(item); }); }
+    const clearPress = () => { clearTimeout(pressTimer); pressTimer = null; };
+    const endDrag = () => {
+        clearPress();
+        if (!dragEl) return;
+        dragEl.classList.remove("dragging");
+        const ids = Array.from(menu.querySelectorAll(".main-menu-btn[data-cat-id]")).map(b => b.getAttribute("data-cat-id"));
+        window.saveCatOrder("services", null, ids);
+        dragEl = null;
+    };
 
-    menu.addEventListener('touchstart', e => {
-        let target = e.target.closest('.main-menu-btn');
-        if(!target) return;
+    menu.addEventListener("touchstart", e => {
+        if (e.target.closest(".cat-btn__hide")) return;
+        const target = e.target.closest(".main-menu-btn[data-cat-id]");
+        if (!target) return;
+        clearPress();
         pressTimer = setTimeout(() => {
-            dragEl = target; dragEl.classList.add('dragging');
-            if(navigator.vibrate) navigator.vibrate(50);
-        }, 500); 
-    }, {passive: true});
+            if (!window.serviceEditMode) window.enterServiceEditMode();
+            dragEl = target;
+            dragEl.classList.add("dragging");
+            if (navigator.vibrate) navigator.vibrate(50);
+        }, 500);
+    }, { passive: true });
 
-    menu.addEventListener('touchmove', e => {
-        if(!dragEl) { clearTimeout(pressTimer); return; }
-        e.preventDefault(); 
-        let touch = e.touches[0];
-        let elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-        let dropTarget = elemBelow ? elemBelow.closest('.main-menu-btn') : null;
-        
-        if(dropTarget && dropTarget !== dragEl) {
-            let rect = dropTarget.getBoundingClientRect();
-            let next = (touch.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+    menu.addEventListener("touchmove", e => {
+        if (!window.serviceEditMode || !dragEl) { clearPress(); return; }
+        e.preventDefault();
+        const touch = e.touches[0];
+        const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const dropTarget = elemBelow ? elemBelow.closest(".main-menu-btn[data-cat-id]") : null;
+        if (dropTarget && dropTarget !== dragEl) {
+            const rect = dropTarget.getBoundingClientRect();
+            const next = (touch.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
             menu.insertBefore(dragEl, next ? dropTarget.nextSibling : dropTarget);
         }
-    }, {passive: false});
+    }, { passive: false });
 
-    const endDrag = () => {
-        clearTimeout(pressTimer);
-        if(dragEl) {
-            dragEl.classList.remove('dragging'); dragEl = null;
-            let order = Array.from(menu.children).map(c => c.getAttribute('data-id'));
-            localStorage.setItem('menu_order_v1', JSON.stringify(order));
-        }
-    };
-    menu.addEventListener('touchend', endDrag); menu.addEventListener('touchcancel', endDrag);
+    menu.addEventListener("touchend", endDrag);
+    menu.addEventListener("touchcancel", endDrag);
+
+    document.addEventListener("touchstart", e => {
+        if (!window.serviceEditMode) return;
+        if (e.target.closest("#bank-main-menu") || e.target.closest(".add-cats-done")) return;
+        if (e.target.closest("#tab-other")) window.exitServiceEditMode(true);
+    }, { passive: true });
+};
+
+window.initDragAndDrop = function() {
+    window.renderServicesMenu();
+    window.setupServicesMenuDrag();
 };

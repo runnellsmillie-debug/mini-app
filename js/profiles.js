@@ -303,18 +303,21 @@ window.applyModulePermissions = function() {
         if (nav) nav.style.display = window.canAccessTab(tab, p) ? "" : "none";
     });
 
-    const menu = window.el("bank-main-menu");
-    if (menu) {
-        menu.querySelectorAll(".main-menu-btn").forEach(btn => {
-            const id = btn.getAttribute("data-id");
-            let ok = true;
-            if (id === "plan") ok = show("mod_plan");
-            else if (id === "sched") ok = show("mod_sched");
-            else if (id === "credit") ok = show("view_credit");
-            else if (id === "dep") ok = show("view_dep");
-            else if (id === "debt") ok = show("mod_debt");
-            btn.style.display = ok || show("admin_all") ? "" : "none";
-        });
+    if (window.renderServicesMenu) window.renderServicesMenu();
+    else {
+        const menu = window.el("bank-main-menu");
+        if (menu) {
+            menu.querySelectorAll(".main-menu-btn").forEach(btn => {
+                const id = btn.getAttribute("data-id");
+                let ok = true;
+                if (id === "plan") ok = show("mod_plan");
+                else if (id === "sched") ok = show("mod_sched");
+                else if (id === "credit") ok = show("view_credit");
+                else if (id === "dep") ok = show("view_dep");
+                else if (id === "debt") ok = show("mod_debt");
+                btn.style.display = ok || show("admin_all") ? "" : "none";
+            });
+        }
     }
 
     const navOther = window.el("nav-other");

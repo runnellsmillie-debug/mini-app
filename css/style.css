@@ -32,6 +32,7 @@
     --nav-h: 64px;
     --numpad-dock-h: 188px;
     --add-bottom-stack-h: 240px;
+    --add-stack-gap: 12px;
     --cat-main-h: 58px;
     --cat-rukun-h: 48px;
     --cat-item-h: 38px;
@@ -687,9 +688,9 @@ body.on-add-tab {
     width: 100%;
     max-width: 480px;
     top: calc(var(--header-h) + var(--safe-top));
-    bottom: calc(var(--nav-h) + var(--add-bottom-stack-h) + var(--safe-bottom));
+    bottom: calc(var(--nav-h) + var(--add-bottom-stack-h) + var(--add-stack-gap) + var(--safe-bottom));
     z-index: 850;
-    padding: 4px 12px 2px;
+    padding: 4px 12px 6px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -829,6 +830,7 @@ body.on-add-tab {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     padding: 6px 8px 8px;
+    margin-bottom: 2px;
 }
 
 #tab-add .add-cats-hint {
@@ -966,9 +968,13 @@ body.on-add-tab {
 }
 
 #tab-add .cat-btn--masked {
-    opacity: 0.4;
-    filter: grayscale(1);
+    opacity: 0.45;
+    filter: grayscale(0.85);
     animation: none !important;
+}
+
+#tab-add .cat-btn--masked.cat-btn--edit {
+    cursor: pointer;
 }
 
 #tab-add .cat-btn--edit {
@@ -985,25 +991,33 @@ body.on-add-tab {
 
 .cat-btn__hide {
     position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 17px;
-    height: 17px;
+    top: 3px;
+    right: 3px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
-    background: var(--danger);
+    background: color-mix(in srgb, var(--danger) 75%, transparent);
     color: #fff;
-    font-size: 10px;
-    font-weight: 800;
-    line-height: 17px;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 13px;
     text-align: center;
     z-index: 3;
     cursor: pointer;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    opacity: 0.88;
+    border: 1px solid color-mix(in srgb, #fff 35%, transparent);
+    backdrop-filter: blur(4px);
+}
+
+.cat-btn__hide--restore {
+    background: color-mix(in srgb, var(--success) 80%, transparent);
+    font-size: 8px;
+    line-height: 13px;
 }
 
 .cat-btn__hide:active {
-    transform: scale(0.92);
-    background: #c62828;
+    transform: scale(0.9);
+    opacity: 1;
 }
 
 .cats-zone--edit {
@@ -1066,10 +1080,14 @@ body.on-add-tab {
     bottom: calc(var(--nav-h) + var(--safe-bottom));
     z-index: 900;
     background: var(--bg-main);
+    padding-top: var(--add-stack-gap);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .add-desc-dock {
-    margin: 0 12px 4px;
+    margin: 0 12px 0;
     padding: 8px 12px;
     font-size: 13px;
     border-radius: var(--radius-sm);
@@ -1611,6 +1629,7 @@ body:not(.dark-mode) .cat-btn span[style*="color: #fff"] {
 
 /* ——— Services menu ——— */
 .main-menu-btn {
+    position: relative;
     display: flex;
     align-items: center;
     padding: 14px 16px;
@@ -1649,6 +1668,28 @@ body:not(.dark-mode) .cat-btn span[style*="color: #fff"] {
     color: var(--text-muted);
     font-size: 14px;
     opacity: 0.5;
+}
+
+.main-menu-btn--wiggle {
+    animation: catWiggle 0.32s ease-in-out infinite;
+}
+
+.main-menu-btn--masked {
+    opacity: 0.45;
+    filter: grayscale(0.85);
+}
+
+.services-menu--edit {
+    padding-top: 2px;
+}
+
+#services-menu-head {
+    margin-bottom: 6px;
+}
+
+#services-menu-head .add-cats-hint,
+#services-menu-head .add-crumb--edit {
+    margin-bottom: 4px;
 }
 
 /* ——— Sidebar ——— */

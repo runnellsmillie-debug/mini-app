@@ -562,7 +562,43 @@ window.hideCatItem = function(id, level, parentId) {
     if (!window.state.catHidden[key]) window.state.catHidden[key] = [];
     if (!window.state.catHidden[key].includes(id)) window.state.catHidden[key].push(id);
     window.save(true);
-    window.renderAddCats();
+    if (window.renderAddCats) window.renderAddCats();
+    else if (window.renderServicesMenu) window.renderServicesMenu();
+};
+
+window.restoreCatItem = function(id, level, parentId) {
+    if (!id) return;
+    const key = window.getCatHiddenKey(level, parentId);
+    if (!window.state.catHidden?.[key]) return;
+    window.state.catHidden[key] = window.state.catHidden[key].filter(x => x !== id);
+    window.save(true);
+    if (window.renderAddCats) window.renderAddCats();
+    else if (window.renderServicesMenu) window.renderServicesMenu();
+};
+
+window.toggleCatHidden = function(id, level, parentId) {
+    parentId = parentId === "root" ? null : parentId;
+    if (window.isCatHidden(id, level, parentId)) window.restoreCatItem(id, level, parentId);
+    else window.hideCatItem(id, level, parentId);
+};
+
+window.getUsedIncLabels = function() {
+    const labels = new Set();
+    const profMatch = x => window.curProf === "general" || x.prof === window.curProf;
+    window.state.incs.filter(profMatch).forEach(x => {
+        if (x.desc) labels.add(x.desc.trim().toLowerCase());
+        if (x.cat) labels.add(x.cat.trim().toLowerCase());
+    });
+    return labels;
+};
+
+window.hasProfileIncs = function() {
+    return window.state.incs.some(x => window.curProf === "general" || x.prof === window.curProf);
+};
+
+window.isIncItemUsed = function(item) {
+    if (!window.hasProfileIncs()) return true;
+    return window.getUsedIncLabels().has((item.label || "").trim().toLowerCase());
 };
 
 window.getUsedLabels = function() {
@@ -607,6 +643,7 @@ window.filterCatItems = function(items, level, parentId) {
     }
     return list.filter(i => {
         if (isHidden(i.id)) return false;
+        if (window.addMode === "income" || parentId === "income") return window.isIncItemUsed(i);
         return window.isItemUsed(i, level);
     });
 };
@@ -633,7 +670,13 @@ window.exitCatEditMode = function(silent) {
 window.onHideCatClick = function(e, id, level, parentId) {
     e.stopPropagation();
     e.preventDefault();
-    window.hideCatItem(id, level, parentId === "root" ? null : parentId);
+    window.toggleCatHidden(id, level, parentId === "root" ? null : parentId);
+};
+
+window.onRestoreCatClick = function(e, id, level, parentId) {
+    e.stopPropagation();
+    e.preventDefault();
+    window.restoreCatItem(id, level, parentId === "root" ? null : parentId);
 };
 
 window.setupAddCatDrag = function() {
@@ -819,9 +862,11 @@ window.renderAddCats = function() {
         const wiggleCls = window.catEditMode && !hidden && !extraCls.includes("ghost") ? " cat-btn--wiggle" : "";
         const editCls = window.catEditMode ? " cat-btn--edit" : "";
         const hideBtn = window.catEditMode && id && id !== "umumiy"
-            ? `<span class="cat-btn__hide" onclick="window.onHideCatClick(event,'${id}','${level}','${parentId || "root"}')">✕</span>`
+            ? `<span class="cat-btn__hide${hidden ? " cat-btn__hide--restore" : ""}" onclick="window.onHideCatClick(event,'${id}','${level}','${parentId || "root"}')">${hidden ? "↩" : "×"}</span>`
             : "";
-        const action = window.catEditMode ? "" : ` onclick="${onclick}"`;
+        let action = "";
+        if (!window.catEditMode) action = ` onclick="${onclick}"`;
+        else if (hidden) action = ` onclick="window.onRestoreCatClick(event,'${id}','${level}','${parentId || "root"}')"`;
         return `<button type="button" class="cat-btn cat-btn--add${extraCls ? " " + extraCls : ""}${maskedCls}${wiggleCls}${editCls}" data-cat-id="${id}"${action}>${hideBtn}<span class="cat-btn__icon">${item.icon}</span><span class="cat-btn__label">${item.label}</span></button>`;
     };
     const wrap = (html, pId) => `<div class="cat-scroll--add cat-grid--${level}" data-level="${level}" data-parent="${pId || "root"}">${html}</div>`;
@@ -829,11 +874,8 @@ window.renderAddCats = function() {
     const editHead = `<div class="add-crumb add-crumb--edit"><span>↕️ Tartiblash rejimi</span><button type="button" class="back-link add-cats-done" onclick="window.exitCatEditMode()">Tayyor</button></div>`;
 
     if (window.addMode === "income") {
-        head.innerHTML = window.catEditMode ? editHead : "";
-        let src = window.applyCatOrder(window.INC_SOURCES.map((s, i) => ({ ...s, id: "inc_" + i })), "main", "income");
-        const isHidden = id => window.isCatHidden(id, "main", "income");
-        if (window.catEditMode) src = [...src.filter(s => !isHidden(s.id)), ...src.filter(s => isHidden(s.id))];
-        else src = src.filter(s => !isHidden(s.id));
+        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">Ushlab turing — tartiblash rejimi</div>`;
+        const src = window.filterCatItems(window.INC_SOURCES.map((s, i) => ({ ...s, id: "inc_" + i })), "main", "income");
         cont.innerHTML = wrap(src.map(s => mkBtn(s, `saveTx('${s.label.replace(/'/g, "\\'")}')`)).join(""), "income");
         window.syncAddLayout();
         return;

@@ -29,6 +29,7 @@ window.keypadMode = "amount";
 window.addExpPanelOpen = false;
 window.headerTodayOpen = false;
 window.headerNotifOpen = false;
+window.serviceEditMode = false;
 window.catEditMode = false;
 window.catEditLevel = null;
 window.catEditParent = null;
