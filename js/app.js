@@ -157,8 +157,6 @@ window.openFullScreenModal = function(profId = null) {
     if (!window.isBudgetAdmin()) return window.toast("Faqat yaratuvchi profil qo'sha/tahrirlaydi", true);
     document.getElementById('modal-profile-fs').style.display = 'flex';
     document.getElementById('fs-prof-id').value = profId || '';
-    const checkboxes = document.querySelectorAll('.fs-perm-chk');
-    checkboxes.forEach(chk => chk.checked = false);
     if (window.el('fs-prof-pin-enabled')) window.el('fs-prof-pin-enabled').checked = false;
     if (window.el('fs-prof-pin')) window.el('fs-prof-pin').value = '';
     if (window.el('fs-prof-age')) window.el('fs-prof-age').value = '';
@@ -166,8 +164,9 @@ window.openFullScreenModal = function(profId = null) {
     if (window.el('fs-prof-phone')) window.el('fs-prof-phone').value = '';
     if (window.el('fs-prof-uid')) window.el('fs-prof-uid').value = '';
 
+    let perms = [];
     if (profId) {
-        document.getElementById('fs-prof-title').innerText = "Profilni Tahrirlash";
+        document.getElementById('fs-prof-title').innerText = window.t ? window.t("edit_profile") : "Profilni tahrirlash";
         let p = window.state.profiles.find(x => x.id === profId);
         if (p) {
             document.getElementById('fs-prof-name').value = p.name || '';
@@ -176,19 +175,18 @@ window.openFullScreenModal = function(profId = null) {
             if (window.el('fs-prof-age')) window.el('fs-prof-age').value = p.age != null ? p.age : '';
             if (window.el('fs-prof-limit')) window.el('fs-prof-limit').value = p.monthlyLimit ? String(p.monthlyLimit).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '';
             if (window.el('fs-prof-pin-enabled')) window.el('fs-prof-pin-enabled').checked = !!p.pinEnabled;
-            if (p.permissions) checkboxes.forEach(chk => { if (p.permissions.includes(chk.value)) chk.checked = true; });
+            perms = p.permissions || [];
             if (window.el('fs-prof-phone')) window.el('fs-prof-phone').value = p.linked_phone || '';
             if (window.el('fs-prof-uid')) window.el('fs-prof-uid').value = p.linked_uid ? String(p.linked_uid) : '';
         }
     } else {
-        document.getElementById('fs-prof-title').innerText = "Yangi Profil Qo'shish";
+        document.getElementById('fs-prof-title').innerText = window.t ? window.t("new_profile") : "Yangi profil";
         document.getElementById('fs-prof-name').value = '';
         document.getElementById('fs-prof-emoji').value = '👤';
         document.getElementById('fs-prof-role').value = 'child_f';
-        checkboxes.forEach(chk => {
-            chk.checked = window.DEFAULT_NEW_PROFILE_PERMS.includes(chk.value);
-        });
+        perms = [...window.DEFAULT_NEW_PROFILE_PERMS];
     }
+    if (window.renderProfilePermsGrid) window.renderProfilePermsGrid(perms);
 };
 
 window.closeFullScreenModal = function() {
@@ -307,11 +305,7 @@ window.renderSidebar = function() {
     const list = document.getElementById("sidebar-profiles-list");
     if (!list) return;
 
-    const datalist = document.getElementById("profile-names-datalist");
     const sorted = window.getSortedProfiles ? window.getSortedProfiles() : window.state.profiles.filter(p => !p.archived);
-    if (datalist) {
-        datalist.innerHTML = sorted.map(p => `<option value="${(p.name || '').replace(/"/g, '')}"></option>`).join("");
-    }
 
     let html = "";
     if (window.isBudgetAdmin()) {
@@ -320,26 +314,22 @@ window.renderSidebar = function() {
     sorted.forEach(p => {
         const spent = window.getProfileMonthSpend(p.id);
         const lim = window.getLimitStatus(p.id);
-        let warn = "";
-        if (lim.level === "danger") warn = " ⚠️";
-        else if (lim.level === "warn") warn = " 🟡";
+        let warn = lim.level === "danger" ? " ⚠️" : lim.level === "warn" ? " 🟡" : "";
         const lock = window.needsPin(p.id) ? " 🔒" : "";
-        const limitLine = p.monthlyLimit > 0
-            ? `<div style="font-size:10px; color:var(--text-muted);">${window.t("limit_prefix")} ${window.formatM(p.monthlyLimit).replace(" so'm","")} (${lim.pct || 0}%)</div>`
-            : "";
-        const activeCls = window.curProf === p.id ? ' active-profile' : '';
-
+        const activeCls = window.curProf === p.id ? " active-profile" : "";
         const linkBadge = p.linked_uid ? `<span class="profile-link-badge" title="${window.t("linked_title")}">📲</span>` : "";
+        const limitTxt = p.monthlyLimit > 0
+            ? `<span class="profile-limit">${window.t("limit_prefix")} ${lim.pct || 0}%</span>`
+            : "";
+
         html += `
-        <div class="list-item profile-row${activeCls}" data-prof-id="${p.id}">
-            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
-                <span class="profile-avatar">${p.icon}${warn}${lock}</span>
-                <div class="profile-meta" style="min-width:0;">
-                    <div class="profile-name">${p.name} ${linkBadge}</div>
-                    <div class="profile-spend">${window.t("month_prefix")} ${window.formatM(spent).replace(" so'm", "")}</div>
-                    ${limitLine}
-                </div>
+        <div class="list-item profile-row profile-row--compact${activeCls}" data-prof-id="${p.id}">
+            <span class="profile-avatar profile-avatar--sm" title="${window.t("profile_hold_settings")}">${p.icon}${warn}${lock}</span>
+            <div class="profile-meta">
+                <div class="profile-name">${p.name}${linkBadge}</div>
+                <div class="profile-spend">${window.t("month_prefix")} ${window.formatM(spent).replace(" so'm", "")}${limitTxt}</div>
             </div>
+            ${window.curProf === p.id ? '<span class="profile-active-dot"></span>' : ""}
         </div>`;
     });
     list.innerHTML = html;

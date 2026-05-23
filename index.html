@@ -100,22 +100,6 @@
                 </div>
             </div>
 
-            <h4 class="fs-section-title">Ruxsatlar va ko'rinish</h4>
-
-            <div class="accordion-item">
-                <div class="accordion-header" onclick="toggleAccordion('acc-tabs')">
-                    <span>📱 Pastki menyu (4 ta bo'lim)</span>
-                    <span id="acc-tabs-icon">▼</span>
-                </div>
-                <div class="accordion-content" id="acc-tabs">
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="tab_home"> 🏠 Asosiy</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="tab_add"> ➕ Kiritish (xarajat/kirim)</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="tab_other"> 💼 Xizmatlar</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="tab_report"> 📊 Hisobot</label>
-                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Har bir asosiy bo'lim alohida yoqiladi/o'chiriladi.</div>
-                </div>
-            </div>
-
             <div class="accordion-item">
                 <div class="accordion-header" onclick="toggleAccordion('acc-invite')">
                     <span>📲 Taklif / Telegram bog'lash</span>
@@ -130,46 +114,11 @@
                     <button type="button" class="btn-primary" style="background:var(--bg-main); color:var(--primary); border:1px solid var(--primary);" onclick="window.fillLinkedUidFromCurrentUser()">Mening ID ni qo'yish (hozirgi foydalanuvchi)</button>
                 </div>
             </div>
-            
-            <div class="accordion-item">
-                <div class="accordion-header" onclick="toggleAccordion('acc-shopping')">
-                    <span>🛒 Bozorlik toifalari</span>
-                    <span id="acc-shopping-icon">▼</span>
-                </div>
-                <div class="accordion-content" id="acc-shopping">
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="shop_food"> Oziq-ovqat va Ro'zg'or</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="shop_clothes"> Kiyim va Shaxsiy</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="shop_school"> Maktab / O'quv</label>
-                </div>
-            </div>
 
-            <div class="accordion-item">
-                <div class="accordion-header" onclick="toggleAccordion('acc-modules')">
-                    <span>📂 Xizmatlar bo'limlari</span>
-                    <span id="acc-modules-icon">▼</span>
-                </div>
-                <div class="accordion-content" id="acc-modules">
-                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">Xizmatlar ichidagi har bir blok alohida boshqariladi.</div>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="mod_plan"> 🛒 Bozorlik ro'yxati</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="mod_sched"> 📅 Rejali to'lovlar</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="view_credit"> 💳 Kreditlar</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="view_dep"> 🏦 Omonatlar</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="mod_debt"> 🤝 Qarzlar</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="mod_income"> ▲ Kirim kiritish (Kiritish tabida)</label>
-                </div>
-            </div>
+            <h4 class="fs-section-title" data-i18n="permissions">Ruxsatlar</h4>
+            <div id="fs-perms-container" class="fs-perms-container"></div>
 
-            <div class="accordion-item">
-                <div class="accordion-header" onclick="toggleAccordion('acc-rights')">
-                    <span>⚙️ Admin huquqlari</span>
-                    <span id="acc-rights-icon">▼</span>
-                </div>
-                <div class="accordion-content" id="acc-rights">
-                    <label class="perm-checkbox" style="color:var(--danger);"><input type="checkbox" class="fs-perm-chk" value="admin_all"> 👑 Barcha huquqlar</label>
-                </div>
-            </div>
-
-            <button onclick="saveFullScreenProfile()" class="btn-primary btn-success" style="width:100%; margin-top:30px; font-size:16px; padding:15px;">✅ Profilni Saqlash</button>
+            <button onclick="saveFullScreenProfile()" class="btn-primary btn-success" style="width:100%; margin-top:20px; font-size:15px; padding:13px;">✅ <span data-i18n="save_profile">Profilni saqlash</span></button>
             <button onclick="deleteFullScreenProfile()" class="btn-primary" style="width:100%; margin-top:10px; font-size:14px; background:transparent; color:var(--danger); border:1px solid var(--danger);">🗑 Profilni o'chirish</button>
         </div>
     </div>
@@ -240,12 +189,6 @@
             </button>
         </div>
         
-        <div class="profile-quick-pick">
-            <input type="text" id="profile-quick-input" class="input-text" list="profile-names-datalist" data-i18n-placeholder="profile_quick_ph" placeholder="Profil ismi (tez tanlash)..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();window.quickSelectProfileByName();}" />
-            <button type="button" class="profile-quick-btn" onclick="window.quickSelectProfileByName()" aria-label="Tanlash">→</button>
-        </div>
-        <datalist id="profile-names-datalist"></datalist>
-
         <div id="sidebar-profiles-list"></div>
         
         <button type="button" id="admin-add-prof-btn" onclick="openFullScreenModal(null)" style="display:none;">

@@ -15,7 +15,16 @@ window.I18N = {
         profile_quick_ph: "Profil ismi (tez tanlash)...",
         new_profile: "Yangi profil",
         admin_reset: "Dasturni tozalash",
-        profile_hint_admin: "Bosing — profilga kirish · 3 son. ushlab turing — tahrirlash",
+        profile_hint_admin: "Bosing — tanlash · ikonkani ushlab turing — sozlamalar",
+        profile_hold_settings: "Ushlab turing — sozlamalar",
+        permissions: "Ruxsatlar",
+        save_profile: "Profilni saqlash",
+        edit_profile: "Profilni tahrirlash",
+        perm_tabs: "Pastki menyu",
+        perm_services: "Xizmatlar",
+        perm_shopping: "Bozorlik toifalari",
+        perm_admin: "Admin",
+        perm_admin_all: "Barcha huquqlar",
         nav_home: "Asosiy",
         nav_add: "Kiritish",
         nav_other: "Xizmatlar",
@@ -52,7 +61,16 @@ window.I18N = {
         profile_quick_ph: "Имя профиля (быстрый выбор)...",
         new_profile: "Новый профиль",
         admin_reset: "Очистить приложение",
-        profile_hint_admin: "Нажмите — войти · 3 сек. удерж. — редактировать",
+        profile_hint_admin: "Нажмите — выбрать · удерж. иконку — настройки",
+        profile_hold_settings: "Удерж. — настройки",
+        permissions: "Разрешения",
+        save_profile: "Сохранить профиль",
+        edit_profile: "Редактировать профиль",
+        perm_tabs: "Нижнее меню",
+        perm_services: "Сервисы",
+        perm_shopping: "Категории покупок",
+        perm_admin: "Админ",
+        perm_admin_all: "Все права",
         nav_home: "Главная",
         nav_add: "Ввод",
         nav_other: "Сервисы",
@@ -89,7 +107,16 @@ window.I18N = {
         profile_quick_ph: "Profile name (quick pick)...",
         new_profile: "New profile",
         admin_reset: "Reset app",
-        profile_hint_admin: "Tap — open profile · hold 3s — edit",
+        profile_hint_admin: "Tap — select · hold icon — settings",
+        profile_hold_settings: "Hold — settings",
+        permissions: "Permissions",
+        save_profile: "Save profile",
+        edit_profile: "Edit profile",
+        perm_tabs: "Bottom menu",
+        perm_services: "Services",
+        perm_shopping: "Shopping categories",
+        perm_admin: "Admin",
+        perm_admin_all: "All permissions",
         nav_home: "Home",
         nav_add: "Add",
         nav_other: "Services",
@@ -160,4 +187,9 @@ window.applyLang = function() {
     if (window.renderAddCats) window.renderAddCats();
     if (window.renderServicesMenu) window.renderServicesMenu();
     if (window.syncDescDisplay && !window.descStr) window.syncDescDisplay();
+    const fsModal = document.getElementById("modal-profile-fs");
+    if (fsModal?.style.display === "flex" && window.renderProfilePermsGrid) {
+        const perms = Array.from(document.querySelectorAll(".fs-perm-chk:checked")).map(c => c.value);
+        window.renderProfilePermsGrid(perms);
+    }
 };

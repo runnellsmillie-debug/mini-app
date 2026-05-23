@@ -32,18 +32,69 @@ window.TAB_PERMISSIONS = {
 };
 
 window.PERMISSION_MODULES = {
-    mod_plan: { menuId: "plan", label: "Bozorlik ro'yxati" },
-    mod_sched: { menuId: "sched", label: "Rejali to'lovlar" },
-    view_credit: { menuId: "credit", label: "Kreditlar" },
-    view_dep: { menuId: "dep", label: "Omonatlar" },
-    mod_debt: { menuId: "debt", label: "Qarzlar" },
-    mod_income: { label: "Kirim kiritish (Kiritish tab)" }
+    mod_plan: { menuId: "plan", label: "Bozorlik ro'yxati", icon: "🛒" },
+    mod_sched: { menuId: "sched", label: "Rejali to'lovlar", icon: "📅" },
+    view_credit: { menuId: "credit", label: "Kreditlar", icon: "💳" },
+    view_dep: { menuId: "dep", label: "Omonatlar", icon: "🏦" },
+    mod_debt: { menuId: "debt", label: "Qarzlar", icon: "🤝" },
+    mod_income: { label: "Kirim kiritish", icon: "📈" }
+};
+
+window.SHOP_PERMISSIONS = {
+    shop_food: { label: "Oziq-ovqat va Ro'zg'or", icon: "🥬" },
+    shop_clothes: { label: "Kiyim va Shaxsiy", icon: "👕" },
+    shop_school: { label: "Maktab / O'quv", icon: "📚" }
+};
+
+window.getAllPermissionGroups = function() {
+    const tabs = Object.entries(window.TAB_PERMISSIONS).map(([id, t]) => ({
+        id, icon: t.icon, label: t.label
+    }));
+    const services = Object.entries(window.PERMISSION_MODULES).map(([id, m]) => ({
+        id, icon: m.icon || "📂", label: m.label
+    }));
+    const shops = Object.entries(window.SHOP_PERMISSIONS).map(([id, s]) => ({
+        id, icon: s.icon, label: s.label
+    }));
+    return [
+        { key: "tabs", label: window.t ? window.t("perm_tabs") : "Pastki menyu", items: tabs },
+        { key: "services", label: window.t ? window.t("perm_services") : "Xizmatlar", items: services },
+        { key: "shopping", label: window.t ? window.t("perm_shopping") : "Bozorlik toifalari", items: shops },
+        { key: "admin", label: window.t ? window.t("perm_admin") : "Admin", items: [
+            { id: "admin_all", icon: "👑", label: window.t ? window.t("perm_admin_all") : "Barcha huquqlar", danger: true }
+        ]}
+    ];
+};
+
+window.renderProfilePermsGrid = function(checkedIds) {
+    const box = document.getElementById("fs-perms-container");
+    if (!box) return;
+    const checked = new Set(checkedIds || []);
+    box.innerHTML = window.getAllPermissionGroups().map(group => `
+        <div class="fs-perm-group">
+            <div class="fs-perm-group__title">${group.label}</div>
+            <div class="fs-perm-grid">
+                ${group.items.map(item => `
+                    <label class="perm-chip${item.danger ? " perm-chip--danger" : ""}${checked.has(item.id) ? " perm-chip--on" : ""}">
+                        <input type="checkbox" class="fs-perm-chk" value="${item.id}"${checked.has(item.id) ? " checked" : ""}>
+                        <span class="perm-chip__icon">${item.icon}</span>
+                        <span class="perm-chip__lbl">${item.label}</span>
+                    </label>
+                `).join("")}
+            </div>
+        </div>
+    `).join("");
+    box.querySelectorAll(".fs-perm-chk").forEach(chk => {
+        chk.addEventListener("change", () => {
+            chk.closest(".perm-chip")?.classList.toggle("perm-chip--on", chk.checked);
+        });
+    });
 };
 
 window.DEFAULT_NEW_PROFILE_PERMS = [
-    "tab_home", "tab_add", "tab_other",
+    "tab_home", "tab_add", "tab_other", "tab_report",
     "shop_food", "shop_clothes", "shop_school",
-    "mod_plan", "mod_sched", "mod_income"
+    "mod_plan", "mod_sched", "view_credit", "view_dep", "mod_debt", "mod_income"
 ];
 
 window.DEFAULT_PROFILES = [
@@ -357,70 +408,57 @@ window.applyModulePermissions = function() {
 window.initProfileRowPress = function(rowEl, profId) {
     if (!rowEl || rowEl._profPressInit) return;
     rowEl._profPressInit = true;
-    let pressStart = 0;
+    const avatar = rowEl.querySelector(".profile-avatar");
     let timer = null;
     let longDone = false;
-    let moved = false;
-    let startX = 0;
-    let startY = 0;
 
     const clearTimer = () => {
         if (timer) { clearTimeout(timer); timer = null; }
-        rowEl.classList.remove("pressing");
+        avatar?.classList.remove("profile-avatar--hold");
     };
 
-    rowEl.addEventListener("pointerdown", (e) => {
-        if (e.pointerType === "mouse" && e.button !== 0) return;
-        pressStart = Date.now();
+    rowEl.addEventListener("click", e => {
+        if (longDone || e.defaultPrevented) return;
+        window.selectProfileSafe(profId);
+    });
+
+    if (!avatar || !window.isBudgetAdmin()) return;
+
+    let startX = 0, startY = 0;
+
+    avatar.addEventListener("pointerdown", e => {
+        e.stopPropagation();
         longDone = false;
-        moved = false;
         startX = e.clientX;
         startY = e.clientY;
-        rowEl.classList.add("pressing");
-        if (window.isBudgetAdmin()) {
-            timer = setTimeout(() => {
-                timer = null;
-                longDone = true;
-                rowEl.classList.remove("pressing");
-                if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
-                window.openFullScreenModal(profId);
-                window.toast("Tahrirlash ochildi");
-            }, 3000);
-        }
-    });
-
-    rowEl.addEventListener("pointermove", (e) => {
-        if (!pressStart) return;
-        if (Math.abs(e.clientX - startX) > 12 || Math.abs(e.clientY - startY) > 12) {
-            moved = true;
-            clearTimer();
-        }
-    });
-
-    rowEl.addEventListener("pointerup", (e) => {
-        const wasLong = longDone;
+        avatar.classList.add("profile-avatar--hold");
         clearTimer();
-        if (wasLong) {
+        timer = setTimeout(() => {
+            timer = null;
+            longDone = true;
+            avatar.classList.remove("profile-avatar--hold");
+            if (navigator.vibrate) navigator.vibrate(40);
+            const sidebar = window.el("sidebar-menu");
+            if (sidebar?.classList.contains("open")) window.toggleSidebar();
+            window.openFullScreenModal(profId);
+        }, 500);
+    });
+
+    avatar.addEventListener("pointermove", e => {
+        if (!timer) return;
+        if (Math.hypot(e.clientX - startX, e.clientY - startY) > 12) clearTimer();
+    });
+
+    avatar.addEventListener("pointerup", e => {
+        if (longDone) {
             e.preventDefault();
             e.stopPropagation();
             longDone = false;
-            pressStart = 0;
-            return;
         }
-        if (!pressStart || moved) { pressStart = 0; return; }
-        const duration = Date.now() - pressStart;
-        pressStart = 0;
-        if (duration < 3000) {
-            e.preventDefault();
-            window.selectProfileSafe(profId);
-        }
+        clearTimer();
     });
 
-    rowEl.addEventListener("pointercancel", () => {
-        clearTimer();
-        pressStart = 0;
-        longDone = false;
-    });
+    avatar.addEventListener("pointercancel", clearTimer);
 };
 
 window.renderAddProfileStrip = function() {
