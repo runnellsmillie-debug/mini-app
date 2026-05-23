@@ -144,15 +144,19 @@ window.openBankSubView = (type) => {
     window.el('main-menu-btn-top').classList.add('hidden');
     window.el('header-main')?.classList.add('hidden');
     window.el('back-btn').classList.remove('hidden');
-
-    let titles = {
-        plan: `<span>🛒</span> <span>${window.t("sub_plan")}</span>`,
-        sched: `<span>📅</span> <span>${window.t("sub_sched")}</span>`,
-        credit: `<span>💳</span> <span>${window.t("sub_credit")}</span>`,
-        dep: `<span>🏦</span> <span>${window.t("sub_dep")}</span>`,
-        debt: `<span>🤝</span> <span>${window.t("sub_debt")}</span>`
-    };
-    window.setHtml('sub-view-title', titles[type]);
+    const titleEl = window.el('sub-view-title');
+    if (titleEl) {
+        titleEl.classList.remove('hidden');
+        const labels = {
+            plan: window.t("sub_plan"),
+            sched: window.t("sub_sched"),
+            credit: window.t("sub_credit"),
+            dep: window.t("sub_dep"),
+            debt: window.t("sub_debt")
+        };
+        titleEl.textContent = labels[type] || "";
+    }
+    document.body.classList.toggle('on-plan-subview', type === 'plan');
 
     if(type === 'credit' && window.switchCrTab) window.switchCrTab('aktiv');
     if(type === 'dep' && window.switchDepTab) window.switchDepTab('aktiv');
@@ -165,6 +169,9 @@ window.openBankSubView = (type) => {
 window.closeBankSubView = () => {
     window.curBankSub = null;
     document.body.classList.remove('on-plan-add-tab');
+    document.body.classList.remove('on-plan-subview');
+    const titleEl = window.el('sub-view-title');
+    if (titleEl) titleEl.classList.add('hidden');
     ['plan', 'sched', 'credit', 'dep', 'debt'].forEach(s => { if(window.el('bank-sub-'+s)) window.el('bank-sub-'+s).classList.add('hidden'); });
     window.el('bank-main-menu').classList.remove('hidden');
     window.el('back-btn').classList.add('hidden');
@@ -198,14 +205,16 @@ window.SERVICE_ITEMS = [
 
 window.refreshBankSubViewTitle = function() {
     if (!window.curBankSub) return;
+    const titleEl = window.el("sub-view-title");
+    if (!titleEl) return;
     const map = {
-        plan: `<span>🛒</span> <span>${window.t("sub_plan")}</span>`,
-        sched: `<span>📅</span> <span>${window.t("sub_sched")}</span>`,
-        credit: `<span>💳</span> <span>${window.t("sub_credit")}</span>`,
-        dep: `<span>🏦</span> <span>${window.t("sub_dep")}</span>`,
-        debt: `<span>🤝</span> <span>${window.t("sub_debt")}</span>`
+        plan: window.t("sub_plan"),
+        sched: window.t("sub_sched"),
+        credit: window.t("sub_credit"),
+        dep: window.t("sub_dep"),
+        debt: window.t("sub_debt")
     };
-    window.setHtml("sub-view-title", map[window.curBankSub] || "");
+    titleEl.textContent = map[window.curBankSub] || "";
 };
 
 window.migrateServiceMenuOrder = function() {
@@ -254,8 +263,8 @@ window.renderServicesMenu = function() {
 
     if (head) {
         head.innerHTML = window.serviceEditMode
-            ? `<div class="add-crumb add-crumb--edit"><span>↕️ ${window.t("sort_mode")}</span><button type="button" class="back-link add-cats-done" onclick="window.exitServiceEditMode()">${window.t("ready")}</button></div>`
-            : `<div class="add-cats-hint">${window.t("sort_hint")}</div>`;
+            ? `<div class="add-crumb add-crumb--edit"><button type="button" class="back-link add-cats-done" onclick="window.exitServiceEditMode()">${window.t("ready")}</button></div>`
+            : "";
     }
 
     menu.classList.toggle("services-menu--edit", window.serviceEditMode);

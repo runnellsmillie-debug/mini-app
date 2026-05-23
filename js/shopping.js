@@ -15,18 +15,54 @@ window.tMarketName = function(m) {
 window.planActMainCat = null;
 window.planActSubCat = null;
 window.planKeypadMode = "amount";
+window.planNameStr = "";
+window.planQtyStr = "";
+
+window.syncPlanFieldDock = function(id, str, phKey) {
+    const el = window.el(id);
+    if (!el) return;
+    const ph = el.querySelector(".plan-field-ph");
+    let val = el.querySelector(".plan-field-val");
+    if (str) {
+        if (!val) {
+            val = document.createElement("span");
+            val.className = "plan-field-val";
+            el.appendChild(val);
+        }
+        val.textContent = str;
+        el.classList.add("has-text");
+    } else {
+        if (val) val.remove();
+        el.classList.remove("has-text");
+        if (ph && phKey) ph.textContent = window.t(phKey);
+    }
+};
+
+window.syncPlanAmountDisplay = function() {
+    let displayVal = "";
+    if (window.planPriceStr) {
+        displayVal = parseInt(window.planPriceStr, 10).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+    window.syncPlanFieldDock("plan-amount-dock", displayVal, "plan_est_price");
+    if (window.el("plan-price")) window.el("plan-price").value = window.planPriceStr;
+};
+
+window.syncPlanNameDisplay = function() {
+    window.syncPlanFieldDock("plan-name-dock", window.planNameStr, "plan_product_ph");
+};
+
+window.syncPlanQtyDisplay = function() {
+    window.syncPlanFieldDock("plan-qty-dock", window.planQtyStr, "plan_qty_ph");
+};
 
 window.syncPlanUi = function() {
-    const phMap = { "plan-name": "plan_product_ph", "plan-qty": "plan_qty_ph" };
-    Object.entries(phMap).forEach(([id, key]) => {
-        const el = window.el(id);
-        if (el) el.placeholder = window.t(key);
-    });
-    const priceLbl = document.querySelector("#plan-view-add .plan-price-label");
-    if (priceLbl) priceLbl.textContent = window.t("plan_est_price");
+    window.syncPlanAmountDisplay();
+    window.syncPlanNameDisplay();
+    window.syncPlanQtyDisplay();
     if (window.updatePlanFilters) window.updatePlanFilters();
     if (window.updatePlanCats) window.updatePlanCats();
     if (window.renderPlanMarketChips) window.renderPlanMarketChips();
+    if (window.renderPlanKeyboard) window.renderPlanKeyboard(true);
 };
 
 window.syncPlanLayout = function() {
@@ -38,18 +74,75 @@ window.syncPlanLayout = function() {
     });
 };
 
+window.setPlanFieldActive = function(mode) {
+    ["amount", "name", "qty"].forEach(m => {
+        const map = { amount: "plan-amount-dock", name: "plan-name-dock", qty: "plan-qty-dock" };
+        const el = window.el(map[m]);
+        if (el) el.classList.toggle("plan-field-dock--active", m === mode);
+    });
+};
+
 window.focusPlanAmount = function() {
     window.planKeypadMode = "amount";
-    const nd = window.el("plan-num-display");
-    document.querySelectorAll(".plan-meta-input").forEach(el => el.classList.remove("plan-input--active"));
-    if (nd) nd.classList.add("num-display--active");
+    const n = window.el("plan-kb-amount"), t = window.el("plan-kb-text");
+    if (n) n.classList.remove("hidden");
+    if (t) t.classList.add("hidden");
+    window.setPlanFieldActive("amount");
     window.syncPlanLayout();
 };
 
 window.focusPlanName = function() {
     window.planKeypadMode = "name";
-    const nd = window.el("plan-num-display");
-    if (nd) nd.classList.remove("num-display--active");
+    const n = window.el("plan-kb-amount"), t = window.el("plan-kb-text");
+    if (n) n.classList.add("hidden");
+    if (t) t.classList.remove("hidden");
+    window.setPlanFieldActive("name");
+    if (window.renderPlanKeyboard) window.renderPlanKeyboard();
+    window.syncPlanLayout();
+};
+
+window.focusPlanQty = function() {
+    window.planKeypadMode = "qty";
+    const n = window.el("plan-kb-amount"), t = window.el("plan-kb-text");
+    if (n) n.classList.remove("hidden");
+    if (t) t.classList.add("hidden");
+    window.setPlanFieldActive("qty");
+    window.syncPlanLayout();
+};
+
+window.pressPlanTextKey = function(k) {
+    if (k === "⌫") window.planNameStr = window.planNameStr.slice(0, -1);
+    else if (k === "123") { window.focusPlanAmount(); return; }
+    else if (k === "CLR") window.planNameStr = "";
+    else if (window.planNameStr.length < 80) window.planNameStr += k;
+    window.syncPlanNameDisplay();
+};
+
+window.renderPlanKeyboard = function(force) {
+    const panel = window.el("plan-kb-text");
+    if (!panel) return;
+    if (force) panel.dataset.init = "";
+    if (panel.dataset.init === "2" && !force) return;
+    panel.dataset.init = "2";
+    const lang = window.getLang ? window.getLang() : "uz";
+    const rows = (window.KEYBOARD_LAYOUTS && window.KEYBOARD_LAYOUTS[lang]) || window.KEYBOARD_LAYOUTS?.uz || [];
+    let html = '<div class="text-kb-grid text-kb-grid--add">';
+    rows.forEach(row => {
+        html += '<div class="text-kb-row">';
+        row.forEach(k => {
+            const esc = k.replace(/'/g, "\\'");
+            html += `<button type="button" class="text-kb-key" onclick="window.pressPlanTextKey('${esc}')">${k}</button>`;
+        });
+        html += "</div>";
+    });
+    html += `<div class="text-kb-row text-kb-row--bottom">
+        <button type="button" class="text-kb-key" onclick="window.pressPlanTextKey(',')">,</button>
+        <button type="button" class="text-kb-key" onclick="window.pressPlanTextKey('.')">.</button>
+        <button type="button" class="text-kb-key text-kb-key--wide" onclick="window.pressPlanTextKey(' ')">${window.t("space")}</button>
+        <button type="button" class="text-kb-key" onclick="window.pressPlanTextKey('⌫')">⌫</button>
+        <button type="button" class="text-kb-key text-kb-key--mode" onclick="window.focusPlanAmount()">123</button>
+    </div></div>`;
+    panel.innerHTML = html;
     window.syncPlanLayout();
 };
 
@@ -132,7 +225,7 @@ window.renderPlanAddCats = function() {
             return mkBtn(window.SUBCAT_ICONS?.[s] || "📦", window.tSubcatName(s), `window.clickPlanSubCat('${esc}')`);
         }).join(""), "rukun");
     } else {
-        head.innerHTML = `<div class="plan-cats-hint">${window.t("sort_hint")}</div>`;
+        head.innerHTML = "";
         cont.className = "cats-level--main";
         cont.innerHTML = wrap(cats.map(c => {
             const esc = c.replace(/'/g, "\\'");
@@ -204,9 +297,14 @@ window.switchPlanTab = (tab) => {
     if (tab === 'add') {
         window.renderPlanMarketChips();
         window.renderPlanAddCats();
+        window.renderPlanKeyboard(true);
+        window.syncPlanAmountDisplay();
+        window.syncPlanNameDisplay();
+        window.syncPlanQtyDisplay();
         window.syncPlanLayout();
         window.focusPlanAmount();
     } else {
+        document.body.classList.remove('on-plan-add-tab');
         window.renderPlanned();
     }
 };
@@ -252,44 +350,42 @@ window.getHistoricalPrice = (name) => {
     return 0;
 };
 
-window.syncPlanPriceDisplay = () => {
-    let displayVal = "0";
-    if (window.planPriceStr) {
-        displayVal = parseInt(window.planPriceStr, 10).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    }
-    window.setTxt("plan-num-display", displayVal);
-    if (window.el("plan-price")) window.el("plan-price").value = window.planPriceStr;
-};
+window.syncPlanPriceDisplay = () => window.syncPlanAmountDisplay();
 
 window.pressPlanNum = v => {
-    window.focusPlanAmount();
+    if (window.planKeypadMode === "name") window.focusPlanAmount();
+    if (window.planKeypadMode === "qty") {
+        if (v === "C") window.planQtyStr = "";
+        else if (v === "⌫") window.planQtyStr = window.planQtyStr.slice(0, -1);
+        else if (window.planQtyStr.length < 6) window.planQtyStr += v;
+        window.syncPlanQtyDisplay();
+        window.focusPlanQty();
+        return;
+    }
     if (v === "C") window.planPriceStr = "";
     else if (v === "⌫") window.planPriceStr = window.planPriceStr.slice(0, -1);
     else if (window.planPriceStr.length < 12) window.planPriceStr += v;
-    window.syncPlanPriceDisplay();
+    window.syncPlanAmountDisplay();
+    window.focusPlanAmount();
 };
 
 window.focusPlanPrice = () => window.focusPlanAmount();
 
 window.quickAddPlan = t => {
-    const ni = window.el("plan-name");
-    const qi = window.el("plan-qty");
     let autoPrice = window.getHistoricalPrice(t);
-    if (ni) {
-        ni.value = window.tItemName(t);
-        ni.classList.add("plan-input--active");
-        setTimeout(() => ni.classList.remove("plan-input--active"), 600);
-    }
-    if (qi) qi.value = "";
+    window.planNameStr = window.tItemName(t);
+    window.planQtyStr = "";
     window.planPriceStr = autoPrice > 0 ? String(autoPrice) : "";
-    window.syncPlanPriceDisplay();
-    window.focusPlanAmount();
+    window.syncPlanNameDisplay();
+    window.syncPlanQtyDisplay();
+    window.syncPlanAmountDisplay();
+    window.focusPlanName();
     window.toast(autoPrice > 0 ? window.t("plan_price_history") : window.t("plan_enter_price"));
 };
 
 window.addPlannedItemManual = () => {
-    const n = window.val("plan-name").trim();
-    const q = window.val("plan-qty").trim();
+    const n = (window.planNameStr || "").trim();
+    const q = (window.planQtyStr || "").trim();
     const c = window.planActMainCat || window.val("smart-plan-cat");
     const m = window.val("plan-market");
     let p = parseInt(window.planPriceStr || "0", 10) || window.getNum("plan-price");
@@ -308,10 +404,12 @@ window.addPlannedItemManual = () => {
         skip: false,
         archived: false
     });
-    window.setVal("plan-name", "");
-    window.setVal("plan-qty", "");
+    window.planNameStr = "";
+    window.planQtyStr = "";
     window.planPriceStr = "";
-    window.syncPlanPriceDisplay();
+    window.syncPlanNameDisplay();
+    window.syncPlanQtyDisplay();
+    window.syncPlanAmountDisplay();
     window.setHtml("plan-stay-hint", `✅ ${window.t("last_entry_hint").replace("{amount}", `<b style="color:var(--success);">${window.formatM(p)}</b>`)}`);
     window.save();
     window.toast(window.t("plan_added"));

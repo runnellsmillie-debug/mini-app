@@ -201,6 +201,7 @@ window.I18N = {
         history: "Tarix",
         menu_aria: "Menyu",
         wallet_history: "Tarix",
+        plan_tab_list: "Ro'yxat",
         plan_tab_add: "Qo'shish",
         plan_tab_active: "Faol",
         plan_tab_skip: "Keyinroq",
@@ -484,6 +485,7 @@ window.I18N = {
         history: "История",
         menu_aria: "Меню",
         wallet_history: "История",
+        plan_tab_list: "Список",
         plan_tab_add: "Добавить",
         plan_tab_active: "Активные",
         plan_tab_skip: "Позже",
@@ -767,6 +769,7 @@ window.I18N = {
         history: "History",
         menu_aria: "Menu",
         wallet_history: "History",
+        plan_tab_list: "List",
         plan_tab_add: "Add",
         plan_tab_active: "Active",
         plan_tab_skip: "Later",
@@ -914,6 +917,10 @@ window.applyLang = function() {
     if (kbDock) kbDock.setAttribute("aria-label", window.t("keyboard"));
     if (window.syncPlanUi) window.syncPlanUi();
     if (window.renderPlanAddCats && window.curBankSub === "plan") window.renderPlanAddCats();
+    if (window.renderPlanKeyboard && window.curBankSub === "plan") window.renderPlanKeyboard(true);
+    if (window.syncPlanAmountDisplay) window.syncPlanAmountDisplay();
+    if (window.syncPlanNameDisplay) window.syncPlanNameDisplay();
+    if (window.syncPlanQtyDisplay) window.syncPlanQtyDisplay();
     if (window.renderPlanned && window.curBankSub === "plan") window.renderPlanned();
     const fsModal = document.getElementById("modal-profile-fs");
     if (fsModal?.style.display === "flex" && window.renderProfilePermsGrid) {

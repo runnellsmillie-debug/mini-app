@@ -1265,10 +1265,10 @@ window.renderAddCats = function() {
     };
     const wrap = (html, pId) => `<div class="cat-scroll--add cat-grid--${level}" data-level="${level}" data-parent="${pId || "root"}">${html}</div>`;
 
-    const editHead = `<div class="add-crumb add-crumb--edit"><span>↕️ ${window.t("sort_mode")}</span><button type="button" class="back-link add-cats-done" onclick="window.exitCatEditMode()">${window.t("ready")}</button></div>`;
+    const editHead = `<div class="add-crumb add-crumb--edit"><button type="button" class="back-link add-cats-done" onclick="window.exitCatEditMode()">${window.t("ready")}</button></div>`;
 
     if (window.addMode === "income") {
-        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">${window.t("sort_hint")}</div>`;
+        head.innerHTML = window.catEditMode ? editHead : "";
         const src = window.filterCatItems(window.INC_SOURCES.map((s, i) => ({
             ...s,
             id: "inc_" + i,
@@ -1297,7 +1297,7 @@ window.renderAddCats = function() {
         }
         cont.innerHTML = wrap(html, window.actMainCat.id);
     } else {
-        head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">${window.t("sort_hint")}</div>`;
+        head.innerHTML = window.catEditMode ? editHead : "";
         cont.innerHTML = wrap(cats.map(c => mkBtn(c, `clickMainCat('${c.id}')`, "cat-btn--main")).join(""), null);
     }
     window.syncAddLayout();

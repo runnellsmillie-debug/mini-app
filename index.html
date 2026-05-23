@@ -151,9 +151,9 @@
             </div>
         </div>
         <button type="button" class="menu-btn hidden" id="back-btn" onclick="closeBankSubView()">
-            <span class="icon">←</span> 
-            <span id="sub-view-title"></span>
+            <span class="icon">←</span>
         </button>
+        <span id="sub-view-title" class="sub-view-title hidden"></span>
     </div>
 
     <div id="header-today-panel" class="header-float-panel hidden">
@@ -301,19 +301,16 @@
 
         <div id="bank-sub-plan" class="hidden bank-sub-panel">
             <div class="mode-selector plan-tab-bar">
-                <button id="plan-tab-add" class="mode-btn" onclick="switchPlanTab('add')" style="background:var(--primary); border-color:var(--primary);">➕ <span data-i18n="plan_tab_add">Qo'shish</span></button>
-                <button id="plan-tab-active" class="mode-btn" onclick="switchPlanTab('active')">🛒 <span data-i18n="plan_tab_active">Faol</span></button>
-                <button id="plan-tab-skip" class="mode-btn" onclick="switchPlanTab('skip')">⏳ <span data-i18n="plan_tab_skip">Keyinroq</span></button>
-                <button id="plan-tab-history" class="mode-btn" onclick="switchPlanTab('history')">✅ <span data-i18n="plan_tab_history">Tarix</span></button>
+                <button id="plan-tab-add" class="mode-btn" onclick="switchPlanTab('add')" style="background:var(--primary); border-color:var(--primary);"><span data-i18n="plan_tab_list">Ro'yxat</span></button>
+                <button id="plan-tab-active" class="mode-btn" onclick="switchPlanTab('active')"><span data-i18n="plan_tab_active">Faol</span></button>
+                <button id="plan-tab-skip" class="mode-btn" onclick="switchPlanTab('skip')"><span data-i18n="plan_tab_skip">Keyinroq</span></button>
+                <button id="plan-tab-history" class="mode-btn" onclick="switchPlanTab('history')"><span data-i18n="plan_tab_history">Tarix</span></button>
             </div>
 
             <div id="plan-view-add" class="plan-add-screen">
                 <div class="plan-top-dock">
-                    <div class="plan-amount-wrap">
-                        <div class="plan-price-label" data-i18n="plan_est_price">Taxminiy summa</div>
-                        <div id="plan-num-display" class="num-display num-display--plan" onclick="window.focusPlanAmount()">0</div>
-                        <div class="plan-stay-hint" id="plan-stay-hint"></div>
-                    </div>
+                    <div id="plan-amount-dock" class="plan-field-dock" onclick="window.focusPlanAmount()"><span class="plan-field-ph" data-i18n="plan_est_price">Taxminiy summa</span></div>
+                    <div class="plan-stay-hint" id="plan-stay-hint"></div>
                     <div id="plan-market-chips" class="plan-market-chips"></div>
                     <div class="plan-cats-zone" id="plan-cats-zone">
                         <div id="plan-cats-header-container"></div>
@@ -322,9 +319,9 @@
                 </div>
                 <div class="plan-bottom-stack" id="plan-bottom-stack">
                     <div class="plan-meta-dock">
-                        <div class="plan-name-row">
-                            <input type="text" id="plan-name" class="input-text plan-meta-input" data-i18n-placeholder="plan_product_ph" placeholder="Mahsulot nomi..." onclick="window.focusPlanName()" />
-                            <input type="text" id="plan-qty" class="input-text plan-meta-input plan-meta-input--qty" data-i18n-placeholder="plan_qty_ph" placeholder="Soni" inputmode="numeric" onclick="window.focusPlanName()" />
+                        <div class="plan-meta-row">
+                            <div id="plan-name-dock" class="plan-field-dock plan-field-dock--grow" onclick="window.focusPlanName()"><span class="plan-field-ph" data-i18n="plan_product_ph">Mahsulot nomi...</span></div>
+                            <div id="plan-qty-dock" class="plan-field-dock plan-field-dock--qty" onclick="window.focusPlanQty()"><span class="plan-field-ph" data-i18n="plan_qty_ph">Soni</span></div>
                         </div>
                         <button type="button" onclick="addPlannedItemManual()" class="btn-primary btn-success plan-save-btn">➕ <span data-i18n="plan_save_btn">Ro'yxatga saqlash</span></button>
                     </div>
@@ -337,6 +334,7 @@
                                 <button type="button" class="num-btn num-btn--clear" onclick="pressPlanNum('C')">C</button><button type="button" class="num-btn" onclick="pressPlanNum('0')">0</button><button type="button" class="num-btn" onclick="pressPlanNum('⌫')">⌫</button>
                             </div>
                         </div>
+                        <div id="plan-kb-text" class="plan-kb-panel hidden"></div>
                     </div>
                 </div>
                 <select id="smart-plan-cat" class="hidden" onchange="window.selectPlanCat(this.value)"></select>
