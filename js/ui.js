@@ -50,10 +50,10 @@ window.selectProfile = id => {
 window.saveNewProfile = () => { 
     const n = window.val("prof-name").trim(), a = parseInt(window.val("prof-age")), r = window.val("prof-role"); 
     let em = window.val("prof-emoji").trim(); if(!em) em = r.endsWith('_f') ? "👧" : "👦"; 
-    if(!n) return window.toast("Ism!", true); 
-    window.state.profiles.push({ id: "p_"+Date.now(), name: n, age: isNaN(a)?null:a, role: r, icon: em }); 
-    window.closeModal('modal-profile'); window.setVal("prof-name",""); window.setVal("prof-age",""); window.setVal("prof-emoji",""); 
-    window.save(); window.renderSidebar(); window.toast("Qo'shildi!"); 
+    if(!n) return window.toast(window.t("name_required"), true);
+    window.state.profiles.push({ id: "p_"+Date.now(), name: n, age: isNaN(a)?null:a, role: r, icon: em });
+    window.closeModal('modal-profile'); window.setVal("prof-name",""); window.setVal("prof-age",""); window.setVal("prof-emoji","");
+    window.save(); window.renderSidebar(); window.toast(window.t("added"));
 };
 
 window.checkAccess = function() {
@@ -71,7 +71,7 @@ window.checkAccess = function() {
 window.switchTab = (id, silent) => {
     if (!window.canAccessTab(id)) {
         const alt = window.getFirstAllowedTab();
-        if (!silent) window.toast("Bu bo'limga ruxsat yo'q", true);
+        if (!silent) window.toast(window.t("svc_no_access"), true);
         if (alt !== id) return window.switchTab(alt, true);
         return;
     }
@@ -110,7 +110,7 @@ window.switchTab = (id, silent) => {
 };
 
 window.initCloseActionOld = (actionFunc) => { window.confirmActionOld = actionFunc; window.setVal("confirm-code", ""); window.openModal("modal-confirm"); };
-window.executeConfirmOld = () => { if(window.val("confirm-code").trim() !== "YOPISH") return window.toast("Xato: YOPISH deb yozing!", true); if(window.confirmActionOld) window.confirmActionOld(); window.closeModal("modal-confirm"); window.confirmActionOld = null; };
+window.executeConfirmOld = () => { if(window.val("confirm-code").trim().toUpperCase() !== window.t("confirm_code").toUpperCase()) return window.toast(window.t("confirm_code_error"), true); if(window.confirmActionOld) window.confirmActionOld(); window.closeModal("modal-confirm"); window.confirmActionOld = null; };
 
 window.openUniversalConfirm = (text, actionFunc) => { window.setTxt("yn-confirm-text", text); window.confirmActionYN = actionFunc; window.openModal("modal-yn-confirm"); };
 window.executeConfirmYN = () => { if(window.confirmActionYN) window.confirmActionYN(); window.closeModal("modal-yn-confirm"); window.confirmActionYN = null; };
@@ -134,7 +134,7 @@ window.closeBankSubViewIfDenied = function() {
 window.openBankSubView = (type) => {
     if (window.serviceEditMode) return;
     const perm = window.SUBVIEW_PERM[type];
-    if (perm && !window.hasPermission(perm)) return window.toast("Bu bo'limga ruxsat yo'q", true);
+    if (perm && !window.hasPermission(perm)) return window.toast(window.t("svc_no_access"), true);
 
     window.curBankSub = type;
 
@@ -145,12 +145,12 @@ window.openBankSubView = (type) => {
     window.el('header-main')?.classList.add('hidden');
     window.el('back-btn').classList.remove('hidden');
 
-    let titles = { 
-        'plan': '<span>🛒</span> <span>Bozorlik</span>',
-        'sched': '<span>📅</span> <span>Rejali to\'lovlar</span>',
-        'credit': '<span>💳</span> <span>Kreditlar</span>', 
-        'dep': '<span>🏦</span> <span>Omonatlar</span>', 
-        'debt': '<span>🤝</span> <span>Qarzlar</span>' 
+    let titles = {
+        plan: `<span>🛒</span> <span>${window.t("sub_plan")}</span>`,
+        sched: `<span>📅</span> <span>${window.t("sub_sched")}</span>`,
+        credit: `<span>💳</span> <span>${window.t("sub_credit")}</span>`,
+        dep: `<span>🏦</span> <span>${window.t("sub_dep")}</span>`,
+        debt: `<span>🤝</span> <span>${window.t("sub_debt")}</span>`
     };
     window.setHtml('sub-view-title', titles[type]);
 
@@ -188,12 +188,24 @@ window.switchDepTab = (tab) => {
 };
 
 window.SERVICE_ITEMS = [
-    { id: "plan", icon: "🛒", label: "Bozorlik ro'yxati" },
-    { id: "sched", icon: "📅", label: "Rejali to'lovlar" },
-    { id: "credit", icon: "💳", label: "Kreditlar bo'limi" },
-    { id: "dep", icon: "🏦", label: "Omonatlar bo'limi" },
-    { id: "debt", icon: "🤝", label: "Qarzlar bo'limi" }
+    { id: "plan", icon: "🛒", labelKey: "svc_plan" },
+    { id: "sched", icon: "📅", labelKey: "svc_sched" },
+    { id: "credit", icon: "💳", labelKey: "svc_credit" },
+    { id: "dep", icon: "🏦", labelKey: "svc_dep" },
+    { id: "debt", icon: "🤝", labelKey: "svc_debt" }
 ];
+
+window.refreshBankSubViewTitle = function() {
+    if (!window.curBankSub) return;
+    const map = {
+        plan: `<span>🛒</span> <span>${window.t("sub_plan")}</span>`,
+        sched: `<span>📅</span> <span>${window.t("sub_sched")}</span>`,
+        credit: `<span>💳</span> <span>${window.t("sub_credit")}</span>`,
+        dep: `<span>🏦</span> <span>${window.t("sub_dep")}</span>`,
+        debt: `<span>🤝</span> <span>${window.t("sub_debt")}</span>`
+    };
+    window.setHtml("sub-view-title", map[window.curBankSub] || "");
+};
 
 window.migrateServiceMenuOrder = function() {
     try {
@@ -256,7 +268,7 @@ window.renderServicesMenu = function() {
         const click = window.serviceEditMode
             ? (hidden ? ` onclick="window.onRestoreCatClick(event,'${item.id}','services','root')"` : "")
             : ` onclick="openBankSubView('${item.id}')"`;
-        return `<div class="main-menu-btn${wiggle}${masked}" data-id="${item.id}" data-cat-id="${item.id}"${click}>${hideBtn}<span class="icon">${item.icon}</span><span class="text">${item.label}</span>${window.serviceEditMode ? "" : `<span class="drag-handle">≡</span>`}</div>`;
+        return `<div class="main-menu-btn${wiggle}${masked}" data-id="${item.id}" data-cat-id="${item.id}"${click}>${hideBtn}<span class="icon">${item.icon}</span><span class="text">${window.t(item.labelKey)}</span>${window.serviceEditMode ? "" : `<span class="drag-handle">≡</span>`}</div>`;
     }).join("");
 };
 

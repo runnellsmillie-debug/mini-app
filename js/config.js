@@ -82,7 +82,12 @@ window.formatSpace = (input) => {
     p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, " "); input.value = p.join('.'); 
 };
 window.getNum = (id) => parseFloat(window.val(id).replace(/\s+/g, '')) || 0;
-window.formatM = n => new Intl.NumberFormat("uz-UZ").format(Math.round(Math.abs(n))) + " so'm";
+window.formatM = n => {
+    const lang = (window.getLang && window.getLang()) || (window.state?.lang) || "uz";
+    const loc = lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ";
+    const cur = window.t ? window.t("currency") : " so'm";
+    return new Intl.NumberFormat(loc).format(Math.round(Math.abs(n))) + cur;
+};
 window.toast = (msg, err=false) => { 
     const t = window.el("toast-msg"); 
     if(t){ t.innerText=msg; t.style.background=err?"var(--danger)":"var(--success)"; t.style.display="block"; setTimeout(()=>t.style.display="none", 2500); } 
@@ -125,20 +130,43 @@ window.buildAdapter = function() {
 window.buildDetailedCategories = function() {
     let gen = [];
     Object.keys(window.PLAN_TAGS).forEach(catName => {
-        let catLabel = catName.replace(/_/g, ' ');
-        let catItem = { id: 'c_'+window.slugify(catName), label: catLabel, icon: window.CAT_ICONS[catName]||"📦", color: window.CAT_COLORS[catName]||"#3b82f6", subs: [] };
+        let catItem = {
+            id: 'c_'+window.slugify(catName),
+            catKey: catName,
+            label: window.tCatName ? window.tCatName(catName) : catName.replace(/_/g, ' '),
+            icon: window.CAT_ICONS[catName]||"📦",
+            color: window.CAT_COLORS[catName]||"#3b82f6",
+            subs: []
+        };
         Object.keys(window.PLAN_TAGS[catName]).forEach(subName => {
-            let subLabel = subName.replace(/_/g, '/');
             let items = window.PLAN_TAGS[catName][subName].map(i => {
-                let iconMatch = i.match(/^(\p{Emoji})/u);
-                const itemLabel = i.replace(/^(\p{Emoji})\s*/u, '').trim();
-                return { id: 'i_'+window.slugify(subName+'_'+itemLabel), label: itemLabel, icon: iconMatch?iconMatch[1]:"▪️" };
+                let iconMatch = i.match(/^(\p{Extended_Pictographic}|\p{Emoji_Presentation})/u);
+                const itemLabelUz = i.replace(/^(\p{Extended_Pictographic}|\p{Emoji_Presentation})\s*/u, '').trim();
+                return {
+                    id: 'i_'+window.slugify(subName+'_'+itemLabelUz),
+                    labelUz: itemLabelUz,
+                    label: window.tItemName ? window.tItemName(itemLabelUz) : itemLabelUz,
+                    icon: iconMatch ? iconMatch[0] : "▪️"
+                };
             });
-            catItem.subs.push({ id: 's_'+window.slugify(subName), label: subLabel, icon: window.SUBCAT_ICONS[subName]||"📁", items: items });
+            catItem.subs.push({
+                id: 's_'+window.slugify(subName),
+                subKey: subName,
+                label: window.tSubcatName ? window.tSubcatName(subName) : subName.replace(/_/g, '/'),
+                icon: window.SUBCAT_ICONS[subName]||"📁",
+                items: items
+            });
         });
         gen.push(catItem);
     });
-    gen.push({ id: "boshqa", label: "Boshqa Chiqim", icon: "💸", color: "#94A3B8", subs: [] });
+    gen.push({
+        id: "boshqa",
+        label: window.tItemName ? window.tItemName("Boshqa Chiqim") : "Boshqa Chiqim",
+        labelUz: "Boshqa Chiqim",
+        icon: "💸",
+        color: "#94A3B8",
+        subs: []
+    });
     window.CATS_DATA.general = gen;
     window.CATS_DATA.home = gen;
     const childFirst = window.sortCatsForAge ? window.sortCatsForAge(gen, 4) : gen;

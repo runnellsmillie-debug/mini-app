@@ -46,14 +46,14 @@ window.saveDeposit = () => {
     const n = (b === "Boshqa") ? window.val("dep-custom-name").trim() : ((bankObj && dpObj) ? `${b} - ${dpObj.name}` : "Nomsiz Omonat"); 
     const a=window.getNum("dep-amount"), s=window.val("dep-date"), d=parseInt(window.val("dep-duration")), r=parseFloat(window.val("dep-rate")), rt=window.val("dep-ratetype"), cap=window.el("dep-cap").checked; 
     
-    if(!b || (b !== "Boshqa" && !tId) || !a||!s||!d||!r) return window.toast("To'ldiring!", true); 
+    if(!b || (b !== "Boshqa" && !tId) || !a||!s||!d||!r) return window.toast(window.t("error_short"), true); 
     if(dpObj && a < dpObj.minAmt) return window.toast(`Minimal summa: ${window.formatM(dpObj.minAmt)}`, true); 
     
     window.state.deps.push({id:Date.now(), name:n, bankIcon: bankObj?.icon, amount:a, start:s, duration:d, rate:r, rateType:rt, cap:cap, archived:false, topups:0, profits:0, initAmt:a}); 
     window.state.txs.unshift({id:Date.now()+1, amount:a, desc:`Omonat: ${n}`, cat:"Bank", date:s, time:"00:00", user:window.tgUser, prof:"general"}); 
     
     window.setVal("dep-bank",""); window.setVal("dep-type-name",""); window.setVal("dep-custom-name",""); window.el("dep-amount").value=""; window.setVal("dep-duration",""); window.setVal("dep-rate",""); 
-    window.switchDepTab('aktiv'); window.save(); window.toast("Ochildi!"); 
+    window.switchDepTab('aktiv'); window.save(); window.toast(window.t("saved")); 
 };
 
 window.openTopupModal = id => { 
@@ -61,11 +61,11 @@ window.openTopupModal = id => {
 };
 
 window.confirmTopup = () => { 
-    const a = window.getNum("topup-amount"); if(!a||a<=0) return window.toast("Xato", true); 
+    const a = window.getNum("topup-amount"); if(!a||a<=0) return window.toast(window.t("error_short"), true); 
     const dep = window.state.deps.find(x=>x.id==window.curDepId); if(!dep) return; 
     dep.amount += a; dep.topups = (dep.topups||0) + a; 
     window.state.txs.unshift({id:Date.now(), amount:a, desc:`Omonat qo'shildi: ${dep.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:window.tgUser, prof:"general"}); 
-    window.closeModal('modal-dep-topup'); window.save(); window.toast("Qo'shildi!"); 
+    window.closeModal('modal-dep-topup'); window.save(); window.toast(window.t("added")); 
 };
 
 window.openIntModal = id => { 
@@ -77,12 +77,12 @@ window.openIntModal = id => {
 };
 
 window.confirmInterest = () => { 
-    const a=window.getNum("interest-amount"); if(!a||a<=0) return window.toast("Xato!", true); 
+    const a=window.getNum("interest-amount"); if(!a||a<=0) return window.toast(window.t("error_short"), true); 
     const d=window.state.deps.find(x=>x.id==window.curDepId); if(!d) return; 
     d.profits = (d.profits||0) + a; 
     if(d.cap) { d.amount += a; } 
     else { window.state.incs.unshift({id:Date.now(), amount:a, desc:`Foiz: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:window.tgUser, prof:"general"}); if(window.creditIncomeToReserve) window.creditIncomeToReserve(a, `Foiz: ${d.name}`); } 
-    window.closeModal('modal-dep-interest'); window.save(); window.toast("Hisoblandi!"); 
+    window.closeModal('modal-dep-interest'); window.save(); window.toast(window.t("saved")); 
 };
 
 window.openDepScheduleModal = id => { 
@@ -105,11 +105,11 @@ window.closeDep = id => {
         window.state.incs.unshift({id:Date.now(), amount:d.amount, desc:`Omonat qaytdi: ${d.name}`, cat:"Bank", date:new Date().toISOString().slice(0,10), time:"00:00", user:window.tgUser, prof:"general"});
         if(window.creditIncomeToReserve) window.creditIncomeToReserve(d.amount, `Omonat qaytdi: ${d.name}`); 
         d.archived = true; d.closeDate = new Date().toISOString().slice(0,10); 
-        window.save(); window.switchDepTab('arxiv'); window.toast("Yopildi!"); 
+        window.save(); window.switchDepTab('arxiv'); window.toast(window.t("saved")); 
     }); 
 };
 
 window.permDelDep = id => { 
     window.state.deps=window.state.deps.filter(x=>x.id!=id); 
-    window.save(); window.switchDepTab('arxiv'); window.toast("O'chirildi!"); 
+    window.save(); window.switchDepTab('arxiv'); window.toast(window.t("deleted_excl")); 
 };

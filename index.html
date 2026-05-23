@@ -14,20 +14,20 @@
 <body class="dark-mode">
     <div id="toast-msg"></div>
 
-    <div id="modal-confirm" class="modal-layer hidden" onclick="closeModalOutside(event, 'modal-confirm')"><div class="modal-box"><h3 style="margin-top:0; color:var(--danger);">Tasdiqlash</h3><div id="confirm-msg" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;">YOPISH deb yozing.</div><input type="text" id="confirm-code" class="input-text" placeholder="YOPISH" autocomplete="off" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-confirm')" class="btn-primary" style="background:var(--border-color);">Bekor</button><button onclick="executeConfirmOld()" class="btn-primary" style="background:var(--danger);">Tasdiqlash</button></div></div></div>
-    <div id="modal-yn-confirm" class="modal-layer hidden" onclick="closeModalOutside(event, 'modal-yn-confirm')"><div class="modal-box"><h3 style="margin-top:0; color:var(--warning);">Diqqat!</h3><div id="yn-confirm-text" style="color:var(--text-main); font-size:14px; margin-bottom:20px; line-height:1.5;">Tasdiqlaysizmi?</div><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-yn-confirm')" class="btn-primary" style="background:var(--border-color);">Yo'q</button><button onclick="executeConfirmYN()" class="btn-primary btn-success">Ha</button></div></div></div>
+    <div id="modal-confirm" class="modal-layer hidden" onclick="closeModalOutside(event, 'modal-confirm')"><div class="modal-box"><h3 style="margin-top:0; color:var(--danger);" data-i18n="confirm_title">Tasdiqlash</h3><div id="confirm-msg" style="color:var(--text-muted); font-size:13px; margin-bottom:15px;" data-i18n="confirm_type_close">YOPISH deb yozing.</div><input type="text" id="confirm-code" class="input-text" data-i18n-placeholder="confirm_placeholder" placeholder="YOPISH" autocomplete="off" /><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-confirm')" class="btn-primary" style="background:var(--border-color);" data-i18n="cancel">Bekor</button><button onclick="executeConfirmOld()" class="btn-primary" style="background:var(--danger);" data-i18n="confirm">Tasdiqlash</button></div></div></div>
+    <div id="modal-yn-confirm" class="modal-layer hidden" onclick="closeModalOutside(event, 'modal-yn-confirm')"><div class="modal-box"><h3 style="margin-top:0; color:var(--warning);" data-i18n="attention">Diqqat!</h3><div id="yn-confirm-text" style="color:var(--text-main); font-size:14px; margin-bottom:20px; line-height:1.5;" data-i18n="confirm_ask">Tasdiqlaysizmi?</div><div style="display:flex; gap:10px;"><button onclick="closeModal('modal-yn-confirm')" class="btn-primary" style="background:var(--border-color);" data-i18n="no">Yo'q</button><button onclick="executeConfirmYN()" class="btn-primary btn-success" data-i18n="yes">Ha</button></div></div></div>
 
     <div id="reset-modal" class="modal-layer" style="display: none;">
         <div class="modal-box" style="border-top: 5px solid var(--danger);">
             <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                <h3 style="margin:0; color: var(--danger);">⚠️ Xavfli Hudud</h3>
+                <h3 style="margin:0; color: var(--danger);" data-i18n="dangerous_zone">⚠️ Xavfli Hudud</h3>
                 <button onclick="document.getElementById('reset-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); font-size:22px;">✕</button>
             </div>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;" data-i18n="reset_hint">
                 Dasturni nol holatiga qaytarish uchun <b>Asosiy Admin ID raqamini</b> kiriting:
             </p>
-            <input type="number" id="reset-admin-id" placeholder="ID raqamni kiriting..." style="width: 100%; padding: 12px; background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text); border-radius: 8px; margin-bottom: 20px;">
-            <button onclick="verifyAndReset()" class="btn-primary btn-danger" style="width: 100%; font-weight: bold; font-size: 15px;">
+            <input type="number" id="reset-admin-id" data-i18n-placeholder="reset_admin_ph" placeholder="ID raqamni kiriting..." style="width: 100%; padding: 12px; background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text); border-radius: 8px; margin-bottom: 20px;">
+            <button onclick="verifyAndReset()" class="btn-primary btn-danger" style="width: 100%; font-weight: bold; font-size: 15px;" data-i18n="reset_confirm_btn">
                 Tozalashni tasdiqlash
             </button>
         </div>
@@ -35,12 +35,12 @@
 
     <div id="modal-pin" class="modal-layer" style="display:none;" onclick="closeModalOutside(event, 'modal-pin')">
         <div class="modal-box" onclick="event.stopPropagation()">
-            <h3 style="margin-top:0; color:var(--primary);">🔒 PIN-kod</h3>
-            <p style="font-size:13px; color:var(--text-muted);"><span id="pin-modal-title">Profil</span> uchun 4 xonali kod</p>
+            <h3 style="margin-top:0; color:var(--primary);" data-i18n="pin_code">🔒 PIN-kod</h3>
+            <p style="font-size:13px; color:var(--text-muted);"><span id="pin-modal-title">Profil</span> — <span data-i18n="pin_for_profile">4 xonali kod</span></p>
             <input type="password" id="pin-input" class="input-text" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" />
             <div style="display:flex; gap:10px; margin-top:15px;">
-                <button onclick="closePinModal()" class="btn-primary" style="background:var(--border-color); flex:1;">Bekor</button>
-                <button onclick="submitPin()" class="btn-primary btn-success" style="flex:1;">Kirish</button>
+                <button onclick="closePinModal()" class="btn-primary" style="background:var(--border-color); flex:1;" data-i18n="cancel">Bekor</button>
+                <button onclick="submitPin()" class="btn-primary btn-success" style="flex:1;" data-i18n="enter">Kirish</button>
             </div>
         </div>
     </div>
@@ -55,23 +55,23 @@
             <input type="hidden" id="fs-prof-id" />
             
             <div style="margin-bottom: 20px;">
-                <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;">Profil nomi (Ism)</label>
-                <input type="text" id="fs-prof-name" class="input-text" placeholder="Masalan: Sevinch" />
+                <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;" data-i18n="profile_name_lbl">Profil nomi (Ism)</label>
+                <input type="text" id="fs-prof-name" class="input-text" data-i18n-placeholder="profile_name_ph" placeholder="Masalan: Sevinch" />
             </div>
 
             <div style="display:flex; gap:10px; margin-bottom:12px;">
                 <div style="flex:1;">
-                    <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;">Emoji</label>
+                    <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;" data-i18n="emoji_lbl">Emoji</label>
                     <input type="text" id="fs-prof-emoji" class="input-text" placeholder="👧" />
                 </div>
                 <div style="flex:1;">
-                    <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;">Yoshi</label>
-                    <input type="number" id="fs-prof-age" class="input-text" placeholder="Mas: 14" min="0" max="120" />
+                    <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;" data-i18n="age_lbl">Yoshi</label>
+                    <input type="number" id="fs-prof-age" class="input-text" data-i18n-placeholder="age_ph" placeholder="Mas: 14" min="0" max="120" />
                 </div>
             </div>
 
             <div style="margin-bottom:20px;">
-                <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;">Oila o'rni / Jinsi</label>
+                <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;" data-i18n="family_role">Oila o'rni / Jinsi</label>
                 <select id="fs-prof-role" class="input-text">
                     <option value="parent_m">Ota (Erkak)</option>
                     <option value="parent_f">Ona (Ayol)</option>
@@ -85,34 +85,34 @@
             </div>
 
             <div style="margin-bottom:20px;">
-                <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;">🎯 Oylik limit (cho'ntak puli, 0 = cheksiz)</label>
-                <input type="text" inputmode="numeric" id="fs-prof-limit" class="input-text" placeholder="Masalan: 500000" oninput="formatSpace(this)" />
+                <label style="color:var(--text-muted); font-size:12px; margin-bottom:5px; display:block;" data-i18n="monthly_limit_lbl">🎯 Oylik limit (cho'ntak puli, 0 = cheksiz)</label>
+                <input type="text" inputmode="numeric" id="fs-prof-limit" class="input-text" data-i18n-placeholder="monthly_limit_ph" placeholder="Masalan: 500000" oninput="formatSpace(this)" />
             </div>
 
             <div class="accordion-item">
                 <div class="accordion-header" onclick="toggleAccordion('acc-pin')">
-                    <span>🔒 PIN-kod himoyasi</span>
+                    <span data-i18n="pin_protection">🔒 PIN-kod himoyasi</span>
                     <span id="acc-pin-icon">▼</span>
                 </div>
                 <div class="accordion-content" id="acc-pin">
-                    <label class="perm-checkbox"><input type="checkbox" id="fs-prof-pin-enabled"> PIN bilan himoyalash</label>
-                    <input type="password" id="fs-prof-pin" class="input-text" inputmode="numeric" maxlength="4" placeholder="Yangi 4 xonali PIN" style="margin-top:8px;" />
-                    <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">Umumiy va Uy profillari uchun tavsiya etiladi.</div>
+                    <label class="perm-checkbox"><input type="checkbox" id="fs-prof-pin-enabled"> <span data-i18n="pin_enable">PIN bilan himoyalash</span></label>
+                    <input type="password" id="fs-prof-pin" class="input-text" inputmode="numeric" maxlength="4" data-i18n-placeholder="pin_new_ph" placeholder="Yangi 4 xonali PIN" style="margin-top:8px;" />
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:6px;" data-i18n="pin_hint">Umumiy va Uy profillari uchun tavsiya etiladi.</div>
                 </div>
             </div>
 
             <div class="accordion-item">
                 <div class="accordion-header" onclick="toggleAccordion('acc-invite')">
-                    <span>📲 Taklif / Telegram bog'lash</span>
+                    <span data-i18n="invite_section">📲 Taklif / Telegram bog'lash</span>
                     <span id="acc-invite-icon">▼</span>
                 </div>
                 <div class="accordion-content" id="acc-invite" style="display:none;">
-                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">Taklif orqali kirgan odamning Telegram ID raqamini yozing — u avtomatik shu profilga ulanadi.</div>
-                    <label style="display:block; margin-bottom:6px;">Telefon (ixtiyoriy)</label>
+                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;" data-i18n="invite_hint">Taklif orqali kirgan odamning Telegram ID raqamini yozing — u avtomatik shu profilga ulanadi.</div>
+                    <label style="display:block; margin-bottom:6px;" data-i18n="phone_lbl">Telefon (ixtiyoriy)</label>
                     <input type="tel" id="fs-prof-phone" class="input-text" placeholder="+998 90 123 45 67" inputmode="tel" />
-                    <label style="display:block; margin-bottom:6px;">Telegram user ID</label>
-                    <input type="text" inputmode="numeric" id="fs-prof-uid" class="input-text" placeholder="Masalan: 123456789" />
-                    <button type="button" class="btn-primary" style="background:var(--bg-main); color:var(--primary); border:1px solid var(--primary);" onclick="window.fillLinkedUidFromCurrentUser()">Mening ID ni qo'yish (hozirgi foydalanuvchi)</button>
+                    <label style="display:block; margin-bottom:6px;" data-i18n="telegram_id_lbl">Telegram user ID</label>
+                    <input type="text" inputmode="numeric" id="fs-prof-uid" class="input-text" data-i18n-placeholder="telegram_id_ph" placeholder="Masalan: 123456789" />
+                    <button type="button" class="btn-primary" style="background:var(--bg-main); color:var(--primary); border:1px solid var(--primary);" onclick="window.fillLinkedUidFromCurrentUser()" data-i18n="fill_my_id">Mening ID ni qo'yish (hozirgi foydalanuvchi)</button>
                 </div>
             </div>
 
@@ -124,13 +124,13 @@
             <div id="fs-wallet-manage-container" class="fs-wallet-manage"></div>
 
             <button onclick="saveFullScreenProfile()" class="btn-primary btn-success" style="width:100%; margin-top:20px; font-size:15px; padding:13px;">✅ <span data-i18n="save_profile">Profilni saqlash</span></button>
-            <button onclick="deleteFullScreenProfile()" class="btn-primary" style="width:100%; margin-top:10px; font-size:14px; background:transparent; color:var(--danger); border:1px solid var(--danger);">🗑 Profilni o'chirish</button>
+            <button onclick="deleteFullScreenProfile()" class="btn-primary" style="width:100%; margin-top:10px; font-size:14px; background:transparent; color:var(--danger); border:1px solid var(--danger);">🗑 <span data-i18n="delete_profile_btn">Profilni o'chirish</span></button>
         </div>
     </div>
 
 
     <div class="top-header">
-        <button type="button" class="menu-btn menu-btn--icon" id="main-menu-btn-top" onclick="toggleSidebar()" aria-label="Menyu">
+        <button type="button" class="menu-btn menu-btn--icon" id="main-menu-btn-top" onclick="toggleSidebar()" data-i18n-aria="menu_aria" aria-label="Menyu">
             <span class="icon">☰</span>
         </button>
         <div class="header-main" id="header-main">
@@ -237,7 +237,7 @@
     <div id="modal-wallet-history" class="modal-layer hidden" onclick="closeModalOutside(event, 'modal-wallet-history')">
         <div class="modal-box modal-box--wide" onclick="event.stopPropagation()">
             <div class="modal-box__head">
-                <h3 id="wallet-history-title" style="margin:0;">Tarix</h3>
+                <h3 id="wallet-history-title" style="margin:0;" data-i18n="wallet_history">Tarix</h3>
                 <button type="button" onclick="window.closeWalletHistory()" style="background:none;border:none;font-size:22px;color:var(--text-muted);">✕</button>
             </div>
             <div id="wallet-history-list" class="wallet-history-list"></div>
@@ -277,8 +277,8 @@
             </div>
         </div>
         <div class="add-bottom-stack" id="add-bottom-stack">
-            <div id="add-desc" class="add-desc-dock" onclick="window.focusAddDesc()"><span class="add-desc-ph">Izoh (ixtiyoriy)...</span></div>
-            <div class="add-numpad-dock" aria-label="Klaviatura">
+            <div id="add-desc" class="add-desc-dock" onclick="window.focusAddDesc()"><span class="add-desc-ph" data-i18n="desc_ph">Izoh (ixtiyoriy)...</span></div>
+            <div class="add-numpad-dock" data-i18n-aria="keyboard" aria-label="Klaviatura">
                 <div id="add-kb-amount" class="add-kb-panel">
                     <div class="num-grid num-grid--add">
                         <button type="button" class="num-btn" onclick="pressNum('1')">1</button><button type="button" class="num-btn" onclick="pressNum('2')">2</button><button type="button" class="num-btn" onclick="pressNum('3')">3</button>
@@ -301,10 +301,10 @@
 
         <div id="bank-sub-plan" class="hidden bank-sub-panel">
             <div class="mode-selector plan-tab-bar">
-                <button id="plan-tab-add" class="mode-btn" onclick="switchPlanTab('add')" style="background:var(--primary); border-color:var(--primary);">➕ Qo'shish</button>
-                <button id="plan-tab-active" class="mode-btn" onclick="switchPlanTab('active')">🛒 Faol</button>
-                <button id="plan-tab-skip" class="mode-btn" onclick="switchPlanTab('skip')">⏳ Keyinroq</button>
-                <button id="plan-tab-history" class="mode-btn" onclick="switchPlanTab('history')">✅ Tarix</button>
+                <button id="plan-tab-add" class="mode-btn" onclick="switchPlanTab('add')" style="background:var(--primary); border-color:var(--primary);">➕ <span data-i18n="plan_tab_add">Qo'shish</span></button>
+                <button id="plan-tab-active" class="mode-btn" onclick="switchPlanTab('active')">🛒 <span data-i18n="plan_tab_active">Faol</span></button>
+                <button id="plan-tab-skip" class="mode-btn" onclick="switchPlanTab('skip')">⏳ <span data-i18n="plan_tab_skip">Keyinroq</span></button>
+                <button id="plan-tab-history" class="mode-btn" onclick="switchPlanTab('history')">✅ <span data-i18n="plan_tab_history">Tarix</span></button>
             </div>
 
             <div id="plan-view-add" class="plan-add-panel">
@@ -316,8 +316,8 @@
                     <select id="smart-plan-subcat" class="input-text" onchange="renderSmartTags()" style="margin:0;"></select>
                     <div id="smart-tags-container" class="tags-wrapper"></div>
                     <div class="plan-name-row">
-                        <input type="text" id="plan-name" class="input-text" placeholder="Mahsulot nomi..." style="margin:0; flex:2;" />
-                        <input type="text" id="plan-qty" class="input-text" placeholder="Soni" style="margin:0; flex:1;" />
+                        <input type="text" id="plan-name" class="input-text" data-i18n-placeholder="plan_product_ph" placeholder="Mahsulot nomi..." style="margin:0; flex:2;" />
+                        <input type="text" id="plan-qty" class="input-text" data-i18n-placeholder="plan_qty_ph" placeholder="Soni" style="margin:0; flex:1;" />
                     </div>
                     <select id="plan-market" class="input-text" style="margin:0;">
                         <option value="Bozor">Bozor</option>
@@ -329,7 +329,7 @@
                 </div>
 
                 <div class="plan-price-block">
-                    <div class="plan-price-label">Taxminiy summa</div>
+                    <div class="plan-price-label" data-i18n="plan_est_price">Taxminiy summa</div>
                     <div id="plan-num-display" class="num-display num-display--plan">0</div>
                     <input type="hidden" id="plan-price" value="" />
                     <div class="num-grid num-grid--compact">
@@ -338,7 +338,7 @@
                         <button type="button" class="num-btn" onclick="pressPlanNum('7')">7</button><button type="button" class="num-btn" onclick="pressPlanNum('8')">8</button><button type="button" class="num-btn" onclick="pressPlanNum('9')">9</button>
                         <button type="button" class="num-btn" style="color:var(--danger);" onclick="pressPlanNum('C')">C</button><button type="button" class="num-btn" onclick="pressPlanNum('0')">0</button><button type="button" class="num-btn" onclick="pressPlanNum('⌫')">⌫</button>
                     </div>
-                    <button type="button" onclick="addPlannedItemManual()" class="btn-primary btn-success" style="margin-top:8px;">➕ Ro'yxatga saqlash</button>
+                    <button type="button" onclick="addPlannedItemManual()" class="btn-primary btn-success" style="margin-top:8px;">➕ <span data-i18n="plan_save_btn">Ro'yxatga saqlash</span></button>
                 </div>
             </div>
 
@@ -481,15 +481,15 @@
             <input type="date" id="rep-to" class="input-text" />
         </div>
         <div class="report-summary">
-            <div id="rep-inc-card" class="stat-card stat-inc"><span>Kirim</span><b id="rep-inc-val">0</b></div>
-            <div class="stat-card stat-exp"><span>Chiqim</span><b id="rep-exp-val">0</b></div>
+            <div id="rep-inc-card" class="stat-card stat-inc"><span data-i18n="report_income">Kirim</span><b id="rep-inc-val">0</b></div>
+            <div class="stat-card stat-exp"><span data-i18n="report_expense">Chiqim</span><b id="rep-exp-val">0</b></div>
         </div>
         <div id="user-stats-container"></div>
-        <div class="report-section-title">Kategoriyalar</div>
+        <div class="report-section-title" data-i18n="report_categories">Kategoriyalar</div>
         <div id="rep-cats-list"></div>
-        <div class="report-section-title">Tarix</div>
+        <div class="report-section-title" data-i18n="report_history">Tarix</div>
         <div id="rep-history-list"></div>
-        <button onclick="downloadExcel()" class="btn-primary">📥 Hisobotni yuklash (CSV)</button>
+        <button onclick="downloadExcel()" class="btn-primary" data-i18n="report_download">📥 Hisobotni yuklash (CSV)</button>
     </div>
 
     <div id="modal-schedule" class="modal-layer hidden" onclick="closeModalOutside(event, 'modal-schedule')">
@@ -498,15 +498,15 @@
             <pre id="schedule-info" style="font-size:12px;color:var(--text-muted);white-space:pre-wrap;margin-bottom:10px;"></pre>
             <div class="schedule-table-wrap"><table id="schedule-table"></table></div>
             <p id="schedule-footer" style="font-size:12px;color:var(--text-muted);margin:10px 0;"></p>
-            <button onclick="closeModal('modal-schedule')" class="btn-primary">Yopish</button>
+            <button onclick="closeModal('modal-schedule')" class="btn-primary" data-i18n="close">Yopish</button>
         </div>
     </div>
 
     <div id="modal-dep-topup" class="modal-layer hidden" onclick="closeModalOutside(event, 'modal-dep-topup')">
         <div class="modal-box" onclick="event.stopPropagation()">
             <h3 id="topup-name" style="margin-top:0;"></h3>
-            <input type="text" inputmode="numeric" id="topup-amount" class="input-text" placeholder="Qo'shiladigan summa" oninput="formatSpace(this)" />
-            <button onclick="confirmTopup()" class="btn-primary btn-success">Tasdiqlash</button>
+            <input type="text" inputmode="numeric" id="topup-amount" class="input-text" data-i18n-placeholder="plan_enter_price" placeholder="Qo'shiladigan summa" oninput="formatSpace(this)" />
+            <button onclick="confirmTopup()" class="btn-primary btn-success" data-i18n="confirm">Tasdiqlash</button>
         </div>
     </div>
 
@@ -522,15 +522,15 @@
         <div class="modal-box" onclick="event.stopPropagation()">
             <pre id="principal-pay-info" style="font-size:12px;margin-bottom:10px;"></pre>
             <input type="text" inputmode="numeric" id="principal-pay-amount" class="input-text" oninput="formatSpace(this)" />
-            <button onclick="confirmPrincipalPay()" class="btn-primary btn-success">To'lash</button>
+            <button onclick="confirmPrincipalPay()" class="btn-primary btn-success" data-i18n="pay_btn">To'lash</button>
         </div>
     </div>
 
     <div id="modal-buy" class="modal-layer hidden" onclick="closeModalOutside(event, 'modal-buy')">
         <div class="modal-box" onclick="event.stopPropagation()">
             <h3 id="buy-item-name" style="margin-top:0;color:var(--success);"></h3>
-            <input type="text" inputmode="numeric" id="buy-price" class="input-text" placeholder="Sotib olingan narx" oninput="formatSpace(this)" />
-            <button onclick="confirmBuyItem()" class="btn-primary btn-success">Sotib olindi</button>
+            <input type="text" inputmode="numeric" id="buy-price" class="input-text" data-i18n-placeholder="buy_price_ph" placeholder="Sotib olingan narx" oninput="formatSpace(this)" />
+            <button onclick="confirmBuyItem()" class="btn-primary btn-success" data-i18n="bought_btn">Sotib olindi</button>
         </div>
     </div>
 
@@ -543,6 +543,7 @@
 
     <script src="js/config.js"></script>
     <script src="js/i18n.js"></script>
+    <script src="js/i18n-catalog.js"></script>
     <script src="js/profiles.js"></script>
     <script src="js/home.js"></script>
     <script src="js/ui.js"></script>

@@ -2,6 +2,48 @@
 // SHOPPING.JS - Bozorlik ro'yxati mantiqi
 // ==========================================
 
+window.tMarketName = function(m) {
+    const map = {
+        ru: { Bozor: "Рынок", Korzinka: "Korzinka", Makro: "Makro", Uzum: "Uzum", "Do'kon": "Магазин" },
+        en: { Bozor: "Market", Korzinka: "Korzinka", Makro: "Makro", Uzum: "Uzum", "Do'kon": "Shop" }
+    };
+    const lang = window.getLang ? window.getLang() : "uz";
+    if (lang === "uz") return m;
+    return map[lang]?.[m] || m;
+};
+
+window.syncPlanUi = function() {
+    const phMap = { "plan-name": "plan_product_ph", "plan-qty": "plan_qty_ph" };
+    Object.entries(phMap).forEach(([id, key]) => {
+        const el = window.el(id);
+        if (el) el.placeholder = window.t(key);
+    });
+    const priceLbl = document.querySelector(".plan-price-label");
+    if (priceLbl) priceLbl.textContent = window.t("plan_est_price");
+    const saveBtn = document.querySelector("#plan-view-add .btn-success span[data-i18n='plan_save_btn']");
+    if (saveBtn) saveBtn.textContent = window.t("plan_save_btn");
+    if (window.updatePlanFilters) window.updatePlanFilters();
+    if (window.updatePlanCats) window.updatePlanCats();
+};
+
+window.updatePlanFilters = function() {
+    const fm = window.el("filter-market");
+    const fc = window.el("filter-cat");
+    const fmVal = fm ? fm.value : "all";
+    const fcVal = fc ? fc.value : "all";
+    if (fm) {
+        fm.innerHTML = `<option value="all">${window.t("filter_market")}: ${window.t("filter_all")}</option>`
+            + ["Bozor", "Korzinka", "Makro", "Uzum", "Do'kon"].map(m => `<option value="${m}">${window.tMarketName(m)}</option>`).join("");
+        if ([...fm.options].some(o => o.value === fmVal)) fm.value = fmVal;
+    }
+    if (fc) {
+        const cats = ["Oziq-ovqat", "Uy_Xojalik", "Kiyim"];
+        fc.innerHTML = `<option value="all">${window.t("filter_cat")}: ${window.t("filter_all")}</option>`
+            + cats.map(c => `<option value="${c}">${window.tCatName(c)}</option>`).join("");
+        if ([...fc.options].some(o => o.value === fcVal)) fc.value = fcVal;
+    }
+};
+
 window.switchPlanTab = (tab) => {
     ['add', 'active', 'skip', 'history'].forEach(t => {
         let btn = window.el('plan-tab-' + t);
@@ -34,7 +76,7 @@ window.renderPlanCatChips = () => {
     const cur = window.val("smart-plan-cat");
     const opts = Array.from(sel.options).map(o => o.value);
     wrap.innerHTML = opts.map(c => {
-        const label = c.replace(/_/g, " ");
+        const label = window.tCatName(c);
         const icon = window.CAT_ICONS[c] || "📦";
         const active = c === cur ? " plan-cat-chip--active" : "";
         return `<button type="button" class="plan-cat-chip${active}" onclick="window.selectPlanCat('${c.replace(/'/g, "\\'")}')">${icon} ${label}</button>`;
@@ -58,7 +100,7 @@ window.updatePlanCats = () => {
     }
     if (!c.length) c = Object.keys(window.PLAN_TAGS || {});
     const prev = window.val("smart-plan-cat");
-    cEl.innerHTML = c.map(x => `<option value="${x}">${x.replace(/_/g, ' ')}</option>`).join("");
+    cEl.innerHTML = c.map(x => `<option value="${x}">${window.tCatName(x)}</option>`).join("");
     if (prev && c.includes(prev)) window.setVal("smart-plan-cat", prev);
     else if (c.length) window.selectPlanCat(c[0]);
     window.renderPlanCatChips();
@@ -73,7 +115,7 @@ window.updateSmartTags = () => {
     if (window.PLAN_TAGS[cat]) {
         window.show("smart-plan-subcat");
         Object.keys(window.PLAN_TAGS[cat]).forEach(s => {
-            subEl.innerHTML += `<option value="${s}">${s.replace(/_/g, '/')}</option>`;
+            subEl.innerHTML += `<option value="${s}">${window.tSubcatName(s)}</option>`;
         });
     } else window.hide("smart-plan-subcat");
     window.renderSmartTags();
@@ -87,9 +129,10 @@ window.renderSmartTags = () => {
     cont.innerHTML = "";
     if (window.PLAN_TAGS[c] && window.PLAN_TAGS[c][s]) {
         window.PLAN_TAGS[c][s].forEach(t => {
-            cont.innerHTML += `<div class="smart-tag" onclick="window.quickAddPlan('${t.replace(/'/g, "\\'")}')">${t}</div>`;
+            const lbl = window.tItemName(t);
+            cont.innerHTML += `<div class="smart-tag" onclick="window.quickAddPlan('${t.replace(/'/g, "\\'")}')">${lbl}</div>`;
         });
-    } else cont.innerHTML = "<span style='color:var(--text-muted); font-size:12px;'>Tez tanlash yo'q.</span>";
+    } else cont.innerHTML = `<span style='color:var(--text-muted); font-size:12px;'>${window.t("quick_tags_none")}</span>`;
 };
 
 window.getHistoricalPrice = (name) => {
@@ -130,7 +173,7 @@ window.quickAddPlan = t => {
     const qi = window.el("plan-qty");
     let autoPrice = window.getHistoricalPrice(t);
     if (ni) {
-        ni.value = t;
+        ni.value = window.tItemName(t);
         ni.style.borderColor = "var(--success)";
         setTimeout(() => { ni.style.borderColor = "var(--border-color)"; }, 600);
     }
@@ -138,7 +181,7 @@ window.quickAddPlan = t => {
     window.planPriceStr = autoPrice > 0 ? String(autoPrice) : "";
     window.syncPlanPriceDisplay();
     window.focusPlanPrice();
-    window.toast(autoPrice > 0 ? "Narx tarixdan olindi" : "Summani kiriting");
+    window.toast(autoPrice > 0 ? window.t("plan_price_history") : window.t("plan_enter_price"));
 };
 
 window.addPlannedItemManual = () => {
@@ -148,9 +191,9 @@ window.addPlannedItemManual = () => {
     const m = window.val("plan-market");
     let p = parseInt(window.planPriceStr || "0", 10) || window.getNum("plan-price");
 
-    if (!n) return window.toast("Nomi kerak!", true);
+    if (!n) return window.toast(window.t("name_required"), true);
     if (!p || p === 0) p = window.getHistoricalPrice(n);
-    if (!p) return window.toast("Summani kiriting!", true);
+    if (!p) return window.toast(window.t("plan_enter_price"), true);
 
     window.state.plan.push({
         id: Date.now(),
@@ -167,25 +210,25 @@ window.addPlannedItemManual = () => {
     window.planPriceStr = "";
     window.syncPlanPriceDisplay();
     window.save();
-    window.toast("Ro'yxatga qo'shildi!");
+    window.toast(window.t("plan_added"));
 };
 
 window.skipPlanItem = id => {
     const i = window.state.plan.find(x => x.id == id);
-    if (i) { i.skip = true; window.save(); window.renderPlanned(); window.toast("Kechiktirildi ⏳"); }
+    if (i) { i.skip = true; window.save(); window.renderPlanned(); window.toast(window.t("plan_postponed")); }
 };
 
 window.unskipPlanItem = id => {
     const i = window.state.plan.find(x => x.id == id);
-    if (i) { i.skip = false; window.save(); window.renderPlanned(); window.toast("Ro'yxatga qaytdi ✅"); }
+    if (i) { i.skip = false; window.save(); window.renderPlanned(); window.toast(window.t("plan_restored")); }
 };
 
 window.permDelPlan = id => {
-    window.openUniversalConfirm("Tarixdan butunlay o'chirib yubormoqchimisiz?", () => {
+    window.openUniversalConfirm(window.t("plan_del_confirm"), () => {
         window.state.plan = window.state.plan.filter(x => x.id != id);
         window.save();
         window.renderPlanned();
-        window.toast("O'chirildi!");
+        window.toast(window.t("deleted_excl"));
     });
 };
 
@@ -193,14 +236,14 @@ window.openBuyModal = id => {
     const i = window.state.plan.find(x => x.id == id);
     if (!i) return;
     window.buyPlanId = id;
-    window.setTxt("buy-item-name", `✅ Olinyapti: ${i.text}`);
+    window.setTxt("buy-item-name", `✅ ${window.t("plan_buying_prefix")} ${i.text}`);
     window.el("buy-price").value = i.price ? new Intl.NumberFormat('ru-RU').format(i.price).replace(/,/g, ' ') : "";
     window.openModal("modal-buy");
 };
 
 window.confirmBuyItem = () => {
     const p = window.getNum("buy-price");
-    if (!p || p <= 0) return window.toast("Narx xato!", true);
+    if (!p || p <= 0) return window.toast(window.t("plan_price_error"), true);
     const i = window.state.plan.find(x => x.id == window.buyPlanId);
     if (!i) return;
     const d = new Date();
@@ -217,7 +260,7 @@ window.confirmBuyItem = () => {
     window.closeModal("modal-buy");
     window.save();
     window.renderPlanned();
-    window.toast("Xarid qilindi ✅");
+    window.toast(window.t("plan_bought"));
 };
 
 window.toggleHistoryDate = (dateId) => {
@@ -257,21 +300,21 @@ window.renderPlanned = function() {
         for (let cat in groups) {
             html += `<div class="plan-group-box">
                 <div class="plan-group-head">
-                    <span>${window.CAT_ICONS[cat] || '📦'} ${cat.replace(/_/g, ' ')}</span>
+                    <span>${window.CAT_ICONS[cat] || '📦'} ${window.tCatName(cat)}</span>
                     <span>${window.formatM(groups[cat].total)}</span>
                 </div>
                 ${groups[cat].list.map(x => `
                     <div class="plan-item plan-item--flat">
                         <div style="flex:1;">
                             <div style="font-weight:600; font-size:14px;">${x.text}</div>
-                            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">📍 ${x.market} | 💰 ${window.formatM(x.price || 0)}</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">📍 ${window.tMarketName(x.market)} | 💰 ${window.formatM(x.price || 0)}</div>
                         </div>
                         <div style="display:flex; gap:5px; flex-direction:column;">
                             ${isSkippedMode ?
-                                `<button onclick="unskipPlanItem(${x.id})" class="btn-primary" style="width:auto; padding:5px 15px; font-size:11px; margin:0; background:transparent; border:1px dashed var(--success); color:var(--success);">⤴️ Qaytarish</button>`
+                                `<button onclick="unskipPlanItem(${x.id})" class="btn-primary" style="width:auto; padding:5px 15px; font-size:11px; margin:0; background:transparent; border:1px dashed var(--success); color:var(--success);">⤴️ ${window.t("plan_return")}</button>`
                                 :
-                                `<button onclick="openBuyModal(${x.id})" class="btn-primary btn-success" style="width:auto; padding:5px 15px; font-size:12px; margin:0;">Olish</button>
-                                 <button onclick="skipPlanItem(${x.id})" class="btn-primary" style="width:auto; padding:4px 15px; font-size:11px; margin:0; background:var(--bg-card); border:1px solid var(--warning); color:var(--warning);">⏳ Kech</button>`
+                                `<button onclick="openBuyModal(${x.id})" class="btn-primary btn-success" style="width:auto; padding:5px 15px; font-size:12px; margin:0;">${window.t("plan_buy")}</button>
+                                 <button onclick="skipPlanItem(${x.id})" class="btn-primary" style="width:auto; padding:4px 15px; font-size:11px; margin:0; background:var(--bg-card); border:1px solid var(--warning); color:var(--warning);">⏳ ${window.t("plan_later")}</button>`
                             }
                         </div>
                     </div>
@@ -285,26 +328,26 @@ window.renderPlanned = function() {
     let finalActiveHtml = "";
     if (activeData.grandTotal > 0) {
         finalActiveHtml += `<div class="plan-summary-banner plan-summary-banner--primary">
-            <div>Jami kutilayotgan</div>
+            <div>${window.t("plan_total_expected")}</div>
             <div>${window.formatM(activeData.grandTotal)}</div>
         </div>`;
     }
-    window.setHtml("planned-list-active", finalActiveHtml + (activeData.html || "<div class='empty-state'>Bozorlik ro'yxati bo'sh.</div>"));
+    window.setHtml("planned-list-active", finalActiveHtml + (activeData.html || `<div class='empty-state'>${window.t("plan_empty")}</div>`));
 
     const skipData = renderGroupedList(allUserPlans.filter(x => !x.archived && x.skip), true);
     let finalSkipHtml = "";
     if (skipData.grandTotal > 0) {
         finalSkipHtml += `<div class="plan-summary-banner plan-summary-banner--warn">
-            <div>Kechiktirilgan jami</div>
+            <div>${window.t("plan_total_skipped")}</div>
             <div>${window.formatM(skipData.grandTotal)}</div>
         </div>`;
     }
-    window.setHtml("planned-list-skipped", finalSkipHtml + (skipData.html || "<div class='empty-state'>Kechiktirilgan mahsulotlar yo'q.</div>"));
+    window.setHtml("planned-list-skipped", finalSkipHtml + (skipData.html || `<div class='empty-state'>${window.t("plan_skip_empty")}</div>`));
 
     const historyItems = allUserPlans.filter(x => x.archived).sort((a, b) => b.id - a.id);
     let historyGroups = {};
     historyItems.forEach(item => {
-        let dateKey = item.buyDate || 'Noma\'lum sana';
+        let dateKey = item.buyDate || window.t("plan_unknown_date");
         if (!historyGroups[dateKey]) historyGroups[dateKey] = { list: [], total: 0 };
         historyGroups[dateKey].list.push(item);
         historyGroups[dateKey].total += (item.buyPrice || item.price || 0);
@@ -323,7 +366,7 @@ window.renderPlanned = function() {
                     <div class="plan-history-row">
                         <div>
                             <div style="font-size:13px;">${x.text}</div>
-                            <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">🏷️ ${x.cat.replace(/_/g, ' ')} | 📍 ${x.market}</div>
+                            <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">🏷️ ${window.tCatName(x.cat)} | 📍 ${window.tMarketName(x.market)}</div>
                         </div>
                         <div style="text-align:right;">
                             <div style="font-size:13px; font-weight:bold;">${window.formatM(x.buyPrice || x.price)}</div>
@@ -334,5 +377,5 @@ window.renderPlanned = function() {
             </div>
         </div>`;
     }
-    window.setHtml("planned-list-history", htmlHistory || "<div class='empty-state'>Tarix bo'sh.</div>");
+    window.setHtml("planned-list-history", htmlHistory || `<div class='empty-state'>${window.t("plan_history_empty")}</div>`);
 };

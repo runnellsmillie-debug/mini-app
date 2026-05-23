@@ -254,8 +254,17 @@ setInterval(() => { if (window.state.theme === 'auto' || !window.state.theme) wi
 // ==========================================
 // 4. TO'LIQ EKRANLI PROFIL TAHRIRLASH
 // ==========================================
+window.renderProfileRoleOptions = function() {
+    const sel = document.getElementById("fs-prof-role");
+    if (!sel) return;
+    const val = sel.value;
+    const roles = ["parent_m", "parent_f", "child_m", "child_f", "relative", "spouse", "guest", "home"];
+    sel.innerHTML = roles.map(r => `<option value="${r}">${window.t("role_" + r)}</option>`).join("");
+    if (val) sel.value = val;
+};
+
 window.openFullScreenModal = function(profId = null) {
-    if (!window.isBudgetAdmin()) return window.toast("Faqat yaratuvchi profil qo'sha/tahrirlaydi", true);
+    if (!window.isBudgetAdmin()) return window.toast(window.t("admin_profiles_only"), true);
     document.getElementById('modal-profile-fs').style.display = 'flex';
     document.getElementById('fs-prof-id').value = profId || '';
     if (window.el('fs-prof-pin-enabled')) window.el('fs-prof-pin-enabled').checked = false;
@@ -265,6 +274,7 @@ window.openFullScreenModal = function(profId = null) {
     if (window.el('fs-prof-phone')) window.el('fs-prof-phone').value = '';
     if (window.el('fs-prof-uid')) window.el('fs-prof-uid').value = '';
 
+    window.renderProfileRoleOptions();
     let perms = [];
     if (profId) {
         document.getElementById('fs-prof-title').innerText = window.t ? window.t("edit_profile") : "Profilni tahrirlash";
@@ -298,13 +308,13 @@ window.closeFullScreenModal = function() {
 };
 
 window.fillLinkedUidFromCurrentUser = function() {
-    if (!window.tgUserId) return window.toast("Telegram ID topilmadi", true);
+    if (!window.tgUserId) return window.toast(window.t("telegram_id_missing"), true);
     window.setVal("fs-prof-uid", String(window.tgUserId));
-    window.toast("ID qo'yildi");
+    window.toast(window.t("id_set"));
 };
 
 window.saveFullScreenProfile = function() {
-    if (!window.isBudgetAdmin()) return window.toast("Ruxsat yo'q", true);
+    if (!window.isBudgetAdmin()) return window.toast(window.t("no_permission"), true);
     let id = document.getElementById('fs-prof-id').value;
     let name = document.getElementById('fs-prof-name').value.trim();
     let icon = document.getElementById('fs-prof-emoji').value.trim() || '👤';
@@ -317,7 +327,7 @@ window.saveFullScreenProfile = function() {
     let pinEnabled = window.el('fs-prof-pin-enabled')?.checked;
     let pinRaw = (window.val('fs-prof-pin') || '').replace(/\D/g, '');
 
-    if(!name) return alert("Ismni kiriting!");
+    if(!name) return alert(window.t("enter_name"));
 
     const linkedPhone = (window.val('fs-prof-phone') || '').trim();
     const linkedUidRaw = (window.val('fs-prof-uid') || '').trim().replace(/\D/g, '');
@@ -365,15 +375,15 @@ window.saveFullScreenProfile = function() {
         if (window.renderAddProfileStrip) window.renderAddProfileStrip();
         if (window.render) window.render();
         if (window.checkAccess) window.checkAccess();
-        window.toast('Profil saqlandi');
+        window.toast(window.t('profile_saved'));
     });
 };
 
 window.deleteFullScreenProfile = function() {
-    if (!window.isBudgetAdmin()) return window.toast("Ruxsat yo'q", true);
+    if (!window.isBudgetAdmin()) return window.toast(window.t("no_permission"), true);
     let id = document.getElementById('fs-prof-id').value;
-    if(!id) return alert("Bu yangi profil, u hali saqlanmagan.");
-    if (window.PROTECTED_PROFILE_IDS.includes(id) || id.startsWith('creator_')) return alert("Bu profilni o'chirib bo'lmaydi!");
+    if(!id) return alert(window.t("new_profile_unsaved"));
+    if (window.PROTECTED_PROFILE_IDS.includes(id) || id.startsWith('creator_')) return alert(window.t("profile_protected"));
     if(confirm("Profilni butunlay o'chirasizmi?")) {
         window.state.profiles = window.state.profiles.filter(x => x.id !== id);
         if(window.curProf === id) window.curProf = 'general';
@@ -455,7 +465,7 @@ window.verifyAndReset = function() {
     const TRUE_ADMIN_ID = "279410924"; 
     
     if (inputId !== TRUE_ADMIN_ID) {
-        alert("❌ Xato! Sizda dasturni tozalash huquqi yo'q (ID noto'g'ri).");
+        alert(window.t("reset_denied"));
         document.getElementById('reset-modal').style.display='none';
         document.getElementById("reset-admin-id").value = "";
         return;
@@ -467,7 +477,7 @@ window.verifyAndReset = function() {
         if (window.currentBudgetId) localStorage.removeItem(window.getStateStorageKey());
         window.state = { txs: [], plan: [], sched: [], debts: [], incs: [], profiles: window.DEFAULT_PROFILES.map(p => ({ ...p, permissions: [...p.permissions] })), deps: [], credits: [], audit: [], theme: 'auto', lang: 'uz' };
         window.save(true);
-        alert("✅ Tizim muvaffaqiyatli tozalandi.");
+        alert(window.t("reset_done"));
         document.getElementById('reset-modal').style.display='none';
         window.location.reload();
     }
@@ -491,7 +501,7 @@ window.saveAndExit = () => {
     } else if(window.Telegram?.WebApp) {
         window.Telegram.WebApp.close(); 
     } else {
-        window.toast("Saqlandi!"); 
+        window.toast(window.t("saved_exit")); 
     }
 };
 
@@ -527,8 +537,9 @@ window.getTodayExpense = function(profId) {
 };
 
 window.fmtHeaderTxRow = function(x) {
-    const title = (x.desc || x.subCat || x.cat || "Xarajat").replace(/</g, "&lt;");
-    const user = (x.user || "Siz").replace(/</g, "&lt;");
+    const raw = x.desc || x.subCat || x.cat || window.t("expense_label");
+    const title = (window.tStoredLabel ? window.tStoredLabel(raw) : raw).replace(/</g, "&lt;");
+    const user = (x.user || window.t("you")).replace(/</g, "&lt;");
     const time = x.time || "";
     return `<div class="header-float-row"><div class="header-float-row__main"><div class="header-float-row__title">${title}</div><div class="header-float-row__meta">👤 ${user}${time ? " · " + time : ""}</div></div><span class="header-float-row__amt">${window.formatM(x.amount)}</span></div>`;
 };
@@ -626,7 +637,7 @@ window.renderHeaderTodayPanel = function() {
     const txs = window.getTodayTxList();
     list.innerHTML = txs.length
         ? txs.map(x => window.fmtHeaderTxRow(x)).join("")
-        : `<div class="header-float-empty">Bugun xarajat yo'q</div>`;
+        : `<div class="header-float-empty">${window.t("header_no_expenses")}</div>`;
 };
 
 window.renderHeaderNotifPanel = function() {
@@ -1179,14 +1190,17 @@ window.pressTextKey = k => {
     window.syncDescDisplay();
 };
 
-window.initAddKeyboard = () => {
+window.renderAddKeyboard = function(force) {
     const panel = window.el("add-kb-text");
-    if (!panel || panel.dataset.init === "2") return;
+    if (!panel) return;
+    if (force) panel.dataset.init = "";
+    if (panel.dataset.init === "2" && !force) return;
     panel.dataset.init = "2";
-    const rows = [
-        ["Q","W","E","R","T","Y","U","I","O","P"],
+    const lang = window.getLang ? window.getLang() : "uz";
+    const rows = (window.KEYBOARD_LAYOUTS && window.KEYBOARD_LAYOUTS[lang]) || window.KEYBOARD_LAYOUTS?.uz || [
+        ["Q","W","E","R","T","Y","U","I","O","P","O'","G'"],
         ["A","S","D","F","G","H","J","K","L"],
-        ["Z","X","C","V","B","N","M","O'","G'"]
+        ["Z","X","C","V","B","N","M"]
     ];
     let html = '<div class="text-kb-grid text-kb-grid--add">';
     rows.forEach(row => {
@@ -1200,13 +1214,15 @@ window.initAddKeyboard = () => {
     html += `<div class="text-kb-row text-kb-row--bottom">
         <button type="button" class="text-kb-key" onclick="window.pressTextKey(',')">,</button>
         <button type="button" class="text-kb-key" onclick="window.pressTextKey('.')">.</button>
-        <button type="button" class="text-kb-key text-kb-key--wide" onclick="window.pressTextKey(' ')">␣</button>
+        <button type="button" class="text-kb-key text-kb-key--wide" onclick="window.pressTextKey(' ')">${window.t("space")}</button>
         <button type="button" class="text-kb-key" onclick="window.pressTextKey('⌫')">⌫</button>
         <button type="button" class="text-kb-key text-kb-key--mode" onclick="window.focusAddAmount()">123</button>
     </div></div>`;
     panel.innerHTML = html;
-    window.syncAddLayout();
+    if (window.syncAddLayout) window.syncAddLayout();
 };
+
+window.initAddKeyboard = () => window.renderAddKeyboard();
 
 window.pressNum = v => {
     if (window.keypadMode === "text") { window.focusAddAmount(); }
@@ -1253,7 +1269,11 @@ window.renderAddCats = function() {
 
     if (window.addMode === "income") {
         head.innerHTML = window.catEditMode ? editHead : `<div class="add-cats-hint">${window.t("sort_hint")}</div>`;
-        const src = window.filterCatItems(window.INC_SOURCES.map((s, i) => ({ ...s, id: "inc_" + i })), "main", "income");
+        const src = window.filterCatItems(window.INC_SOURCES.map((s, i) => ({
+            ...s,
+            id: "inc_" + i,
+            label: window.tIncomeSource ? window.tIncomeSource(s.label) : s.label
+        })), "main", "income");
         cont.innerHTML = wrap(src.map(s => mkBtn(s, `saveTx('${s.label.replace(/'/g, "\\'")}')`)).join(""), "income");
         window.syncAddLayout();
         return;
@@ -1263,17 +1283,17 @@ window.renderAddCats = function() {
     if (window.actSubCat) {
         head.innerHTML = window.catEditMode ? editHead : `<div class="add-crumb"><span>${window.actMainCat.label} <b>›</b> ${window.actSubCat.label}</span><button type="button" class="back-link" onclick="backCat()">${window.t("back")}</button></div>`;
         const items = window.filterCatItems(window.actSubCat.items, "items", window.actSubCat.id);
-        cont.innerHTML = wrap(items.map(i => mkBtn(i, `saveTx('${i.label.replace(/'/g, "\\'")}', true)`, "cat-btn--pick")).join(""), window.actSubCat.id);
+        cont.innerHTML = wrap(items.map(i => mkBtn(i, `saveTx('${(i.labelUz || i.label).replace(/'/g, "\\'")}', true)`, "cat-btn--pick")).join(""), window.actSubCat.id);
     } else if (window.actMainCat && window.actMainCat.subs && window.actMainCat.subs.length > 0) {
         head.innerHTML = window.catEditMode ? editHead : `<div class="add-crumb"><span>${window.t("rukun")} <b>${window.actMainCat.label}</b></span><button type="button" class="back-link" onclick="backCat()">${window.t("back")}</button></div>`;
         let subs = window.filterCatItems(window.actMainCat.subs, "rukun", window.actMainCat.id);
         let html = subs.map(s => {
             const f = s.items?.length > 0;
             const lbl = s.label + (f ? "" : " ✓");
-            return mkBtn({ ...s, label: lbl }, f ? `clickSubCat('${s.id}')` : `saveTx('${s.label.replace(/'/g, "\\'")}')`);
+            return mkBtn({ ...s, label: lbl }, f ? `clickSubCat('${s.id}')` : `saveTx('${(s.subKey ? s.subKey.replace(/_/g,'/') : (s.labelUz||s.label)).replace(/'/g, "\\'")}')`);
         }).join("");
         if (!window.catEditMode || !window.isCatHidden("umumiy", "rukun", window.actMainCat.id)) {
-            html += mkBtn({ id: "umumiy", icon: "⚙️", label: "Umumiy" }, `saveTx('${window.actMainCat.label.replace(/'/g, "\\'")}')`, "cat-btn--ghost");
+            html += mkBtn({ id: "umumiy", icon: "⚙️", label: window.t("general_cat") }, `saveTx('${(window.actMainCat.catKey ? window.actMainCat.catKey.replace(/_/g,' ') : window.actMainCat.label).replace(/'/g, "\\'")}')`, "cat-btn--ghost");
         }
         cont.innerHTML = wrap(html, window.actMainCat.id);
     } else {
@@ -1287,13 +1307,13 @@ window.clickMainCat = id => {
     if (window.catEditMode) return;
     const c = window.getCats().find(x=>x.id==id);
     if(c && c.subs?.length) { window.actMainCat = c; window.renderAddCats(); window.setHtml("stay-hint",""); }
-    else if(c) window.saveTx(c.label);
+    else if(c) window.saveTx(c.catKey ? c.catKey.replace(/_/g, ' ') : (c.labelUz || c.label));
 };
 window.clickSubCat = id => {
     if (window.catEditMode) return;
     const s = window.actMainCat.subs.find(x=>x.id==id);
     if(s && s.items?.length) { window.actSubCat = s; window.renderAddCats(); window.setHtml("stay-hint",""); }
-    else if(s) window.saveTx(s.label);
+    else if(s) window.saveTx(s.subKey ? s.subKey.replace(/_/g, '/') : (s.labelUz || s.label));
 };
 window.backCat = () => {
     window.exitCatEditMode(true);
@@ -1304,15 +1324,15 @@ window.backCat = () => {
 };
 
 window.saveTx = (l, isDeepItem=false) => {
-    const a = parseFloat(window.amtStr); if(!a || a<=0) return window.toast("Summa yo'q!", true); const d = new Date();
-    let realCat = window.actMainCat ? window.actMainCat.label : l, realSubCat = l;
-    if(isDeepItem && window.actSubCat) realSubCat = `${window.actSubCat.label} › ${l}`; else if(window.actMainCat) realSubCat = l;
+    const a = parseFloat(window.amtStr); if(!a || a<=0) return window.toast(window.t("no_amount"), true); const d = new Date();
+    let realCat = window.actMainCat ? (window.actMainCat.catKey ? window.actMainCat.catKey.replace(/_/g, ' ') : window.actMainCat.label) : l, realSubCat = l;
+    if(isDeepItem && window.actSubCat) realSubCat = `${window.actSubCat.subKey ? window.actSubCat.subKey.replace(/_/g,'/') : window.actSubCat.label} › ${l}`; else if(window.actMainCat) realSubCat = l;
 
     const note = (window.descStr || "").trim();
     const i = { id: Date.now(), amount: a, desc: note || l, cat: realCat, subCat: realSubCat, date: d.toISOString().slice(0,10), time: d.toLocaleTimeString("uz-UZ",{hour:'2-digit',minute:'2-digit'}), user: window.tgUser, prof: window.curProf };
     if(window.addMode==="expense") {
         const lim = window.getLimitStatus(window.curProf);
-        if (lim.level === "danger") return window.toast("Oylik limit tugagan!", true);
+        if (lim.level === "danger") return window.toast(window.t("limit_reached"), true);
         window.state.txs.unshift(i);
     } else window.state.incs.unshift(i);
     if (window.creditIncomeToReserve) window.creditIncomeToReserve(a, note || l);
@@ -1323,11 +1343,14 @@ window.saveTx = (l, isDeepItem=false) => {
     window.amtStr = ""; window.descStr = ""; window.setTxt("num-display", "0");
     if (window.syncDescDisplay) window.syncDescDisplay();
     if (window.focusAddAmount) window.focusAddAmount();
-    window.save(); 
-    if(window.actSubCat||window.actMainCat) { window.setHtml("stay-hint", `✅ Oxirgi: <b style="color:var(--success);">${window.formatM(a)}</b>. Yana kiriting!`); window.renderAddCats(); } else window.setHtml("stay-hint", ""); 
+    window.save();
+    if(window.actSubCat||window.actMainCat) {
+        window.setHtml("stay-hint", `✅ ${window.t("last_entry_hint").replace("{amount}", `<b style="color:var(--success);">${window.formatM(a)}</b>`)}`);
+        window.renderAddCats();
+    } else window.setHtml("stay-hint", "");
     if (window.headerTodayOpen) window.renderHeaderTodayPanel();
     window.updateHeaderBalance();
-    window.toast("Saqlandi!");
+    window.toast(window.t("saved"));
 };
 
 window.renderReport = function() {
@@ -1337,14 +1360,18 @@ window.renderReport = function() {
     const pInc = fIncs.reduce((s,i)=>s+i.amount, 0), pExp = fTxs.reduce((s,x)=>s+x.amount, 0);
     window.setTxt("rep-inc-val", window.formatM(pInc)); window.setTxt("rep-exp-val", window.formatM(pExp));
 
-    let uExp = {}; fTxs.forEach(x => { const u = x.user||"Siz"; uExp[u] = (uExp[u]||0)+x.amount; });
-    window.setHtml("user-stats-container", Object.entries(uExp).map(([u,a]) => `<div style="background:var(--bg-card); padding:10px 15px; border-radius:12px; border:1px solid var(--border-color); min-width:100px; text-align:center;"><div style="font-size:12px; color:var(--text-muted);">${u}</div><div style="font-weight:bold; font-size:15px; margin-top:4px;">${window.formatM(a).replace(" so'm","")}</div></div>`).join("") || "<div style='color:var(--text-muted); font-size:13px;'>Ma'lumot yo'q</div>");
+    let uExp = {}; fTxs.forEach(x => { const u = x.user||window.t("you"); uExp[u] = (uExp[u]||0)+x.amount; });
+    const cur = window.t("currency");
+    window.setHtml("user-stats-container", Object.entries(uExp).map(([u,a]) => `<div style="background:var(--bg-card); padding:10px 15px; border-radius:12px; border:1px solid var(--border-color); min-width:100px; text-align:center;"><div style="font-size:12px; color:var(--text-muted);">${u}</div><div style="font-weight:bold; font-size:15px; margin-top:4px;">${window.formatM(a).replace(cur,"")}</div></div>`).join("") || `<div style='color:var(--text-muted); font-size:13px;'>${window.t("no_data")}</div>`);
 
-    let cats = {}; fTxs.forEach(x => { cats[x.cat] = (cats[x.cat]||0)+x.amount; });
-    window.setHtml("rep-cats-list", Object.entries(cats).map(([c,a]) => { const p = Math.round((a/pExp)*100); return `<div style="background:var(--bg-card); padding:12px; border-radius:12px; margin-bottom:8px;"><div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-bottom:6px;"><span>${c} (${p}%)</span><span>${window.formatM(a)}</span></div><div style="background:rgba(255,255,255,0.05); border-radius:4px; height:6px;"><div style="height:100%; border-radius:4px; width:${p}%; background:var(--primary);"></div></div></div>`; }).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Xarajat yo'q.</div>");
+    let cats = {}; fTxs.forEach(x => { const c = window.tStoredLabel ? window.tStoredLabel(x.cat) : x.cat; cats[c] = (cats[c]||0)+x.amount; });
+    window.setHtml("rep-cats-list", Object.entries(cats).map(([c,a]) => { const p = Math.round((a/pExp)*100); return `<div style="background:var(--bg-card); padding:12px; border-radius:12px; margin-bottom:8px;"><div style="display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin-bottom:6px;"><span>${c} (${p}%)</span><span>${window.formatM(a)}</span></div><div style="background:rgba(255,255,255,0.05); border-radius:4px; height:6px;"><div style="height:100%; border-radius:4px; width:${p}%; background:var(--primary);"></div></div></div>`; }).join("") || `<div style='text-align:center; color:var(--text-muted); font-size:13px;'>${window.t("no_expenses")}</div>`);
 
     const cb = [...fIncs.map(i=>({...i,m:'plus'})), ...fTxs.map(x=>({...x,m:'minus'}))].sort((a,b)=>b.id-a.id);
-    window.setHtml("rep-history-list", cb.map(i => `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-color); font-size:13px;"><div><div style="font-weight:bold; color:${i.m==='plus'?'var(--success)':'#fff'};">${i.desc}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">👤 ${i.user||'Siz'} | 📅 ${i.date}</div></div><div style="display:flex; align-items:center; gap:10px;"><span style="font-weight:bold; color:${i.m==='plus'?'var(--success)':'var(--danger)'};">${i.m==='plus'?'+':'-'}${window.formatM(i.amount).replace(" so'm","")}</span> <button class="delete-btn" onclick="delItem('${i.m==='minus'?'tx':'inc'}', ${i.id})">✕</button></div></div>`).join("") || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Tarix bo'sh.</div>");
+    window.setHtml("rep-history-list", cb.map(i => {
+        const desc = window.tStoredLabel ? window.tStoredLabel(i.desc) : i.desc;
+        return `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-color); font-size:13px;"><div><div style="font-weight:bold; color:${i.m==='plus'?'var(--success)':'#fff'};">${desc}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">👤 ${i.user||window.t('you')} | 📅 ${i.date}</div></div><div style="display:flex; align-items:center; gap:10px;"><span style="font-weight:bold; color:${i.m==='plus'?'var(--success)':'var(--danger)'};">${i.m==='plus'?'+':'-'}${window.formatM(i.amount).replace(cur,"")}</span> <button class="delete-btn" onclick="delItem('${i.m==='minus'?'tx':'inc'}', ${i.id})">✕</button></div></div>`;
+    }).join("") || `<div style='text-align:center; color:var(--text-muted); font-size:13px;'>${window.t("rep_history_empty")}</div>`);
 };
 
 window.delItem = function(type, id) {
@@ -1354,7 +1381,7 @@ window.delItem = function(type, id) {
     if (window.renderReport) window.renderReport();
     if (window.headerTodayOpen) window.renderHeaderTodayPanel();
     window.updateHeaderBalance();
-    window.toast("O'chirildi");
+    window.toast(window.t("deleted"));
 };
 
 window.downloadExcel = () => { let c="\uFEFFSana,Profil,Turi,Odam,Rukun,Kategoriya,Izoh,Summa\n"; [...window.state.incs.map(i=>({...i,t:"Kirim"})), ...window.state.txs.map(t=>({...t,t:"Chiqim"}))].sort((a,b)=>b.id-a.id).forEach(r => { const p = window.state.profiles.find(x=>x.id==r.prof)?.name||'Umumiy'; c+=`${r.date},${p},${r.t},${r.user||'Siz'},${r.cat||''},${r.subCat||''},${r.desc},${r.amount}\n`; }); const b=new Blob([c], {type:'text/csv;charset=utf-8;'}); const l=document.createElement("a"); l.setAttribute("href", URL.createObjectURL(b)); l.setAttribute("download", "Hisobot.csv"); document.body.appendChild(l); l.click(); };
@@ -1379,7 +1406,7 @@ window.updateHeaderBalance = function() {
     const expEl = window.el("header-today-exp");
     if (expEl) {
         const todayExp = window.getTodayExpense();
-        expEl.textContent = window.formatM(todayExp).replace(" so'm", "");
+        expEl.textContent = window.formatM(todayExp).replace(window.t("currency"), "");
     }
     window.updateHeaderNotifications();
 };
@@ -1398,10 +1425,10 @@ window.render = function() {
         const getWD = (y,m) => { let d=new Date(y,m,0).getDate(), w=0; for(let i=1;i<=d;i++) { let day=new Date(y,m-1,i).getDay(); if(day!==0&&day!==6) w++; } return w; };
         const actAmt = s.miss > 0 ? Math.max(0, Math.round(s.amt - ((s.amt / getWD(parseInt(s.tMonth.split('-')[0]), parseInt(s.tMonth.split('-')[1]))) * s.miss))) : s.amt;
         const sm = parseInt(s.tMonth.replace("-","")), cm = parseInt(tM.replace("-","")); let isDue = false, st = "";
-        if(sm < cm) { isDue = true; st = "O'tib ketgan!"; } else if(sm === cm) { if(d.getDate() >= s.day) { isDue = true; st = "Vaqti keldi!"; } else if(s.day - d.getDate() <= 3) { isDue = true; st = `${s.day - d.getDate()} kun qoldi`; } }
-        if(isDue) sHtml += `<div class="plan-item"><div style="flex:1;"><span>⚠️ <b style="font-size:14px;">${s.label}</b> <span style="font-size:11px; color:var(--danger);">(${st})</span></span><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Qoldirilgan kun: <input type="number" onchange="updMiss(${s.id}, this.value)" value="${s.miss||''}" style="width:40px; padding:2px; background:var(--bg-dark); color:#fff; border:1px solid var(--border-color); text-align:center;"></div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:14px; color:#fff;">${window.formatM(actAmt)}</div><button onclick="paySched(${s.id})" class="btn-primary btn-success" style="width:auto; padding:6px 10px; font-size:11px; margin-top:4px; margin-bottom:0;">To'lash</button></div></div>`;
-    }); 
-    window.setHtml("sched-list-container", sHtml || "<div style='text-align:center; color:var(--text-muted); font-size:13px; padding:10px;'>Majburiy to'lovlar yo'q.</div>"); 
+        if(sm < cm) { isDue = true; st = window.t("sched_overdue"); } else if(sm === cm) { if(d.getDate() >= s.day) { isDue = true; st = window.t("sched_due"); } else if(s.day - d.getDate() <= 3) { isDue = true; st = window.t("sched_days_left").replace("{n}", s.day - d.getDate()); } }
+        if(isDue) sHtml += `<div class="plan-item"><div style="flex:1;"><span>⚠️ <b style="font-size:14px;">${s.label}</b> <span style="font-size:11px; color:var(--danger);">(${st})</span></span><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${window.t("sched_missed_days")} <input type="number" onchange="updMiss(${s.id}, this.value)" value="${s.miss||''}" style="width:40px; padding:2px; background:var(--bg-dark); color:#fff; border:1px solid var(--border-color); text-align:center;"></div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:14px; color:#fff;">${window.formatM(actAmt)}</div><button onclick="paySched(${s.id})" class="btn-primary btn-success" style="width:auto; padding:6px 10px; font-size:11px; margin-top:4px; margin-bottom:0;">${window.t("sched_pay")}</button></div></div>`;
+    });
+    window.setHtml("sched-list-container", sHtml || `<div style='text-align:center; color:var(--text-muted); font-size:13px; padding:10px;'>${window.t("sched_empty")}</div>`);
     if(window.renderSchedSet) window.renderSchedSet();
 
     if (window.curTab === "home" && window.renderHomeTab) window.renderHomeTab();
@@ -1413,14 +1440,14 @@ window.render = function() {
         const todayStr = new Date().toISOString().slice(0,10); const today = new Date();
         
         let activeDebts = window.state.debts.filter(x=>!x.archived);
-        let hDebts = activeDebts.map(x => `<div class="list-item" style="border-left: 5px solid ${x.type=='take'?'var(--success)':'var(--danger)'}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:6px;"><div><div style="font-size:15px; font-weight:bold;">${x.name}</div><div style="font-size:11px; color:var(--text-muted);">${x.type=='take'?'Olaman':'Beraman'}</div></div><div style="font-weight:bold; font-size:15px;">${window.formatM(x.amount)}</div></div><button onclick="closeDebt(${x.id})" class="btn-primary btn-success" style="padding:10px; font-size:13px; margin-bottom:0;">✅ Qarz uzildi</button></div>`).join("");
-        window.setHtml("debts-list", hDebts || "<div style='text-align:center; color:var(--text-muted); font-size:13px;'>Qarzlar yo'q.</div>");
+        let hDebts = activeDebts.map(x => `<div class="list-item" style="border-left: 5px solid ${x.type=='take'?'var(--success)':'var(--danger)'}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:6px;"><div><div style="font-size:15px; font-weight:bold;">${x.name}</div><div style="font-size:11px; color:var(--text-muted);">${x.type=='take'?window.t('debt_take'):window.t('debt_give')}</div></div><div style="font-weight:bold; font-size:15px;">${window.formatM(x.amount)}</div></div><button onclick="closeDebt(${x.id})" class="btn-primary btn-success" style="padding:10px; font-size:13px; margin-bottom:0;">✅ ${window.t("debt_close_btn")}</button></div>`).join("");
+        window.setHtml("debts-list", hDebts || `<div style='text-align:center; color:var(--text-muted); font-size:13px;'>${window.t("debt_empty")}</div>`);
 
         let activeDeps = window.state.deps.filter(x=>!x.archived), archDeps = window.state.deps.filter(x=>x.archived);
-        let hDepsAct = activeDeps.map(dep => `<div class="list-item" style="border-left: 5px solid var(--success); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:var(--success);">${dep.bankIcon||'🏦'} ${dep.name}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px;">${window.formatM(dep.amount)}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="openTopupModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 2px; font-size:11px; margin-bottom:0;">+ Qo'sh</button><button onclick="openIntModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 2px; font-size:11px; margin-bottom:0;">💸 Foiz</button><button onclick="openDepScheduleModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 2px; font-size:11px; margin-bottom:0;">📊 Grafik</button></div><button onclick="closeDep(${dep.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px; margin-bottom:0;">Omonatni Yopish</button></div>`).join("");
-        let hDepsArch = archDeps.map(dep => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${dep.bankIcon||'🏦'} ${dep.name}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${window.formatM(dep.amount)}</div></div></div><button onclick="permDelDep(${dep.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%; margin-bottom:0;">🗑️ O'chirish</button></div>`).join("");
-        window.setHtml("deposits-list-active", hDepsAct || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Aktiv omonatlar yo'q.</div>");
-        window.setHtml("deposits-list-archived", hDepsArch || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Arxivlangan omonatlar yo'q.</div>");
+        let hDepsAct = activeDeps.map(dep => `<div class="list-item" style="border-left: 5px solid var(--success); flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:var(--success);">${dep.bankIcon||'🏦'} ${dep.name}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px;">${window.formatM(dep.amount)}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="openTopupModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 2px; font-size:11px; margin-bottom:0;">+ ${window.t("dep_topup_btn")}</button><button onclick="openIntModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 2px; font-size:11px; margin-bottom:0;">💸 ${window.t("dep_interest_btn")}</button><button onclick="openDepScheduleModal(${dep.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 2px; font-size:11px; margin-bottom:0;">📊 ${window.t("credit_schedule_btn")}</button></div><button onclick="closeDep(${dep.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px; margin-bottom:0;">${window.t("dep_close_btn")}</button></div>`).join("");
+        let hDepsArch = archDeps.map(dep => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${dep.bankIcon||'🏦'} ${dep.name}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${window.formatM(dep.amount)}</div></div></div><button onclick="permDelDep(${dep.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%; margin-bottom:0;">🗑️ ${window.t("deleted")}</button></div>`).join("");
+        window.setHtml("deposits-list-active", hDepsAct || `<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>${window.t("dep_empty_active")}</div>`);
+        window.setHtml("deposits-list-archived", hDepsArch || `<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>${window.t("dep_empty_arch")}</div>`);
 
         let activeCredits = window.state.credits.filter(x=>!x.archived), archCredits = window.state.credits.filter(x=>x.archived);
         let hCredits = activeCredits.map(cr => {
@@ -1428,12 +1455,12 @@ window.render = function() {
             if (nextUnpaid && nextUnpaid.date < todayStr) overdue = true;
             let borderCol = overdue ? "var(--danger)" : "#ec4899"; let bgCol = overdue ? "rgba(239, 68, 68, 0.1)" : "var(--bg-card)";
             let currentBal = cr.initAmt - cr.schedule.filter(x => x.status === 'paid').reduce((s, x) => s + x.principal, 0) - (cr.extraPrincipalPaid || 0);
-            return `<div class="list-item" style="border-left: 5px solid ${borderCol}; background:${bgCol}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:${borderCol};">${cr.bankIcon||'🏦'} ${cr.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${cr.rate}%</div>${overdue?`<div style="font-size:10px; color:var(--danger); font-weight:bold; margin-top:4px;">⚠️ Muddat o'tgan!</div>`:''}</div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:${borderCol};">${window.formatM(currentBal)}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="payNextMonthCredit(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 4px; font-size:11px; margin-bottom:0;">💸 Oylik</button><button onclick="openPrincipalPayModal(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 4px; font-size:11px; margin-bottom:0;">📉 Tanidan</button><button onclick="openCreditScheduleModal(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 4px; font-size:11px; margin-bottom:0;">📊 Grafik</button></div><button onclick="closeCredit(${cr.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px; margin-bottom:0;">Kreditni Yopish (To'liq)</button></div>`;
+            return `<div class="list-item" style="border-left: 5px solid ${borderCol}; background:${bgCol}; flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;"><div><div style="font-size:15px; font-weight:bold; color:${borderCol};">${cr.bankIcon||'🏦'} ${cr.name}</div><div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${cr.rate}%</div>${overdue?`<div style="font-size:10px; color:var(--danger); font-weight:bold; margin-top:4px;">⚠️ ${window.t("credit_overdue")}</div>`:''}</div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:${borderCol};">${window.formatM(currentBal)}</div></div></div><div style="display:flex; gap:6px; width:100%;"><button onclick="payNextMonthCredit(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--success); color:var(--success); padding:8px 4px; font-size:11px; margin-bottom:0;">💸 ${window.t("credit_monthly_btn")}</button><button onclick="openPrincipalPayModal(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--warning); color:var(--warning); padding:8px 4px; font-size:11px; margin-bottom:0;">📉 ${window.t("credit_principal_btn")}</button><button onclick="openCreditScheduleModal(${cr.id})" class="btn-primary" style="flex:1; background:transparent; border:1px solid var(--primary); color:var(--primary); padding:8px 4px; font-size:11px; margin-bottom:0;">📊 ${window.t("credit_schedule_btn")}</button></div><button onclick="closeCredit(${cr.id})" class="btn-primary" style="width:100%; background:var(--danger); margin-top:8px; padding:10px; font-size:13px; margin-bottom:0;">${window.t("credit_close_full")}</button></div>`;
         }).join("");
-        let archHtmlCredits = archCredits.map(cr => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${cr.bankIcon||'🏦'} ${cr.name}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${window.formatM(cr.initAmt)}</div></div></div><button onclick="permDelCredit(${cr.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%; margin-bottom:0;">🗑️ Butunlay o'chirish</button></div>`).join("");
-        
-        window.setHtml("credits-list-active", hCredits || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Aktiv kreditlar yo'q.</div>");
-        window.setHtml("credits-list-archived", archHtmlCredits || "<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>Arxivlangan kreditlar yo'q.</div>");
+        let archHtmlCredits = archCredits.map(cr => `<div class="list-item" style="border-left: 5px solid var(--text-muted); flex-direction:column; align-items:flex-start; filter: grayscale(100%);"><div style="display:flex; justify-content:space-between; width:100%;"><div><div style="font-size:15px; font-weight:bold; color:var(--text-muted); text-decoration:line-through;">${cr.bankIcon||'🏦'} ${cr.name}</div></div><div style="text-align:right;"><div style="font-weight:bold; font-size:16px; color:var(--text-muted);">${window.formatM(cr.initAmt)}</div></div></div><button onclick="permDelCredit(${cr.id})" class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger); padding:8px; font-size:12px; margin-top:10px; width:100%; margin-bottom:0;">🗑️ ${window.t("credit_perm_del")}</button></div>`).join("");
+
+        window.setHtml("credits-list-active", hCredits || `<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>${window.t("credit_empty_active")}</div>`);
+        window.setHtml("credits-list-archived", archHtmlCredits || `<div style='text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;'>${window.t("credit_empty_arch")}</div>`);
         
         if(window.el('bank-sub-plan') && !window.el('bank-sub-plan').classList.contains('hidden')) window.renderPlanned();
     }

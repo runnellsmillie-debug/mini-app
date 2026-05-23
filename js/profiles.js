@@ -25,36 +25,36 @@ window.getSortedProfiles = function() {
 
 window.PIN_SESSION_KEY = "family_erp_unlocked";
 window.TAB_PERMISSIONS = {
-    tab_home: { tab: "home", label: "Asosiy", icon: "🏠" },
-    tab_add: { tab: "add", label: "Kiritish", icon: "➕" },
-    tab_other: { tab: "other", label: "Xizmatlar", icon: "💼" },
-    tab_report: { tab: "report", label: "Hisobot", icon: "📊" }
+    tab_home: { tab: "home", labelKey: "nav_home", icon: "🏠" },
+    tab_add: { tab: "add", labelKey: "nav_add", icon: "➕" },
+    tab_other: { tab: "other", labelKey: "nav_other", icon: "💼" },
+    tab_report: { tab: "report", labelKey: "nav_report", icon: "📊" }
 };
 
 window.PERMISSION_MODULES = {
-    mod_plan: { menuId: "plan", label: "Bozorlik ro'yxati", icon: "🛒" },
-    mod_sched: { menuId: "sched", label: "Rejali to'lovlar", icon: "📅" },
-    view_credit: { menuId: "credit", label: "Kreditlar", icon: "💳" },
-    view_dep: { menuId: "dep", label: "Omonatlar", icon: "🏦" },
-    mod_debt: { menuId: "debt", label: "Qarzlar", icon: "🤝" },
-    mod_income: { label: "Kirim kiritish", icon: "📈" }
+    mod_plan: { menuId: "plan", labelKey: "perm_mod_plan", icon: "🛒" },
+    mod_sched: { menuId: "sched", labelKey: "perm_mod_sched", icon: "📅" },
+    view_credit: { menuId: "credit", labelKey: "perm_view_credit", icon: "💳" },
+    view_dep: { menuId: "dep", labelKey: "perm_view_dep", icon: "🏦" },
+    mod_debt: { menuId: "debt", labelKey: "perm_mod_debt", icon: "🤝" },
+    mod_income: { labelKey: "perm_mod_income", icon: "📈" }
 };
 
 window.SHOP_PERMISSIONS = {
-    shop_food: { label: "Oziq-ovqat va Ro'zg'or", icon: "🥬" },
-    shop_clothes: { label: "Kiyim va Shaxsiy", icon: "👕" },
-    shop_school: { label: "Maktab / O'quv", icon: "📚" }
+    shop_food: { labelKey: "perm_shop_food", icon: "🥬" },
+    shop_clothes: { labelKey: "perm_shop_clothes", icon: "👕" },
+    shop_school: { labelKey: "perm_shop_school", icon: "📚" }
 };
 
 window.getAllPermissionGroups = function() {
     const tabs = Object.entries(window.TAB_PERMISSIONS).map(([id, t]) => ({
-        id, icon: t.icon, label: t.label
+        id, icon: t.icon, label: window.t(t.labelKey)
     }));
     const services = Object.entries(window.PERMISSION_MODULES).map(([id, m]) => ({
-        id, icon: m.icon || "📂", label: m.label
+        id, icon: m.icon || "📂", label: window.t(m.labelKey)
     }));
     const shops = Object.entries(window.SHOP_PERMISSIONS).map(([id, s]) => ({
-        id, icon: s.icon, label: s.label
+        id, icon: s.icon, label: window.t(s.labelKey)
     }));
     return [
         { key: "tabs", label: window.t ? window.t("perm_tabs") : "Pastki menyu", items: tabs },
@@ -269,7 +269,7 @@ window.quickSelectProfileByName = function() {
     const inp = window.el("profile-quick-input") || window.el("add-prof-quick");
     const q = inp ? window.val(inp.id) : "";
     const p = window.findProfileByName(q);
-    if (!p) return window.toast("Profil topilmadi", true);
+    if (!p) return window.toast(window.t("profile_not_found"), true);
     if (inp) window.setVal(inp.id, "");
     window.selectProfileSafe(p.id);
 };
@@ -469,9 +469,9 @@ window.closePinModal = function() {
 
 window.submitPin = function() {
     const pin = window.val("pin-input").replace(/\D/g, "");
-    if (pin.length !== 4) return window.toast("4 xonali PIN kiriting", true);
+    if (pin.length !== 4) return window.toast(window.t("pin_required"), true);
     const p = window.state.profiles.find(x => x.id === window._pinTargetProf);
-    if (!p || window.hashPin(pin) !== p.pinHash) return window.toast("PIN noto'g'ri", true);
+    if (!p || window.hashPin(pin) !== p.pinHash) return window.toast(window.t("pin_wrong"), true);
     window.setProfileUnlocked(p.id);
     window.closePinModal();
     if (window._pinSuccessCb) window._pinSuccessCb();

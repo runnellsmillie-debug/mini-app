@@ -58,6 +58,7 @@ window.creditIncomeToReserve = function(amount, note) {
 window.getRelationLabel = function(p) {
     if (!p) return "";
     if (p.relationLabel) return p.relationLabel;
+    if (window.tRoleLabel && p.role) return window.tRoleLabel(p.role);
     return window.ROLE_LABELS[p.role] || window.t("relative");
 };
 
