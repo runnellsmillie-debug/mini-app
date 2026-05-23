@@ -4,10 +4,19 @@
 const API_BASE = "https://mini-app-gkr9.onrender.com"; // Render manzili
 const urlParams = new URLSearchParams(window.location.search);
 
-window.currentBudgetId = urlParams.get('bid');
+function parseBidFromHash() {
+    const h = (window.location.hash || "").replace(/^#/, "");
+    if (!h) return null;
+    const m = h.match(/(?:^|&)bid=(\d+)/) || h.match(/^bid=(\d+)/);
+    return m ? m[1] : (/^\d+$/.test(h) ? h : null);
+}
+
+window.currentBudgetId = urlParams.get('bid') || parseBidFromHash();
 window.tgUserId = urlParams.get('uid');
 window.tgFirstName = urlParams.get('fname') || '';
 window.isAdmin = urlParams.get('isadmin') === 'true';
+window._ownBudgetId = null;
+window._invitedBudgetId = null;
 try {
     if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
         const u = window.Telegram.WebApp.initDataUnsafe.user;
@@ -40,11 +49,33 @@ window.migrateLegacyStorage = function() {
     if (!localStorage.getItem(key)) localStorage.setItem(key, legacy);
 };
 
+window.resolveBudgetFromServer = async function() {
+    const uid = window.tgUserId ? String(window.tgUserId).replace(/\D/g, "") : "";
+    if (!uid) return false;
+    try {
+        const res = await fetch(`${API_BASE}/api/user-budget/${uid}`);
+        if (!res.ok) return false;
+        const json = await res.json();
+        if (json.status !== "ok") return false;
+        window._ownBudgetId = json.own_budget_id;
+        window._invitedBudgetId = json.invited_budget_id;
+        if (json.current_budget_id) {
+            window.currentBudgetId = String(json.current_budget_id);
+            window.isAdmin = json.is_own_account === true;
+        }
+        return true;
+    } catch (e) {
+        console.error("Hisob ID aniqlash xatosi:", e);
+        return false;
+    }
+};
+
 // ==========================================
 // 2. MA'LUMOTLARNI YUKLASH (Bulut va Kesh)
 // ==========================================
 window.initCloudData = async function() {
     let loadedFromCloud = false;
+    await window.resolveBudgetFromServer();
     window.migrateLegacyStorage();
     
     // 1. Bulutdan qidiramiz
@@ -79,23 +110,44 @@ window.initCloudData = async function() {
 };
 
 window.updateBudgetInfo = function() {
-    const box = window.el("sidebar-budget-info");
-    if (!box) return;
+    const html = window.getBudgetInfoHtml();
+    const sidebar = window.el("sidebar-budget-info");
+    const home = window.el("home-budget-banner");
+    if (sidebar) sidebar.innerHTML = html;
+    if (home) home.innerHTML = html;
+};
+
+window.getBudgetInfoHtml = function() {
     const bid = window.currentBudgetId;
     if (!bid) {
-        box.innerHTML = `<div class="sidebar-budget-info__warn">⚠️ ${window.t ? window.t("budget_id") : "Hisob ID"}: —<br><small>Bot orqali kiring</small></div>`;
-        return;
+        return `<div class="budget-banner budget-banner--warn">
+            <div class="budget-banner__title">⚠️ ${window.t("budget_id")}: —</div>
+            <div class="budget-banner__hint">${window.t("budget_open_via_bot")}</div>
+        </div>`;
     }
-    const typeLabel = window.isAdmin === true || window.isAdmin === "true"
+    const isOwn = window._ownBudgetId && String(window._ownBudgetId) === String(bid);
+    const typeLabel = window.isAdmin === true || window.isAdmin === "true" || isOwn
         ? window.t("budget_type_admin")
         : window.t("budget_type_invited");
-    box.innerHTML = `
-        <div class="sidebar-budget-info__row">
-            <span class="sidebar-budget-info__lbl">${window.t("budget_id")}</span>
-            <strong class="sidebar-budget-info__val" id="sidebar-bid-val">${bid}</strong>
-        </div>
-        <div class="sidebar-budget-info__type">${typeLabel}</div>
-        <div class="sidebar-budget-info__hint">${window.t("budget_id_hint")}</div>`;
+    let extra = "";
+    if (window._ownBudgetId && window._invitedBudgetId) {
+        extra = `<div class="budget-banner__ids">Shaxsiy: ${window._ownBudgetId} · Oilaviy: ${window._invitedBudgetId}</div>`;
+    } else if (window._ownBudgetId) {
+        extra = `<div class="budget-banner__ids">Shaxsiy: ${window._ownBudgetId}</div>`;
+    }
+    const warn = window._ownBudgetId && window._invitedBudgetId && String(bid) === String(window._ownBudgetId) && window._invitedBudgetId
+        ? `<div class="budget-banner__alert">⚠️ ${window.t("budget_wrong_account")}</div>` : "";
+    return `
+        <div class="budget-banner">
+            <div class="budget-banner__row">
+                <span>${window.t("budget_id")}</span>
+                <strong>${bid}</strong>
+            </div>
+            <div class="budget-banner__type">${typeLabel}</div>
+            ${extra}
+            ${warn}
+            <div class="budget-banner__hint">${window.t("budget_id_hint")}</div>
+        </div>`;
 };
 
 async function postLoadInit() {

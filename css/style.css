@@ -2225,13 +2225,68 @@ body:not(.dark-mode) .cat-btn span[style*="color: #fff"] {
 }
 
 .sidebar-budget-info {
-    margin-top: 14px;
+    margin: 0 0 12px;
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.home-budget-banner {
+    margin-bottom: 10px;
+}
+
+.budget-banner {
     padding: 10px 12px;
-    border-radius: 10px;
+    border-radius: 12px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     font-size: 11px;
     line-height: 1.45;
+}
+
+.budget-banner--warn {
+    border-color: var(--warning);
+    background: color-mix(in srgb, var(--warning) 12%, var(--bg-card));
+}
+
+.budget-banner__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.budget-banner__row strong {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--primary);
+    letter-spacing: 0.04em;
+}
+
+.budget-banner__type {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.budget-banner__ids {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.budget-banner__alert {
+    font-size: 11px;
+    color: var(--warning);
+    font-weight: 600;
+    margin: 6px 0 4px;
+}
+
+.budget-banner__hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    opacity: 0.85;
 }
 
 .sidebar-budget-info__row {

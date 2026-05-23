@@ -122,7 +122,8 @@ def ensure_invited_profile(state_data, user_id, display_name, phone):
 def webapp_url(budget_id, user_id, is_admin, first_name=""):
     fn = quote((first_name or "")[:40])
     adm = "true" if is_admin else "false"
-    return f"{WEB_APP_URL}?bid={budget_id}&uid={user_id}&isadmin={adm}&fname={fn}"
+    base = WEB_APP_URL.rstrip("/")
+    return f"{base}/index.html?bid={budget_id}&uid={user_id}&isadmin={adm}&fname={fn}#bid={budget_id}"
 
 class Setup(StatesGroup):
     waiting_for_name = State()
@@ -281,6 +282,29 @@ def add_cors_headers(response):
 @app.route('/')
 def health_check(): return "Bot is active!", 200
 
+@app.route('/api/user-budget/<int:user_id>', methods=['GET'])
+def get_user_budget(user_id):
+    conn = sqlite3.connect('bot_data.db')
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT ozi_yaratgan_budget_id, taklif_budget_id, joriy_budget_id FROM users WHERE user_id = ?",
+        (user_id,)
+    )
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+    own_id, taklif_id, joriy_id = row
+    current_id = joriy_id or own_id
+    return jsonify({
+        "status": "ok",
+        "own_budget_id": own_id,
+        "invited_budget_id": taklif_id,
+        "current_budget_id": current_id,
+        "is_own_account": current_id == own_id,
+        "has_invite": taklif_id is not None
+    })
+
 @app.route('/api/state/<int:budget_id>', methods=['GET'])
 def get_state(budget_id):
     conn = sqlite3.connect('bot_data.db')
@@ -415,25 +439,38 @@ async def open_admin_app(message: types.Message):
     
     web_app = WebAppInfo(url=url_with_params)
     inline_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 Ilovaga kirish", web_app=web_app)]])
-    await message.answer(f"{message.text} faollashdi. Ilovani ochish uchun bosing:", reply_markup=inline_kb)
+    await message.answer(f"{message.text} faollashdi.\n📌 <b>Hisob ID: {own_id}</b>\n\nIlovani ochish uchun bosing:", reply_markup=inline_kb, parse_mode="HTML")
 
 @dp.message(F.text.startswith("🤝"))
 async def open_invited_app(message: types.Message):
     conn = sqlite3.connect('bot_data.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT taklif_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
-    taklif_id = cursor.fetchone()[0]
+    cursor.execute("SELECT ozi_yaratgan_budget_id, taklif_budget_id FROM users WHERE user_id = ?", (message.from_user.id,))
+    row = cursor.fetchone()
+    own_id, taklif_id = row if row else (None, None)
     if taklif_id:
         cursor.execute("UPDATE users SET joriy_budget_id = ? WHERE user_id = ?", (taklif_id, message.from_user.id))
         conn.commit()
+        conn.close()
         
-        # Taklif qilingan foydalanuvchi ekanligini bildiramiz (admin emas)
         url_with_params = webapp_url(taklif_id, message.from_user.id, False, message.from_user.first_name)
-        
         web_app = WebAppInfo(url=url_with_params)
         inline_kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🚀 Ilovaga kirish", web_app=web_app)]])
-        await message.answer(f"{message.text} faollashdi. Ilovani ochish uchun bosing:", reply_markup=inline_kb)
-    conn.close()
+        await message.answer(
+            f"{message.text} faollashdi.\n\n"
+            f"📌 <b>Oilaviy hisob ID: {taklif_id}</b>\n"
+            f"Shaxsiy hisobingiz ID: {own_id}\n\n"
+            f"⚠️ Ikkala ID bir xil bo'lmasligi kerak!\n"
+            f"Ilovani ochish uchun bosing:",
+            reply_markup=inline_kb, parse_mode="HTML"
+        )
+    else:
+        conn.close()
+        await message.answer(
+            f"❌ Siz hali oilaviy hisobga taklif qilinmagansiz.\n"
+            f"Shaxsiy hisobingiz ID: {own_id or '?'}\n\n"
+            f"Admin sizni «👥 Yangi foydalanuvchi bog'lash» orqali qo'shishi kerak."
+        )
 
 @dp.message(F.text == "👥 Yangi foydalanuvchi bog'lash")
 async def start_binding(message: types.Message, state: FSMContext):

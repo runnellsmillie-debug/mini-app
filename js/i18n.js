@@ -89,7 +89,9 @@ window.I18N = {
         budget_id: "Hisob ID",
         budget_type_admin: "Asosiy hisob (admin)",
         budget_type_invited: "Taklif hisobi",
-        budget_id_hint: "Oilaviy hisob — ikkalangizda bir xil raqam bo'lishi kerak"
+        budget_id_hint: "Oilaviy hisob — ikkalangizda bir xil raqam bo'lishi kerak",
+        budget_open_via_bot: "Botdan «🚀 Ilovaga kirish» tugmasi orqali oching",
+        budget_wrong_account: "Siz shaxsiy hisobdasiz! Botda «🤝 Taklif» tugmasini bosing"
     },
     ru: {
         profiles: "Профили",
@@ -177,7 +179,9 @@ window.I18N = {
         budget_id: "ID счёта",
         budget_type_admin: "Основной счёт (админ)",
         budget_type_invited: "Приглашённый счёт",
-        budget_id_hint: "Семейный счёт — номер должен совпадать у обоих"
+        budget_id_hint: "Семейный счёт — номер должен совпадать у обоих",
+        budget_open_via_bot: "Откройте через кнопку «🚀 Войти» в боте",
+        budget_wrong_account: "Вы в личном счёте! Нажмите «🤝 Приглашение» в боте"
     },
     en: {
         profiles: "Profiles",
@@ -265,7 +269,9 @@ window.I18N = {
         budget_id: "Account ID",
         budget_type_admin: "Main account (admin)",
         budget_type_invited: "Invited account",
-        budget_id_hint: "Family account — both must show the same number"
+        budget_id_hint: "Family account — both must show the same number",
+        budget_open_via_bot: "Open via «🚀 Open app» button in the bot",
+        budget_wrong_account: "You're on personal account! Tap «🤝 Invite» in the bot"
     }
 };
 

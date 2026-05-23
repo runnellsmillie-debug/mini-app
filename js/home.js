@@ -545,4 +545,5 @@ window.renderHomeTab = function() {
 
     window.updateHomeFinanceSummary();
     window.renderHomeChatStrip();
+    if (window.updateBudgetInfo) window.updateBudgetInfo();
 };
