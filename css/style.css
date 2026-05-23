@@ -121,9 +121,20 @@ body {
 }
 
 .menu-btn--icon {
-    width: auto;
+    width: auto !important;
     flex-shrink: 0;
     padding: 8px 10px;
+}
+
+.top-header > .menu-btn {
+    width: auto;
+    flex-shrink: 0;
+}
+
+.top-header > #back-btn.menu-btn {
+    flex: 1;
+    min-width: 0;
+    width: auto;
 }
 
 .header-main {
@@ -132,6 +143,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    overflow: visible;
 }
 
 .header-profile-name {
@@ -351,7 +363,6 @@ body {
     align-items: center;
     gap: 10px;
     font-weight: 600;
-    width: 100%;
     padding: 8px 12px;
     border-radius: var(--radius-sm);
     transition: background var(--transition), transform 0.1s;

@@ -77,6 +77,10 @@ async function postLoadInit() {
 
     window.applyTheme();
     window.applyModulePermissions();
+
+    const hm = window.el("header-main");
+    if (hm && !window.curBankSub) hm.classList.remove("hidden");
+    if (window.updateHeaderBalance) window.updateHeaderBalance();
     
     if(window.loadExternalData) await window.loadExternalData();
     
