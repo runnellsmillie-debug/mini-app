@@ -92,8 +92,9 @@ async function postLoadInit() {
     if(window.syncPlanPriceDisplay) window.syncPlanPriceDisplay();
     if(window.initAddKeyboard) window.initAddKeyboard();
     if(window.syncDescDisplay) window.syncDescDisplay();
+    if(window.syncAddLayout) window.syncAddLayout();
     
-    window.render(); 
+    window.render();
 }
 
 // ==========================================
@@ -402,6 +403,17 @@ window.syncDescDisplay = () => {
     }
 };
 
+window.syncAddLayout = function() {
+    requestAnimationFrame(() => {
+        const stack = window.el("add-bottom-stack");
+        if (!stack) return;
+        const tab = window.el("tab-add");
+        if (tab && tab.classList.contains("hidden")) return;
+        const h = Math.ceil(stack.getBoundingClientRect().height);
+        if (h > 0) document.documentElement.style.setProperty("--add-bottom-stack-h", h + "px");
+    });
+};
+
 window.focusAddAmount = () => {
     window.keypadMode = "amount";
     const n = window.el("add-kb-amount"), t = window.el("add-kb-text");
@@ -410,6 +422,7 @@ window.focusAddAmount = () => {
     const d = window.el("add-desc"), nd = window.el("num-display");
     if (d) d.classList.remove("add-desc--active");
     if (nd) nd.classList.add("num-display--active");
+    window.syncAddLayout();
 };
 
 window.focusAddDesc = () => {
@@ -420,6 +433,7 @@ window.focusAddDesc = () => {
     const d = window.el("add-desc"), nd = window.el("num-display");
     if (d) d.classList.add("add-desc--active");
     if (nd) nd.classList.remove("num-display--active");
+    window.syncAddLayout();
 };
 
 window.pressTextKey = k => {
@@ -455,6 +469,7 @@ window.initAddKeyboard = () => {
         <button type="button" class="text-kb-key text-kb-key--mode" onclick="window.focusAddAmount()">123</button>
     </div></div>`;
     panel.innerHTML = html;
+    window.syncAddLayout();
 };
 
 window.pressNum = v => {
@@ -493,6 +508,7 @@ window.renderAddCats = function() {
         head.innerHTML = "";
         cont.innerHTML = wrap(cats.map(c => mkBtn(c.icon, c.label, `clickMainCat('${c.id}')`, "cat-btn--main")).join(""));
     }
+    window.syncAddLayout();
 };
 
 window.clickMainCat = id => { const c = window.getCats().find(x=>x.id==id); if(c && c.subs?.length) { window.actMainCat = c; window.renderAddCats(); window.setHtml("stay-hint",""); } else if(c) window.saveTx(c.label); };
@@ -549,9 +565,26 @@ window.delItem = function(type, id) {
 
 window.downloadExcel = () => { let c="\uFEFFSana,Profil,Turi,Odam,Rukun,Kategoriya,Izoh,Summa\n"; [...window.state.incs.map(i=>({...i,t:"Kirim"})), ...window.state.txs.map(t=>({...t,t:"Chiqim"}))].sort((a,b)=>b.id-a.id).forEach(r => { const p = window.state.profiles.find(x=>x.id==r.prof)?.name||'Umumiy'; c+=`${r.date},${p},${r.t},${r.user||'Siz'},${r.cat||''},${r.subCat||''},${r.desc},${r.amount}\n`; }); const b=new Blob([c], {type:'text/csv;charset=utf-8;'}); const l=document.createElement("a"); l.setAttribute("href", URL.createObjectURL(b)); l.setAttribute("download", "Hisobot.csv"); document.body.appendChild(l); l.click(); };
 
+window.getProfileBalance = function(profId) {
+    const p = profId || window.curProf;
+    const match = x => p === "general" || x.prof === p;
+    const inc = window.state.incs.filter(match).reduce((s, i) => s + i.amount, 0);
+    const exp = window.state.txs.filter(match).reduce((s, t) => s + t.amount, 0);
+    return inc - exp;
+};
+
+window.updateHeaderBalance = function() {
+    const el = window.el("header-balance");
+    if (!el) return;
+    const bal = window.getProfileBalance();
+    el.textContent = window.formatM(bal);
+    el.style.color = bal >= 0 ? "var(--primary)" : "var(--danger)";
+};
+
 window.render = function() {
     const tInc = window.state.incs.reduce((s,i)=>s+i.amount, 0), tExp = window.state.txs.reduce((s,t)=>s+t.amount, 0);
-    window.setTxt("main-total-balance", window.formatM(tInc - tExp)); 
+    window.setTxt("main-total-balance", window.formatM(tInc - tExp));
+    window.updateHeaderBalance();
 
     const d = new Date(), tM = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0');
     let sHtml = ""; 
@@ -627,7 +660,9 @@ window.startAutoSync = function() {
 if(document.readyState==="loading") {
     document.addEventListener("DOMContentLoaded", () => {
         window.initCloudData(); window.startAutoSync();
+        window.addEventListener("resize", () => { if (window.syncAddLayout) window.syncAddLayout(); });
     });
 } else {
     window.initCloudData(); window.startAutoSync();
+    window.addEventListener("resize", () => { if (window.syncAddLayout) window.syncAddLayout(); });
 }

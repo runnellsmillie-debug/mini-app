@@ -75,6 +75,7 @@ window.switchTab = (id, silent) => {
         window.checkAccess();
         if (window.initAddKeyboard) window.initAddKeyboard();
         if (window.focusAddAmount) window.focusAddAmount();
+        if (window.syncAddLayout) window.syncAddLayout();
     }
     if (id === "home" && window.updatePlanCats) window.updatePlanCats();
     if (id === "report" && window.renderReport) window.renderReport();

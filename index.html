@@ -176,7 +176,13 @@
 
 
     <div class="top-header">
-        <button type="button" class="menu-btn" id="main-menu-btn-top" onclick="toggleSidebar()"><span class="icon">☰</span> <span id="current-profile-name">Umumiy</span></button>
+        <button type="button" class="menu-btn" id="main-menu-btn-top" onclick="toggleSidebar()">
+            <span class="icon">☰</span>
+            <span class="header-prof-wrap">
+                <span id="current-profile-name">Umumiy</span>
+                <span id="header-balance" class="header-balance">0</span>
+            </span>
+        </button>
         <button type="button" class="menu-btn hidden" id="back-btn" onclick="closeBankSubView()">
             <span class="icon">←</span> 
             <span id="sub-view-title"></span>
@@ -244,24 +250,28 @@
                 <button id="mode-exp" class="mode-btn mode-btn--active-exp" onclick="setAddMode('expense')">Chiqim</button>
                 <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">Kirim</button>
             </div>
-            <div id="num-display" class="num-display num-display--add" onclick="window.focusAddAmount()">0</div>
-            <div class="add-stay-hint" id="stay-hint"></div>
+            <div class="add-amount-wrap">
+                <div id="num-display" class="num-display num-display--add" onclick="window.focusAddAmount()">0</div>
+                <div class="add-stay-hint" id="stay-hint"></div>
+            </div>
             <div class="add-cats-zone">
                 <div id="cats-header-container"></div>
                 <div id="cats-container"></div>
             </div>
-            <div id="add-desc" class="add-desc-display" onclick="window.focusAddDesc()"><span class="add-desc-ph">Izoh (ixtiyoriy)...</span></div>
         </div>
-        <div class="add-numpad-dock" aria-label="Klaviatura">
-            <div id="add-kb-amount" class="add-kb-panel">
-                <div class="num-grid num-grid--add">
-                    <button type="button" class="num-btn" onclick="pressNum('1')">1</button><button type="button" class="num-btn" onclick="pressNum('2')">2</button><button type="button" class="num-btn" onclick="pressNum('3')">3</button>
-                    <button type="button" class="num-btn" onclick="pressNum('4')">4</button><button type="button" class="num-btn" onclick="pressNum('5')">5</button><button type="button" class="num-btn" onclick="pressNum('6')">6</button>
-                    <button type="button" class="num-btn" onclick="pressNum('7')">7</button><button type="button" class="num-btn" onclick="pressNum('8')">8</button><button type="button" class="num-btn" onclick="pressNum('9')">9</button>
-                    <button type="button" class="num-btn num-btn--clear" onclick="pressNum('C')">C</button><button type="button" class="num-btn" onclick="pressNum('0')">0</button><button type="button" class="num-btn" onclick="pressNum('⌫')">⌫</button>
+        <div class="add-bottom-stack" id="add-bottom-stack">
+            <div id="add-desc" class="add-desc-dock" onclick="window.focusAddDesc()"><span class="add-desc-ph">Izoh (ixtiyoriy)...</span></div>
+            <div class="add-numpad-dock" aria-label="Klaviatura">
+                <div id="add-kb-amount" class="add-kb-panel">
+                    <div class="num-grid num-grid--add">
+                        <button type="button" class="num-btn" onclick="pressNum('1')">1</button><button type="button" class="num-btn" onclick="pressNum('2')">2</button><button type="button" class="num-btn" onclick="pressNum('3')">3</button>
+                        <button type="button" class="num-btn" onclick="pressNum('4')">4</button><button type="button" class="num-btn" onclick="pressNum('5')">5</button><button type="button" class="num-btn" onclick="pressNum('6')">6</button>
+                        <button type="button" class="num-btn" onclick="pressNum('7')">7</button><button type="button" class="num-btn" onclick="pressNum('8')">8</button><button type="button" class="num-btn" onclick="pressNum('9')">9</button>
+                        <button type="button" class="num-btn num-btn--clear" onclick="pressNum('C')">C</button><button type="button" class="num-btn" onclick="pressNum('0')">0</button><button type="button" class="num-btn" onclick="pressNum('⌫')">⌫</button>
+                    </div>
                 </div>
+                <div id="add-kb-text" class="add-kb-panel hidden"></div>
             </div>
-            <div id="add-kb-text" class="add-kb-panel hidden"></div>
         </div>
     </div>
 
