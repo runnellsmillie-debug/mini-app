@@ -85,6 +85,22 @@ def ensure_creator_profile(state_data, user_id, display_name, phone=None):
 def ensure_invited_profile(state_data, user_id, display_name, phone):
     pid = f"user_{user_id}"
     profiles = state_data.setdefault("profiles", default_profiles())
+    norm_phone = (phone or "").replace("+", "").replace(" ", "")
+
+    for p in profiles:
+        p_phone = (p.get("linked_phone") or "").replace("+", "").replace(" ", "")
+        if norm_phone and p_phone and p_phone == norm_phone:
+            p["linked_uid"] = user_id
+            if display_name and not p.get("name"):
+                p["name"] = display_name
+            return state_data
+        if p.get("id") == pid:
+            p["linked_uid"] = user_id
+            p["linked_phone"] = phone or p.get("linked_phone", "")
+            if display_name:
+                p["name"] = display_name
+            return state_data
+
     if any(p.get("id") == pid for p in profiles):
         return state_data
     profiles.append({
@@ -488,7 +504,7 @@ async def handle_callback(callback: types.CallbackQuery):
             save_budget_state(cursor, shared_budget_id, state_data)
 
             conn.commit()
-            await callback.message.edit_text("✅ Siz taklifni qabul qildingiz!")
+            await callback.message.edit_text("✅ Siz taklifni qabul qildingiz!\n\n⚠️ Endi ilovaga kirish uchun pastdagi «🤝 ... (Taklif)» tugmasini bosing — «👑 Mening hisobim» emas!")
             await bot.send_message(from_user_id, f"🎉 +{target_phone} hisobingizga qo'shildi va unga avtomatik profil yaratildi.")
             await bot.send_message(target_user_id, "Menyu yangilandi:", reply_markup=get_main_keyboard(target_user_id))
     elif action == "reject":

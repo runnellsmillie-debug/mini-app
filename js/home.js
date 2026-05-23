@@ -133,8 +133,16 @@ window.getHomeBalanceRows = function() {
 };
 
 window.getInvitedChatProfiles = function() {
+    const mine = new Set(window.getMyLinkedProfileIds ? window.getMyLinkedProfileIds() : []);
     return (window.getSortedProfiles ? window.getSortedProfiles() : window.state.profiles)
-        .filter(p => !p.archived && (String(p.id).startsWith("user_") || p.role === "guest" || p.linked_uid));
+        .filter(p => {
+            if (p.archived || p.id === "general") return false;
+            if (mine.has(p.id) || (window.isMyProfile && window.isMyProfile(p))) return false;
+            if (String(p.id).startsWith("user_")) return true;
+            if (p.role === "guest" || p.role === "spouse" || p.role === "relative") return true;
+            if (p.linked_uid && !mine.has(p.id)) return true;
+            return false;
+        });
 };
 
 window.addWalletLedger = function(entry) {

@@ -274,6 +274,36 @@ window.quickSelectProfileByName = function() {
     window.selectProfileSafe(p.id);
 };
 
+window.ensureInvitedProfileLink = function() {
+    if (!window.tgUserId || window.isBudgetAdmin()) return;
+    const uid = String(window.tgUserId);
+    const pid = `user_${uid}`;
+    let p = window.state.profiles.find(x => x.id === pid);
+    if (!p) {
+        const name = (window.tgFirstName || window.tgUser || "Mehmon").trim();
+        p = window.normalizeProfile({
+            id: pid,
+            name,
+            icon: "👤",
+            role: "guest",
+            age: null,
+            gender: "",
+            monthlyLimit: 0,
+            pinEnabled: false,
+            pinHash: "",
+            permissions: window.DEFAULT_NEW_PROFILE_PERMS || [],
+            linked_phone: "",
+            linked_uid: parseInt(uid, 10),
+            permsConfigured: false
+        });
+        window.state.profiles.push(p);
+        window.save(true);
+    } else if (!p.linked_uid) {
+        p.linked_uid = parseInt(uid, 10);
+        window.save(true);
+    }
+};
+
 window.tryAutoLinkProfile = function() {
     if (!window.tgUserId) return;
     const uid = String(window.tgUserId);
@@ -337,6 +367,21 @@ window.hasPermission = function(perm, prof) {
     const perms = p.permissions || [];
     if (perms.includes("admin_all")) return true;
     return perms.includes(perm);
+};
+
+window.isMyProfile = function(p) {
+    if (!p) return false;
+    const me = window.tgUserId ? String(window.tgUserId) : "";
+    if (!me) return false;
+    if (String(p.id) === `creator_${me}` || String(p.id) === `user_${me}`) return true;
+    if (p.linked_uid && String(p.linked_uid) === me) return true;
+    return false;
+};
+
+window.getMyLinkedProfileIds = function() {
+    return (window.state.profiles || [])
+        .filter(p => !p.archived && window.isMyProfile(p))
+        .map(p => p.id);
 };
 
 window.canManageWallet = function(targetProfId, viewerProf) {

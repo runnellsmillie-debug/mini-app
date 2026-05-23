@@ -28,30 +28,48 @@ window.state = {
     txs: [], plan: [], sched: [], debts: [], incs: [], profiles: [], deps: [], credits: [], theme: 'auto', lang: 'uz'
 };
 
+window.getStateStorageKey = function(bid) {
+    const id = bid || window.currentBudgetId;
+    return id ? `family_erp_state_${id}` : "family_erp_state";
+};
+
+window.migrateLegacyStorage = function() {
+    const legacy = localStorage.getItem("family_erp_state") || localStorage.getItem("xarajat_pro_v8");
+    if (!legacy || !window.currentBudgetId) return;
+    const key = window.getStateStorageKey();
+    if (!localStorage.getItem(key)) localStorage.setItem(key, legacy);
+};
+
 // ==========================================
 // 2. MA'LUMOTLARNI YUKLASH (Bulut va Kesh)
 // ==========================================
 window.initCloudData = async function() {
     let loadedFromCloud = false;
+    window.migrateLegacyStorage();
     
     // 1. Bulutdan qidiramiz
     if (window.currentBudgetId) {
         try {
             let res = await fetch(`${API_BASE}/api/state/${window.currentBudgetId}`);
-            let json = await res.json();
-            if (json.status === "ok" && Object.keys(json.data).length > 0) {
-                window.state = { ...window.state, ...json.data };
-                loadedFromCloud = true;
-                console.log("Ma'lumotlar bulutdan muvaffaqiyatli yuklandi.");
+            if (res.ok) {
+                let json = await res.json();
+                if (json.status === "ok" && Object.keys(json.data).length > 0) {
+                    window.state = { ...window.state, ...json.data };
+                    loadedFromCloud = true;
+                    localStorage.setItem(window.getStateStorageKey(), JSON.stringify(window.state));
+                    console.log("Ma'lumotlar bulutdan muvaffaqiyatli yuklandi.");
+                }
             }
         } catch(e) { 
             console.error("Bulutga ulanishda xatolik:", e); 
         }
     }
     
-    // 2. Agar bulutda bo'lmasa, telefon xotirasidan olamiz
+    // 2. Agar bulutda bo'lmasa, shu hisob uchun telefon xotirasidan olamiz
     if (!loadedFromCloud) {
-        const raw = localStorage.getItem('family_erp_state') || localStorage.getItem('xarajat_pro_v8');
+        const raw = localStorage.getItem(window.getStateStorageKey())
+            || localStorage.getItem('family_erp_state')
+            || localStorage.getItem('xarajat_pro_v8');
         if (raw) { 
             try { window.state = { ...window.state, ...JSON.parse(raw) }; } catch(e) {} 
         }
@@ -66,6 +84,8 @@ async function postLoadInit() {
         const n = window.state.profiles.length;
         window.ensureCreatorProfile();
         if (window.state.profiles.length > n) window.save(true);
+    } else if (window.tgUserId && window.ensureInvitedProfileLink) {
+        window.ensureInvitedProfileLink();
     }
     ['txs','incs','debts','sched','plan','deps','credits','audit'].forEach(k => { if(!window.state[k]) window.state[k] = []; });
     if (!window.state.catOrders) window.state.catOrders = {};
@@ -364,6 +384,7 @@ window.verifyAndReset = function() {
     if (confirm("⚠️ DIQQAT! Barcha xarajatlar... Ishonchingiz komilmi?")) {
         localStorage.removeItem('family_erp_state');
         localStorage.removeItem('xarajat_pro_v8');
+        if (window.currentBudgetId) localStorage.removeItem(window.getStateStorageKey());
         window.state = { txs: [], plan: [], sched: [], debts: [], incs: [], profiles: window.DEFAULT_PROFILES.map(p => ({ ...p, permissions: [...p.permissions] })), deps: [], credits: [], audit: [], theme: 'auto', lang: 'uz' };
         window.save(true);
         alert("✅ Tizim muvaffaqiyatli tozalandi.");
@@ -373,7 +394,8 @@ window.verifyAndReset = function() {
 };
 
 window.save = function(force = false) {
-    localStorage.setItem('family_erp_state', JSON.stringify(window.state));
+    const storageKey = window.getStateStorageKey();
+    localStorage.setItem(storageKey, JSON.stringify(window.state));
     if (window.currentBudgetId) {
         fetch(`${API_BASE}/api/state/${window.currentBudgetId}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(window.state)
@@ -1345,8 +1367,8 @@ window.startAutoSync = function() {
                 let localDataStr = JSON.stringify(window.state);
                 if (cloudDataStr !== localDataStr) {
                     const prevIds = new Set((window.state.txs || []).map(t => t.id));
-                    window.state = json.data;
-                    localStorage.setItem('family_erp_state', cloudDataStr);
+                    window.state = { ...window.state, ...json.data };
+                    localStorage.setItem(window.getStateStorageKey(), JSON.stringify(window.state));
                     const me = window.tgUser;
                     const fresh = (window.state.txs || []).filter(t => !prevIds.has(t.id) && (t.user || "Siz") !== me);
                     if (typeof window.render === 'function') window.render();
