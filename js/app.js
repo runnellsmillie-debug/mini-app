@@ -386,22 +386,22 @@ window.saveAndExit = () => {
 // ==========================================
 window.setAddMode = m => { 
     window.addMode = m; window.actMainCat = null; window.actSubCat = null; 
-    window.addExpPanelOpen = false;
     const exp = window.el("mode-exp"), inc = window.el("mode-inc");
-    if (exp) { exp.classList.toggle("mode-btn--active-exp", m === "expense"); exp.classList.toggle("mode-btn--active", m === "expense"); }
+    if (exp) { exp.classList.toggle("mode-btn--active-exp", m === "expense"); exp.classList.toggle("mode-btn--active", m === "expense"); exp.classList.remove("mode-btn--panel-open"); }
     if (inc) { inc.classList.toggle("mode-btn--active-inc", m === "income"); inc.classList.toggle("mode-btn--active", m === "income"); }
-    window.setHtml("stay-hint",""); window.renderTodayExpPanel(); window.renderAddCats();
+    window.setHtml("stay-hint",""); window.renderAddCats();
     if (window.focusAddAmount) window.focusAddAmount();
 };
 
 window.onModeExpClick = function() {
-    if (window.addMode !== "expense") {
-        window.setAddMode("expense");
-        return;
-    }
-    window.addExpPanelOpen = !window.addExpPanelOpen;
-    window.renderTodayExpPanel();
-    window.syncAddLayout();
+    if (window.addMode !== "expense") window.setAddMode("expense");
+};
+
+window.getTodayTxList = function() {
+    const today = new Date().toISOString().slice(0, 10);
+    return window.state.txs
+        .filter(x => x.date === today && (window.curProf === "general" || x.prof === window.curProf))
+        .sort((a, b) => b.amount - a.amount);
 };
 
 window.getTodayExpense = function(profId) {
@@ -411,26 +411,102 @@ window.getTodayExpense = function(profId) {
     return window.state.txs.filter(match).reduce((s, t) => s + t.amount, 0);
 };
 
-window.renderTodayExpPanel = function() {
-    const panel = window.el("add-today-panel");
-    const list = window.el("add-today-list");
-    if (!panel || !list) return;
-    if (!window.addExpPanelOpen || window.addMode !== "expense") {
-        panel.classList.add("hidden");
-        const exp = window.el("mode-exp");
-        if (exp) exp.classList.remove("mode-btn--panel-open");
-        return;
-    }
-    panel.classList.remove("hidden");
-    const expBtn = window.el("mode-exp");
-    if (expBtn) expBtn.classList.add("mode-btn--panel-open");
+window.fmtHeaderTxRow = function(x) {
+    const title = (x.desc || x.subCat || x.cat || "Xarajat").replace(/</g, "&lt;");
+    const user = (x.user || "Siz").replace(/</g, "&lt;");
+    const time = x.time || "";
+    return `<div class="header-float-row"><div class="header-float-row__main"><div class="header-float-row__title">${title}</div><div class="header-float-row__meta">👤 ${user}${time ? " · " + time : ""}</div></div><span class="header-float-row__amt">${window.formatM(x.amount)}</span></div>`;
+};
+
+window.getNotifSeenIds = function() {
+    try { return new Set(JSON.parse(localStorage.getItem("family_notif_seen") || "[]")); }
+    catch { return new Set(); }
+};
+
+window.saveNotifSeenIds = function(ids) {
+    localStorage.setItem("family_notif_seen", JSON.stringify([...ids].slice(-500)));
+};
+
+window.getFamilyNotifTxs = function() {
+    const me = window.tgUser;
     const today = new Date().toISOString().slice(0, 10);
-    const txs = window.state.txs
+    return window.state.txs
         .filter(x => x.date === today && (window.curProf === "general" || x.prof === window.curProf))
-        .sort((a, b) => b.amount - a.amount);
+        .filter(x => (x.user || "Siz") !== me)
+        .sort((a, b) => b.id - a.id);
+};
+
+window.getUnreadFamilyNotifTxs = function() {
+    const seen = window.getNotifSeenIds();
+    return window.getFamilyNotifTxs().filter(x => !seen.has(x.id));
+};
+
+window.updateHeaderNotifications = function() {
+    const unread = window.getUnreadFamilyNotifTxs();
+    const badge = window.el("header-bell-badge");
+    const bell = window.el("header-bell-btn");
+    if (badge) {
+        if (unread.length) {
+            badge.textContent = unread.length > 9 ? "9+" : String(unread.length);
+            badge.classList.remove("hidden");
+        } else {
+            badge.classList.add("hidden");
+        }
+    }
+    if (bell) bell.classList.toggle("header-bell-btn--shake", unread.length > 0 && !window.headerNotifOpen);
+};
+
+window.renderHeaderTodayPanel = function() {
+    const list = window.el("header-today-list");
+    if (!list) return;
+    const txs = window.getTodayTxList();
     list.innerHTML = txs.length
-        ? txs.map(x => `<div class="add-today-row"><span class="add-today-desc">${(x.desc || x.subCat || x.cat || "").replace(/</g, "&lt;")}</span><span class="add-today-amt">${window.formatM(x.amount)}</span></div>`).join("")
-        : `<div class="add-today-empty">Bugun xarajat yo'q</div>`;
+        ? txs.map(x => window.fmtHeaderTxRow(x)).join("")
+        : `<div class="header-float-empty">Bugun xarajat yo'q</div>`;
+};
+
+window.renderHeaderNotifPanel = function() {
+    const list = window.el("header-notif-list");
+    if (!list) return;
+    const txs = window.getFamilyNotifTxs();
+    list.innerHTML = txs.length
+        ? txs.map(x => window.fmtHeaderTxRow(x)).join("")
+        : `<div class="header-float-empty">Boshqa a'zolardan xarajat yo'q</div>`;
+};
+
+window.closeHeaderPanels = function() {
+    window.headerTodayOpen = false;
+    window.headerNotifOpen = false;
+    window.el("header-today-panel")?.classList.add("hidden");
+    window.el("header-notif-panel")?.classList.add("hidden");
+    window.el("header-panel-overlay")?.classList.add("hidden");
+    window.el("header-today-btn")?.classList.remove("header-stat-btn--active");
+    window.updateHeaderNotifications();
+};
+
+window.toggleHeaderTodayPanel = function() {
+    const open = !window.headerTodayOpen;
+    window.closeHeaderPanels();
+    if (!open) return;
+    window.headerTodayOpen = true;
+    window.renderHeaderTodayPanel();
+    window.el("header-today-panel")?.classList.remove("hidden");
+    window.el("header-panel-overlay")?.classList.remove("hidden");
+    window.el("header-today-btn")?.classList.add("header-stat-btn--active");
+};
+
+window.toggleHeaderNotifPanel = function() {
+    const open = !window.headerNotifOpen;
+    window.closeHeaderPanels();
+    if (!open) return;
+    window.headerNotifOpen = true;
+    window.renderHeaderNotifPanel();
+    window.el("header-notif-panel")?.classList.remove("hidden");
+    window.el("header-panel-overlay")?.classList.remove("hidden");
+    const seen = window.getNotifSeenIds();
+    window.getFamilyNotifTxs().forEach(x => seen.add(x.id));
+    window.saveNotifSeenIds(seen);
+    window.updateHeaderNotifications();
 };
 
 window.getAddCatLevel = function() {
@@ -663,7 +739,7 @@ window.saveTx = (l, isDeepItem=false) => {
     if (window.focusAddAmount) window.focusAddAmount();
     window.save(); 
     if(window.actSubCat||window.actMainCat) { window.setHtml("stay-hint", `✅ Oxirgi: <b style="color:var(--success);">${window.formatM(a)}</b>. Yana kiriting!`); window.renderAddCats(); } else window.setHtml("stay-hint", ""); 
-    window.renderTodayExpPanel();
+    if (window.headerTodayOpen) window.renderHeaderTodayPanel();
     window.updateHeaderBalance();
     window.toast("Saqlandi!");
 };
@@ -690,7 +766,7 @@ window.delItem = function(type, id) {
     else window.state.incs = window.state.incs.filter(x => x.id !== id);
     window.save(true);
     if (window.renderReport) window.renderReport();
-    window.renderTodayExpPanel();
+    if (window.headerTodayOpen) window.renderHeaderTodayPanel();
     window.updateHeaderBalance();
     window.toast("O'chirildi");
 };
@@ -706,17 +782,18 @@ window.getProfileBalance = function(profId) {
 };
 
 window.updateHeaderBalance = function() {
-    const el = window.el("header-balance");
-    if (el) {
+    const balEl = window.el("header-balance");
+    if (balEl) {
         const bal = window.getProfileBalance();
-        el.textContent = window.formatM(bal);
-        el.style.color = bal >= 0 ? "var(--primary)" : "var(--danger)";
+        balEl.textContent = window.formatM(bal);
+        balEl.style.color = bal >= 0 ? "var(--primary)" : "var(--danger)";
     }
     const expEl = window.el("header-today-exp");
     if (expEl) {
         const todayExp = window.getTodayExpense();
-        expEl.textContent = "Bugun: " + window.formatM(todayExp);
+        expEl.textContent = window.formatM(todayExp).replace(" so'm", "");
     }
+    window.updateHeaderNotifications();
 };
 
 window.render = function() {
@@ -736,10 +813,9 @@ window.render = function() {
     window.setHtml("sched-list-container", sHtml || "<div style='text-align:center; color:var(--text-muted); font-size:13px; padding:10px;'>Majburiy to'lovlar yo'q.</div>"); 
     if(window.renderSchedSet) window.renderSchedSet();
 
-    if(window.curTab === "add") {
-        window.renderAddCats();
-        window.renderTodayExpPanel();
-    }
+    if(window.curTab === "add") window.renderAddCats();
+    if (window.headerTodayOpen) window.renderHeaderTodayPanel();
+    if (window.headerNotifOpen) window.renderHeaderNotifPanel();
     
     if(window.curTab === "other") {
         const todayStr = new Date().toISOString().slice(0,10); const today = new Date();
@@ -785,13 +861,21 @@ window.startAutoSync = function() {
                 let cloudDataStr = JSON.stringify(json.data);
                 let localDataStr = JSON.stringify(window.state);
                 if (cloudDataStr !== localDataStr) {
+                    const prevIds = new Set((window.state.txs || []).map(t => t.id));
                     window.state = json.data;
                     localStorage.setItem('family_erp_state', cloudDataStr);
+                    const me = window.tgUser;
+                    const fresh = (window.state.txs || []).filter(t => !prevIds.has(t.id) && (t.user || "Siz") !== me);
                     if (typeof window.render === 'function') window.render();
                     window.normalizeAllProfiles();
                     if (typeof window.renderSidebar === 'function') window.renderSidebar();
                     if (typeof window.updatePlanCats === 'function') window.updatePlanCats();
                     if (typeof window.applyModulePermissions === 'function') window.applyModulePermissions();
+                    if (fresh.length) {
+                        window.updateHeaderNotifications();
+                        const t = fresh[0];
+                        window.toast(`🔔 ${t.user || "A'zo"}: ${window.formatM(t.amount)} — ${t.desc || t.cat || ""}`);
+                    }
                 }
             }
         } catch(e) {}

@@ -176,21 +176,41 @@
 
 
     <div class="top-header">
-        <button type="button" class="menu-btn" id="main-menu-btn-top" onclick="toggleSidebar()">
+        <button type="button" class="menu-btn menu-btn--icon" id="main-menu-btn-top" onclick="toggleSidebar()" aria-label="Menyu">
             <span class="icon">☰</span>
-            <span class="header-prof-wrap">
-                <span id="current-profile-name">Umumiy</span>
-                <span class="header-stats">
-                    <span id="header-balance" class="header-balance">0</span>
-                    <span id="header-today-exp" class="header-today-exp">Bugun: 0</span>
-                </span>
-            </span>
         </button>
+        <div class="header-main" id="header-main">
+            <span id="current-profile-name" class="header-profile-name">Umumiy</span>
+            <div class="header-finance-card">
+                <button type="button" class="header-stat-btn header-stat-btn--balance" id="header-balance-btn">
+                    <span class="header-stat-btn__lbl">Balans</span>
+                    <span id="header-balance" class="header-stat-btn__val">0</span>
+                </button>
+                <button type="button" class="header-stat-btn header-stat-btn--today" id="header-today-btn" onclick="window.toggleHeaderTodayPanel()">
+                    <span class="header-stat-btn__lbl">Bugun</span>
+                    <span id="header-today-exp" class="header-stat-btn__val">0</span>
+                </button>
+                <button type="button" class="header-bell-btn" id="header-bell-btn" onclick="window.toggleHeaderNotifPanel()" aria-label="Xabarlar">
+                    🔔
+                    <span id="header-bell-badge" class="header-bell-badge hidden">0</span>
+                </button>
+            </div>
+        </div>
         <button type="button" class="menu-btn hidden" id="back-btn" onclick="closeBankSubView()">
             <span class="icon">←</span> 
             <span id="sub-view-title"></span>
         </button>
     </div>
+
+    <div id="header-today-panel" class="header-float-panel hidden">
+        <div class="header-float-panel__head">Bugungi xarajatlar</div>
+        <div id="header-today-list" class="header-float-panel__body"></div>
+    </div>
+    <div id="header-notif-panel" class="header-float-panel hidden">
+        <div class="header-float-panel__head">Oilaviy xarajatlar</div>
+        <div id="header-notif-list" class="header-float-panel__body"></div>
+    </div>
+    <div id="header-panel-overlay" class="header-panel-overlay hidden" onclick="window.closeHeaderPanels()"></div>
     
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div id="sidebar-menu" class="sidebar-menu">
@@ -256,10 +276,6 @@
             <div class="add-amount-wrap">
                 <div id="num-display" class="num-display num-display--add" onclick="window.focusAddAmount()">0</div>
                 <div class="add-stay-hint" id="stay-hint"></div>
-            </div>
-            <div id="add-today-panel" class="add-today-panel hidden">
-                <div class="add-today-panel__head">Bugungi xarajatlar</div>
-                <div id="add-today-list" class="add-today-list"></div>
             </div>
             <div class="add-cats-zone">
                 <div id="cats-header-container"></div>

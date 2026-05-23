@@ -28,7 +28,7 @@
     --radius-lg: 20px;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
-    --header-h: 56px;
+    --header-h: 68px;
     --nav-h: 64px;
     --numpad-dock-h: 188px;
     --add-bottom-stack-h: 240px;
@@ -112,11 +112,233 @@ body {
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
-    padding-left: 14px;
-    padding-right: 14px;
+    gap: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
     z-index: 1000;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+}
+
+.menu-btn--icon {
+    width: auto;
+    flex-shrink: 0;
+    padding: 8px 10px;
+}
+
+.header-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.header-profile-name {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    padding-left: 2px;
+}
+
+.header-finance-card {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    padding-right: 30px;
+}
+
+.header-stat-btn {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    padding: 5px 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition), transform 0.1s;
+    box-shadow: var(--shadow-sm);
+}
+
+.header-stat-btn:active {
+    transform: scale(0.98);
+}
+
+.header-stat-btn--active {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
+.header-stat-btn__lbl {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.header-stat-btn__val {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.header-stat-btn--balance .header-stat-btn__val {
+    color: var(--primary);
+}
+
+.header-stat-btn--today .header-stat-btn__val {
+    color: var(--danger);
+}
+
+.header-bell-btn {
+    position: absolute;
+    top: -6px;
+    right: 0;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    border-radius: 50%;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s;
+}
+
+.header-bell-btn--shake {
+    animation: bellShake 0.55s ease-in-out infinite;
+}
+
+@keyframes bellShake {
+    0%, 100% { transform: rotate(0deg); }
+    20% { transform: rotate(14deg); }
+    40% { transform: rotate(-12deg); }
+    60% { transform: rotate(8deg); }
+    80% { transform: rotate(-6deg); }
+}
+
+.header-bell-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 2px solid var(--bg-card);
+}
+
+.header-panel-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.header-float-panel {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    top: calc(var(--header-h) + var(--safe-top) + 6px);
+    width: calc(100% - 20px);
+    max-width: 460px;
+    z-index: 1060;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: headerPanelIn 0.18s ease;
+}
+
+@keyframes headerPanelIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.header-float-panel__head {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-main);
+}
+
+.header-float-panel__body {
+    max-height: min(50vh, 280px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.header-float-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 12px;
+}
+
+.header-float-row:last-child { border-bottom: none; }
+
+.header-float-row__main {
+    flex: 1;
+    min-width: 0;
+}
+
+.header-float-row__title {
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.header-float-row__meta {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.header-float-row__amt {
+    font-weight: 700;
+    color: var(--danger);
+    flex-shrink: 0;
+    font-size: 11px;
+}
+
+.header-float-empty {
+    padding: 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
 }
 
 .menu-btn {
@@ -136,34 +358,7 @@ body {
 }
 
 .header-prof-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1px;
-    min-width: 0;
-    flex: 1;
-    line-height: 1.2;
-}
-
-.header-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 10px;
-    align-items: baseline;
-}
-
-.header-balance {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--primary);
-    letter-spacing: -0.02em;
-}
-
-.header-today-exp {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--danger);
-    letter-spacing: -0.02em;
+    display: none;
 }
 
 .menu-btn:active { transform: scale(0.98); }
@@ -956,8 +1151,12 @@ body.on-add-tab {
         --cat-main-h: 52px;
         --cat-rukun-h: 44px;
         --cat-item-h: 34px;
-        --header-h: 52px;
+        --header-h: 64px;
     }
+    .header-stat-btn { padding: 4px 8px; }
+    .header-stat-btn__val { font-size: 10px; }
+    .header-stat-btn__lbl { font-size: 8px; }
+    .header-profile-name { font-size: 12px; }
     #tab-add .num-display--add {
         font-size: clamp(24px, 7vw, 32px);
         min-height: 46px;

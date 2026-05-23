@@ -80,6 +80,7 @@ window.switchTab = (id, silent) => {
     if (id === "home" && window.updatePlanCats) window.updatePlanCats();
     if (id === "report" && window.renderReport) window.renderReport();
     document.body.classList.toggle("on-add-tab", id === "add");
+    if (window.closeHeaderPanels) window.closeHeaderPanels();
     if (window.render) window.render();
 };
 
@@ -115,6 +116,7 @@ window.openBankSubView = (type) => {
     ['plan', 'sched', 'credit', 'dep', 'debt'].forEach(s => { if(window.el('bank-sub-'+s)) window.el('bank-sub-'+s).classList.add('hidden'); });
     window.el('bank-sub-'+type).classList.remove('hidden');
     window.el('main-menu-btn-top').classList.add('hidden');
+    window.el('header-main')?.classList.add('hidden');
     window.el('back-btn').classList.remove('hidden');
 
     let titles = { 
@@ -140,6 +142,7 @@ window.closeBankSubView = () => {
     window.el('bank-main-menu').classList.remove('hidden');
     window.el('back-btn').classList.add('hidden');
     window.el('main-menu-btn-top').classList.remove('hidden');
+    window.el('header-main')?.classList.remove('hidden');
 };
 
 window.switchCrTab = (tab) => {
