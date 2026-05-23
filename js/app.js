@@ -87,6 +87,9 @@ async function postLoadInit() {
     if(window.renderSidebar) window.renderSidebar();
     if(window.updatePlanCats) window.updatePlanCats();
     if(window.initDragAndDrop) window.initDragAndDrop();
+    if(window.tryAutoLinkProfile) window.tryAutoLinkProfile();
+    if(window.renderAddProfileStrip) window.renderAddProfileStrip();
+    if(window.syncPlanPriceDisplay) window.syncPlanPriceDisplay();
     
     window.render(); 
 }
@@ -139,6 +142,8 @@ window.openFullScreenModal = function(profId = null) {
     if (window.el('fs-prof-pin')) window.el('fs-prof-pin').value = '';
     if (window.el('fs-prof-age')) window.el('fs-prof-age').value = '';
     if (window.el('fs-prof-limit')) window.el('fs-prof-limit').value = '';
+    if (window.el('fs-prof-phone')) window.el('fs-prof-phone').value = '';
+    if (window.el('fs-prof-uid')) window.el('fs-prof-uid').value = '';
 
     if (profId) {
         document.getElementById('fs-prof-title').innerText = "Profilni Tahrirlash";
@@ -151,17 +156,28 @@ window.openFullScreenModal = function(profId = null) {
             if (window.el('fs-prof-limit')) window.el('fs-prof-limit').value = p.monthlyLimit ? String(p.monthlyLimit).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '';
             if (window.el('fs-prof-pin-enabled')) window.el('fs-prof-pin-enabled').checked = !!p.pinEnabled;
             if (p.permissions) checkboxes.forEach(chk => { if (p.permissions.includes(chk.value)) chk.checked = true; });
+            if (window.el('fs-prof-phone')) window.el('fs-prof-phone').value = p.linked_phone || '';
+            if (window.el('fs-prof-uid')) window.el('fs-prof-uid').value = p.linked_uid ? String(p.linked_uid) : '';
         }
     } else {
         document.getElementById('fs-prof-title').innerText = "Yangi Profil Qo'shish";
         document.getElementById('fs-prof-name').value = '';
         document.getElementById('fs-prof-emoji').value = '👤';
         document.getElementById('fs-prof-role').value = 'child_f';
+        checkboxes.forEach(chk => {
+            chk.checked = window.DEFAULT_NEW_PROFILE_PERMS.includes(chk.value);
+        });
     }
 };
 
 window.closeFullScreenModal = function() {
     document.getElementById('modal-profile-fs').style.display = 'none';
+};
+
+window.fillLinkedUidFromCurrentUser = function() {
+    if (!window.tgUserId) return window.toast("Telegram ID topilmadi", true);
+    window.setVal("fs-prof-uid", String(window.tgUserId));
+    window.toast("ID qo'yildi");
 };
 
 window.saveFullScreenProfile = function() {
@@ -179,11 +195,18 @@ window.saveFullScreenProfile = function() {
 
     if(!name) return alert("Ismni kiriting!");
 
+    const linkedPhone = (window.val('fs-prof-phone') || '').trim();
+    const linkedUidRaw = (window.val('fs-prof-uid') || '').trim().replace(/\D/g, '');
+    const linkedUid = linkedUidRaw ? linkedUidRaw : null;
+
     const build = (base) => window.normalizeProfile({
         ...base, name, icon, role, age, monthlyLimit, permissions: perms,
+        permsConfigured: true,
         pinEnabled: !!pinEnabled,
         pinHash: pinRaw.length === 4 ? window.hashPin(pinRaw) : (base?.pinHash || ""),
-        gender: role.endsWith('_f') ? 'f' : role.endsWith('_m') ? 'm' : ''
+        gender: role.endsWith('_f') ? 'f' : role.endsWith('_m') ? 'm' : '',
+        linked_phone: linkedPhone,
+        linked_uid: linkedUid
     });
 
     if (id) {
@@ -197,13 +220,28 @@ window.saveFullScreenProfile = function() {
     } else {
         const np = build({ id: 'prof_' + Date.now(), linked_phone: '', linked_uid: null });
         window.state.profiles.push(np);
+        id = np.id;
         window.logAudit('profile_create', name, { prof: np.id });
     }
     window.save(true);
     closeFullScreenModal();
-    if(window.renderSidebar) window.renderSidebar();
-    window.applyModulePermissions();
-    window.render();
+    window.requestProfileAccess(id, () => {
+        window.curProf = id;
+        window.actMainCat = null;
+        window.actSubCat = null;
+        const p = window.state.profiles.find(x => x.id === id);
+        if (document.getElementById('current-profile-name')) {
+            document.getElementById('current-profile-name').innerText = p?.name || 'Profil';
+        }
+        window.applyModulePermissions();
+        if (window.closeBankSubViewIfDenied) window.closeBankSubViewIfDenied();
+        if (window.updatePlanCats) window.updatePlanCats();
+        if (window.renderSidebar) window.renderSidebar();
+        if (window.renderAddProfileStrip) window.renderAddProfileStrip();
+        if (window.render) window.render();
+        if (window.checkAccess) window.checkAccess();
+        window.toast('Profil saqlandi');
+    });
 };
 
 window.deleteFullScreenProfile = function() {
@@ -229,21 +267,17 @@ window.selectProfileSafe = function(profId) {
         window.actSubCat = null;
         const p = window.state.profiles.find(x => x.id === profId);
         if (document.getElementById('current-profile-name')) document.getElementById('current-profile-name').innerText = p?.name || 'Umumiy';
-        if (window.toggleSidebar) window.toggleSidebar();
+        const sidebar = window.el("sidebar-menu");
+        if (sidebar && sidebar.classList.contains("open") && window.toggleSidebar) window.toggleSidebar();
         window.applyModulePermissions();
+        if (window.closeBankSubViewIfDenied) window.closeBankSubViewIfDenied();
         if (window.updatePlanCats) window.updatePlanCats();
         if (window.renderSidebar) window.renderSidebar();
+        if (window.renderAddProfileStrip) window.renderAddProfileStrip();
+        if (window.updateSubViewContext) window.updateSubViewContext();
         if (window.render) window.render();
         if (window.checkAccess) window.checkAccess();
     });
-};
-
-window.onSidebarProfileClick = function(profId) {
-    if (window.isBudgetAdmin()) {
-        window.openFullScreenModal(profId);
-    } else {
-        window.selectProfileSafe(profId);
-    }
 };
 
 // ==========================================
@@ -253,7 +287,16 @@ window.renderSidebar = function() {
     const list = document.getElementById("sidebar-profiles-list");
     if (!list) return;
 
+    const datalist = document.getElementById("profile-names-datalist");
+    if (datalist) {
+        datalist.innerHTML = window.state.profiles.filter(p => !p.archived)
+            .map(p => `<option value="${(p.name || '').replace(/"/g, '')}"></option>`).join("");
+    }
+
     let html = "";
+    if (window.isBudgetAdmin()) {
+        html += `<div class="profile-hint-admin">Bosing — profilga kirish · 3 son. ushlab turing — tahrirlash</div>`;
+    }
     window.state.profiles.filter(p => !p.archived).forEach(p => {
         const spent = window.getProfileMonthSpend(p.id);
         const lim = window.getLimitStatus(p.id);
@@ -266,20 +309,24 @@ window.renderSidebar = function() {
             : "";
         const activeCls = window.curProf === p.id ? ' active-profile' : '';
 
+        const linkBadge = p.linked_uid ? `<span class="profile-link-badge" title="Telegram bog'langan">📲</span>` : "";
         html += `
-        <div class="list-item${activeCls}" onclick="window.onSidebarProfileClick('${p.id}')">
-            <div style="display:flex; align-items:center; gap:12px; flex:1;">
-                <span style="font-size:24px;">${p.icon}${warn}${lock}</span>
-                <div>
-                    <div style="font-weight:bold; font-size:15px;">${p.name}</div>
-                    <div style="font-size:11px; color:var(--text-muted);">Joriy oy: ${window.formatM(spent).replace(" so'm", "")}</div>
+        <div class="list-item profile-row${activeCls}" data-prof-id="${p.id}">
+            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                <span class="profile-avatar">${p.icon}${warn}${lock}</span>
+                <div class="profile-meta" style="min-width:0;">
+                    <div class="profile-name">${p.name} ${linkBadge}</div>
+                    <div class="profile-spend">Oy: ${window.formatM(spent).replace(" so'm", "")}</div>
                     ${limitLine}
                 </div>
             </div>
-            ${window.isBudgetAdmin() ? `<button onclick="event.stopPropagation(); window.selectProfileSafe('${p.id}')" title="Tanlash" style="background:none;border:none;font-size:14px;padding:4px;">✓</button>` : ''}
         </div>`;
     });
     list.innerHTML = html;
+    list.querySelectorAll(".profile-row").forEach(row => {
+        const id = row.getAttribute("data-prof-id");
+        if (id) window.initProfileRowPress(row, id);
+    });
     const cur = window.state.profiles.find(x => x.id === window.curProf);
     if (document.getElementById('current-profile-name')) document.getElementById('current-profile-name').innerText = cur?.name || 'Umumiy';
 };
@@ -335,10 +382,11 @@ window.saveAndExit = () => {
 // ==========================================
 window.setAddMode = m => { 
     window.addMode = m; window.actMainCat = null; window.actSubCat = null; 
-    window.el("mode-exp").style.background = m==="expense" ? "var(--danger)" : "var(--bg-card)"; 
-    window.el("mode-exp").style.borderColor = m==="expense" ? "var(--danger)" : "var(--border-color)"; 
-    window.el("mode-inc").style.background = m==="income" ? "var(--success)" : "var(--bg-card)"; 
-    window.el("mode-inc").style.borderColor = m==="income" ? "var(--success)" : "var(--border-color)"; 
+    const exp = window.el("mode-exp"), inc = window.el("mode-inc");
+    if (exp) { exp.classList.toggle("mode-btn--active-exp", m === "expense"); exp.classList.toggle("mode-btn--active", m === "expense"); }
+    if (inc) { inc.classList.toggle("mode-btn--active-inc", m === "income"); inc.classList.toggle("mode-btn--active", m === "income"); }
+    window.ctxDetailLabel = m === "income" ? "Kirim" : "Chiqim";
+    if (window.curTab === "add" && window.updateSubViewContext) window.updateSubViewContext();
     window.setHtml("stay-hint",""); window.renderAddCats(); 
 };
 
@@ -356,20 +404,20 @@ window.renderAddCats = function() {
     
     const cats = window.getCats();
     if (window.actSubCat) {
-        head.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; background:var(--bg-card); padding:8px 12px; border-radius:10px; border:1px solid var(--border-color);"><span style="font-size:12px; color:var(--text-muted);">${window.actMainCat.label} <b style="color:var(--primary); margin:0 4px;">›</b> <b style="color:#fff">${window.actSubCat.label}</b></span><button onclick="backCat()" style="background:transparent; color:var(--primary); border:none; font-weight:bold; font-size:12px; cursor:pointer;">⬅ Orqaga</button></div>`;
+        head.innerHTML = `<div class="breadcrumb-bar"><span style="color:var(--text-muted);">${window.actMainCat.label} <b style="color:var(--primary);">›</b> <b>${window.actSubCat.label}</b></span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
         cont.innerHTML = `<div class="cat-scroll-container">` + window.actSubCat.items.map(i => `<button class="cat-btn" style="background:rgba(59, 130, 246, 0.15); border-color:var(--primary);" onclick="saveTx('${i.label}', true)"><span style="font-size:24px;">${i.icon}</span><span>${i.label}</span></button>`).join("") + `</div>`;
     } else if (window.actMainCat && window.actMainCat.subs && window.actMainCat.subs.length > 0) {
-        head.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; background:var(--bg-card); padding:8px 12px; border-radius:10px; border:1px solid var(--border-color);"><span style="font-size:12px; color:var(--text-muted);">Rukun: <b style="color:#fff">${window.actMainCat.label}</b></span><button onclick="backCat()" style="background:transparent; color:var(--primary); border:none; font-weight:bold; font-size:12px; cursor:pointer;">⬅ Orqaga</button></div>`;
+        head.innerHTML = `<div class="breadcrumb-bar"><span style="color:var(--text-muted);">Rukun: <b>${window.actMainCat.label}</b></span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
         cont.innerHTML = `<div class="cat-scroll-container">` + window.actMainCat.subs.map(s => { const f = s.items?.length>0; return `<button class="cat-btn" style="background:var(--bg-card);" onclick="${f ? `clickSubCat('${s.id}')` : `saveTx('${s.label}')`}"><span style="font-size:24px;">${s.icon}</span><span>${s.label} ${f?'':'✓'}</span></button>`; }).join("") + `<button class="cat-btn" style="background:var(--bg-card); border:1px dashed var(--text-muted);" onclick="saveTx('${window.actMainCat.label}')"><span style="font-size:24px;">⚙️</span><span>Umumiy</span></button></div>`;
     } else {
         head.innerHTML = "";
-        cont.innerHTML = `<div class="cat-scroll-container">` + cats.map(c => `<button class="cat-btn" style="background:${c.color||'var(--bg-card)'}22; border-color:${c.color||'var(--border-color)'}; color:${c.color};" onclick="clickMainCat('${c.id}')"><span style="font-size:24px;">${c.icon}</span><span style="color:#fff;">${c.label}</span></button>`).join("") + `</div>`;
+        cont.innerHTML = `<div class="cat-scroll-container">` + cats.map(c => `<button class="cat-btn" style="background:${c.color||'var(--primary)'}18; border-color:${c.color||'var(--border-color)'}55;" onclick="clickMainCat('${c.id}')"><span>${c.icon}</span><span>${c.label}</span></button>`).join("") + `</div>`;
     }
 };
 
-window.clickMainCat = id => { const c = window.getCats().find(x=>x.id==id); if(c && c.subs?.length) { window.actMainCat = c; window.renderAddCats(); window.setHtml("stay-hint",""); } else if(c) window.saveTx(c.label); };
-window.clickSubCat = id => { const s = window.actMainCat.subs.find(x=>x.id==id); if(s && s.items?.length) { window.actSubCat = s; window.renderAddCats(); window.setHtml("stay-hint",""); } else if(s) window.saveTx(s.label); };
-window.backCat = () => { if(window.actSubCat) window.actSubCat = null; else window.actMainCat = null; window.setHtml("stay-hint",""); window.renderAddCats(); };
+window.clickMainCat = id => { const c = window.getCats().find(x=>x.id==id); if(c && c.subs?.length) { window.actMainCat = c; window.ctxDetailLabel = c.label; if(window.updateSubViewContext) window.updateSubViewContext(); window.renderAddCats(); window.setHtml("stay-hint",""); } else if(c) window.saveTx(c.label); };
+window.clickSubCat = id => { const s = window.actMainCat.subs.find(x=>x.id==id); if(s && s.items?.length) { window.actSubCat = s; window.ctxDetailLabel = s.label; if(window.updateSubViewContext) window.updateSubViewContext(); window.renderAddCats(); window.setHtml("stay-hint",""); } else if(s) window.saveTx(s.label); };
+window.backCat = () => { if(window.actSubCat) { window.actSubCat = null; window.ctxDetailLabel = window.actMainCat?.label || (window.addMode === "income" ? "Kirim" : "Chiqim"); } else { window.actMainCat = null; window.ctxDetailLabel = window.addMode === "income" ? "Kirim" : "Chiqim"; } if(window.updateSubViewContext) window.updateSubViewContext(); window.setHtml("stay-hint",""); window.renderAddCats(); };
 
 window.saveTx = (l, isDeepItem=false) => {
     const a = parseFloat(window.amtStr); if(!a || a<=0) return window.toast("Summa yo'q!", true); const d = new Date(), de = window.el("add-desc");

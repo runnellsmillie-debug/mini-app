@@ -7,7 +7,9 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <link rel="stylesheet" href="css/style.css">
-    <meta name="theme-color" content="#0b1220">
+    <meta name="theme-color" content="#4f6ef7">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
 <body class="dark-mode">
     <div id="toast-msg"></div>
@@ -98,7 +100,36 @@
                 </div>
             </div>
 
-            <h4 style="color:var(--text); margin:20px 0 10px; border-bottom:1px dashed var(--border-color); padding-bottom:10px;">Ko'rinadigan bo'limlar (galichka)</h4>
+            <h4 class="fs-section-title">Ruxsatlar va ko'rinish</h4>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion('acc-tabs')">
+                    <span>📱 Pastki menyu (4 ta bo'lim)</span>
+                    <span id="acc-tabs-icon">▼</span>
+                </div>
+                <div class="accordion-content" id="acc-tabs">
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="tab_home"> 🏠 Asosiy</label>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="tab_add"> ➕ Kiritish (xarajat/kirim)</label>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="tab_other"> 💼 Xizmatlar</label>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="tab_report"> 📊 Hisobot</label>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Har bir asosiy bo'lim alohida yoqiladi/o'chiriladi.</div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion('acc-invite')">
+                    <span>📲 Taklif / Telegram bog'lash</span>
+                    <span id="acc-invite-icon">▼</span>
+                </div>
+                <div class="accordion-content" id="acc-invite" style="display:none;">
+                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">Taklif orqali kirgan odamning Telegram ID raqamini yozing — u avtomatik shu profilga ulanadi.</div>
+                    <label style="display:block; margin-bottom:6px;">Telefon (ixtiyoriy)</label>
+                    <input type="tel" id="fs-prof-phone" class="input-text" placeholder="+998 90 123 45 67" inputmode="tel" />
+                    <label style="display:block; margin-bottom:6px;">Telegram user ID</label>
+                    <input type="text" inputmode="numeric" id="fs-prof-uid" class="input-text" placeholder="Masalan: 123456789" />
+                    <button type="button" class="btn-primary" style="background:var(--bg-main); color:var(--primary); border:1px solid var(--primary);" onclick="window.fillLinkedUidFromCurrentUser()">Mening ID ni qo'yish (hozirgi foydalanuvchi)</button>
+                </div>
+            </div>
             
             <div class="accordion-item">
                 <div class="accordion-header" onclick="toggleAccordion('acc-shopping')">
@@ -118,12 +149,13 @@
                     <span id="acc-modules-icon">▼</span>
                 </div>
                 <div class="accordion-content" id="acc-modules">
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="mod_plan"> Bozorlik ro'yxati</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="mod_sched"> Rejali to'lovlar</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="view_credit"> Kreditlar</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="view_dep"> Omonatlar</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="mod_debt"> Qarzlar</label>
-                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="mod_income"> Kirim kiritish</label>
+                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">Xizmatlar ichidagi har bir blok alohida boshqariladi.</div>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="mod_plan"> 🛒 Bozorlik ro'yxati</label>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="mod_sched"> 📅 Rejali to'lovlar</label>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="view_credit"> 💳 Kreditlar</label>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="view_dep"> 🏦 Omonatlar</label>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="mod_debt"> 🤝 Qarzlar</label>
+                    <label class="perm-checkbox"><input type="checkbox" class="fs-perm-chk" value="mod_income"> ▲ Kirim kiritish (Kiritish tabida)</label>
                 </div>
             </div>
 
@@ -144,66 +176,85 @@
 
 
     <div class="top-header">
-        <button class="menu-btn" id="main-menu-btn-top" onclick="toggleSidebar()"><span class="icon">☰</span> <span id="current-profile-name" style="font-size:16px;">Umumiy</span></button>
-        <button class="menu-btn hidden" id="back-btn" onclick="closeBankSubView()" style="width:100%; display:flex; align-items:center;">
-            <span class="icon" style="font-size:22px; color:var(--primary);">⬅</span> 
-            <span id="sub-view-title" style="display:flex; align-items:center; gap:8px;"></span>
+        <button type="button" class="menu-btn" id="main-menu-btn-top" onclick="toggleSidebar()"><span class="icon">☰</span> <span id="current-profile-name">Umumiy</span></button>
+        <button type="button" class="menu-btn hidden" id="back-btn" onclick="closeBankSubView()">
+            <span class="icon">←</span> 
+            <span id="sub-view-title"></span>
         </button>
+    </div>
+
+    <div id="subview-context-bar" class="subview-context-bar hidden">
+        <div class="ctx-chip ctx-prof"><span id="ctx-prof-icon">👤</span> <span id="ctx-prof-name">Profil</span></div>
+        <span class="ctx-dash">—</span>
+        <div class="ctx-chip ctx-section" id="ctx-section">Bo'lim</div>
+        <span class="ctx-dash ctx-cat-sep hidden" id="ctx-cat-sep">—</span>
+        <div class="ctx-chip ctx-detail hidden" id="ctx-detail"></div>
     </div>
     
     <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div id="sidebar-menu" class="sidebar-menu">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px dashed var(--border-color);">
-            <h3 style="margin:0; color:var(--primary);">Profillar</h3>
-            <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text-muted); font-size:22px;">✕</button>
+        <div class="sidebar-head">
+            <h3>Profillar</h3>
+            <button type="button" class="sidebar-close" onclick="toggleSidebar()" aria-label="Yopish">✕</button>
         </div>
         
+        <div class="profile-quick-pick">
+            <input type="text" id="profile-quick-input" class="input-text" list="profile-names-datalist" placeholder="Profil ismi (tez tanlash)..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();window.quickSelectProfileByName();}" />
+            <button type="button" class="profile-quick-btn" onclick="window.quickSelectProfileByName()" aria-label="Tanlash">→</button>
+        </div>
+        <datalist id="profile-names-datalist"></datalist>
+
         <div id="sidebar-profiles-list"></div>
         
-        <button id="admin-add-prof-btn" onclick="openFullScreenModal(null)" style="width:100%; padding:12px; background:rgba(59,130,246,0.1); border:1px dashed var(--primary); color:var(--primary); border-radius:8px; margin-top:15px; font-weight:bold; cursor:pointer; display:none;">
-            ➕ Yangi profil qo'shish
+        <button type="button" id="admin-add-prof-btn" onclick="openFullScreenModal(null)" style="display:none;">
+            ➕ Yangi profil
         </button>
 
-        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px dashed var(--border-color);">
-            <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 12px; text-transform: uppercase;">Sozlamalar</div>
+        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+            <div class="sidebar-section-label">Sozlamalar</div>
             
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.1); padding: 8px 12px; border-radius: 8px;">
-                <span style="font-size: 14px; font-weight: bold;">🌐 Dastur tili</span>
-                <select id="lang-select" onchange="window.setLang(this.value)" style="background: var(--bg-card); color: var(--text); border: 1px solid var(--border-color); border-radius: 5px; padding: 4px 8px; outline: none; cursor: pointer;">
+            <div class="sidebar-setting-row">
+                <span>🌐 Til</span>
+                <select id="lang-select" onchange="window.setLang(this.value)">
                     <option value="uz">O'zbekcha</option>
                     <option value="ru">Русский</option>
                 </select>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.1); padding: 8px 12px; border-radius: 8px;">
-                <span style="font-size: 14px; font-weight: bold;">🎨 Rejim</span>
-                <select id="theme-select" onchange="window.setTheme(this.value)" style="background: var(--bg-card); color: var(--text); border: 1px solid var(--border-color); border-radius: 5px; padding: 4px 8px; outline: none; cursor: pointer;">
-                    <option value="auto">🕒 Avto (GMT+5)</option>
-                    <option value="light">☀️ Kun</option>
-                    <option value="dark">🌙 Tun</option>
+            <div class="sidebar-setting-row">
+                <span>🎨 Rejim</span>
+                <select id="theme-select" onchange="window.setTheme(this.value)">
+                    <option value="auto">Avto</option>
+                    <option value="light">Kun</option>
+                    <option value="dark">Tun</option>
                 </select>
             </div>
             
-            <button id="admin-reset-btn" onclick="document.getElementById('reset-modal').style.display='flex'" style="width:100%; padding:12px; background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:8px; margin-top:20px; font-weight:bold; display:none;">
-                🗑 Dasturni nol qilish (Reset)
+            <button type="button" id="admin-reset-btn" onclick="document.getElementById('reset-modal').style.display='flex'" style="display:none;">
+                🗑 Dasturni tozalash
             </button>
         </div>
-        </div>
+    </div>
 
 
     <div id="tab-home" class="tab-content">
         <div class="balance-card-main">
-            <div style="color: var(--text-muted); font-size: 11px; font-weight:bold; letter-spacing:1px; margin-bottom:6px;">JAMI MAVJUD MABLAG'</div>
-            <div id="main-total-balance" style="font-size: 32px; font-weight: bold; color: #fff;">0 so'm</div>
+            <div class="balance-label">Jami mavjud mablag'</div>
+            <div id="main-total-balance">0 so'm</div>
         </div>
-        <button onclick="saveAndExit()" class="btn-primary btn-success" style="padding:14px; font-size:15px; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">✅ Saqlash va Chiqish (<span id="session-count">0</span>)</button>
+        <button onclick="saveAndExit()" class="btn-primary btn-success">✅ Saqlash va chiqish (<span id="session-count">0</span>)</button>
     </div>
 
 
     <div id="tab-add" class="tab-content hidden">
-        <div class="mode-selector">
-            <button id="mode-exp" class="mode-btn" style="background:var(--danger); border-color:var(--danger);" onclick="setAddMode('expense')">▼ Chiqim (Xarajat)</button>
-            <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">▲ Kirim (Foyda)</button>
+        <div id="add-profile-strip" class="add-profile-strip">
+            <span class="add-profile-strip-label">Xarajat profili</span>
+            <select id="add-prof-switch" class="input-text" style="margin:0; flex:1;" onchange="window.selectProfileSafe(this.value)"></select>
+            <input type="text" id="add-prof-quick" class="input-text add-prof-quick-inp" list="profile-names-datalist" placeholder="Ism..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();window.setVal('profile-quick-input',this.value);window.quickSelectProfileByName();this.value='';}" />
+        </div>
+        <div class="mode-selector mode-selector--dual">
+            <button id="mode-exp" class="mode-btn mode-btn--active-exp" onclick="setAddMode('expense')">Chiqim</button>
+            <button id="mode-inc" class="mode-btn" onclick="setAddMode('income')">Kirim</button>
         </div>
         <div id="num-display" class="num-display">0</div>
         <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-bottom: 10px; height: 16px;" id="stay-hint"></div>
@@ -229,23 +280,46 @@
             <div class="main-menu-btn" data-id="debt" onclick="openBankSubView('debt')"><span class="icon">🤝</span> <span class="text">Qarzlar bo'limi</span> <span class="drag-handle">≡</span></div>
         </div>
 
-        <div id="bank-sub-plan" class="hidden">
-            
-            <div class="mode-selector" style="margin-bottom: 15px; overflow-x: auto; white-space: nowrap; flex-wrap: nowrap; padding-bottom: 8px;">
+        <div id="bank-sub-plan" class="hidden bank-sub-panel">
+            <div class="mode-selector plan-tab-bar">
                 <button id="plan-tab-add" class="mode-btn" onclick="switchPlanTab('add')" style="background:var(--primary); border-color:var(--primary);">➕ Qo'shish</button>
                 <button id="plan-tab-active" class="mode-btn" onclick="switchPlanTab('active')">🛒 Faol</button>
                 <button id="plan-tab-skip" class="mode-btn" onclick="switchPlanTab('skip')">⏳ Keyinroq</button>
                 <button id="plan-tab-history" class="mode-btn" onclick="switchPlanTab('history')">✅ Tarix</button>
             </div>
 
-            <div id="plan-view-add">
-                <div class="widget-box">
-                    <div style="display:flex; gap:8px; margin-bottom:10px;"><select id="smart-plan-cat" class="input-text" onchange="updateSmartTags()" style="flex:1; margin:0;"></select><select id="smart-plan-subcat" class="input-text" onchange="renderSmartTags()" style="flex:1; margin:0;"></select></div>
+            <div id="plan-view-add" class="plan-add-panel">
+                <select id="smart-plan-cat" class="hidden" onchange="window.selectPlanCat(this.value)"></select>
+
+                <div id="plan-cat-chips" class="plan-cat-chips"></div>
+
+                <div class="plan-fields-compact">
+                    <select id="smart-plan-subcat" class="input-text" onchange="renderSmartTags()" style="margin:0;"></select>
                     <div id="smart-tags-container" class="tags-wrapper"></div>
-                    <hr style="border:none; border-top:1px dashed var(--border-color); margin:10px 0;">
-                    <div style="display:flex; gap:8px; margin-bottom:8px;"><input type="text" id="plan-name" class="input-text" placeholder="Nima? (Mas: 🍅 Pomidor)" style="flex:2; margin:0;" /><input type="text" id="plan-qty" class="input-text" placeholder="Soni/Vazni" style="flex:1; margin:0;" /></div>
-                    <div style="display:flex; gap:8px; margin-bottom:10px;"><select id="plan-market" class="input-text" style="flex:1; margin:0;"><option value="Bozor">Bozor</option><option value="Korzinka">Korzinka</option><option value="Makro">Makro</option><option value="Uzum">Uzum</option><option value="Do'kon">Do'kon</option></select><input type="text" inputmode="numeric" id="plan-price" class="input-text" placeholder="Taxminiy narx" style="flex:1; margin:0;" oninput="formatSpace(this)" /></div>
-                    <button onclick="addPlannedItemManual()" class="btn-primary btn-success">➕ Ro'yxatga Saqlash</button>
+                    <div class="plan-name-row">
+                        <input type="text" id="plan-name" class="input-text" placeholder="Mahsulot nomi..." style="margin:0; flex:2;" />
+                        <input type="text" id="plan-qty" class="input-text" placeholder="Soni" style="margin:0; flex:1;" />
+                    </div>
+                    <select id="plan-market" class="input-text" style="margin:0;">
+                        <option value="Bozor">Bozor</option>
+                        <option value="Korzinka">Korzinka</option>
+                        <option value="Makro">Makro</option>
+                        <option value="Uzum">Uzum</option>
+                        <option value="Do'kon">Do'kon</option>
+                    </select>
+                </div>
+
+                <div class="plan-price-block">
+                    <div class="plan-price-label">Taxminiy summa</div>
+                    <div id="plan-num-display" class="num-display num-display--plan">0</div>
+                    <input type="hidden" id="plan-price" value="" />
+                    <div class="num-grid num-grid--compact">
+                        <button type="button" class="num-btn" onclick="pressPlanNum('1')">1</button><button type="button" class="num-btn" onclick="pressPlanNum('2')">2</button><button type="button" class="num-btn" onclick="pressPlanNum('3')">3</button>
+                        <button type="button" class="num-btn" onclick="pressPlanNum('4')">4</button><button type="button" class="num-btn" onclick="pressPlanNum('5')">5</button><button type="button" class="num-btn" onclick="pressPlanNum('6')">6</button>
+                        <button type="button" class="num-btn" onclick="pressPlanNum('7')">7</button><button type="button" class="num-btn" onclick="pressPlanNum('8')">8</button><button type="button" class="num-btn" onclick="pressPlanNum('9')">9</button>
+                        <button type="button" class="num-btn" style="color:var(--danger);" onclick="pressPlanNum('C')">C</button><button type="button" class="num-btn" onclick="pressPlanNum('0')">0</button><button type="button" class="num-btn" onclick="pressPlanNum('⌫')">⌫</button>
+                    </div>
+                    <button type="button" onclick="addPlannedItemManual()" class="btn-primary btn-success" style="margin-top:8px;">➕ Ro'yxatga saqlash</button>
                 </div>
             </div>
 
@@ -264,10 +338,10 @@
 
         </div>
 
-        <div id="bank-sub-sched" class="hidden">
+        <div id="bank-sub-sched" class="hidden bank-sub-panel">
             <div class="widget-box">
                 <input type="text" id="sched-name" class="input-text" placeholder="Nomi (Mas: Bog'cha to'lovi)" />
-                <div style="display:flex; gap:8px; margin-bottom:8px;"><select id="sched-cat" class="input-text" style="flex:1; margin:0;"><option value="Oila/Bolalar">Oila</option><option value="Uy/Kommunal">Uy/Kommunal</option><option value="Majburiyatlar">Kredit</option><option value="Boshqa">Boshqa</option></select><input type="number" id="sched-day" placeholder="Sana" class="input-text" style="width:70px; margin:0;" /></div>
+                <div style="display:flex; gap:8px; margin-bottom:8px;"><select id="sched-cat" class="input-text" style="flex:1; margin:0;" onchange="window.ctxDetailLabel=this.options[this.selectedIndex].text; window.updateSubViewContext();"><option value="Oila/Bolalar">Oila</option><option value="Uy/Kommunal">Uy/Kommunal</option><option value="Majburiyatlar">Kredit</option><option value="Boshqa">Boshqa</option></select><input type="number" id="sched-day" placeholder="Sana" class="input-text" style="width:70px; margin:0;" /></div>
                 <input type="text" inputmode="numeric" id="sched-amount" placeholder="Summa (To'liq)" class="input-text" oninput="formatSpace(this)" />
                 <button onclick="addScheduled()" class="btn-primary btn-success" style="margin-bottom:10px;">➕ Qo'shish</button>
                 <div id="sched-edit-list"></div>
@@ -441,12 +515,12 @@
         </div>
     </div>
 
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('home')"><div class="icon">🏠</div><div>Asosiy</div></div>
-        <div class="nav-item" onclick="switchTab('add')"><div class="icon" style="font-size:24px;">➕</div><div>Kiritish</div></div>
-        <div class="nav-item" id="nav-other" onclick="switchTab('other')"><div class="icon">💼</div><div>Xizmatlar</div></div>
-        <div class="nav-item" onclick="switchTab('report')"><div class="icon">📊</div><div>Hisobot</div></div>
-    </div>
+    <nav class="bottom-nav" aria-label="Asosiy menyu">
+        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><div class="icon">🏠</div><span>Asosiy</span></div>
+        <div class="nav-item" id="nav-add" onclick="switchTab('add')"><div class="icon">➕</div><span>Kiritish</span></div>
+        <div class="nav-item" id="nav-other" onclick="switchTab('other')"><div class="icon">💼</div><span>Xizmatlar</span></div>
+        <div class="nav-item" id="nav-report" onclick="switchTab('report')"><div class="icon">📊</div><span>Hisobot</span></div>
+    </nav>
 
     <script src="js/config.js"></script>
     <script src="js/profiles.js"></script>

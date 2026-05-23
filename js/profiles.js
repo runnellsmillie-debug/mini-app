@@ -4,15 +4,27 @@
 
 window.PROTECTED_PROFILE_IDS = ["general", "home_profile"];
 window.PIN_SESSION_KEY = "family_erp_unlocked";
-window.PERMISSION_MODULES = {
-    mod_plan: { menuId: "plan", label: "Bozorlik" },
-    mod_sched: { menuId: "sched", label: "Rejali to'lovlar" },
-    mod_credit: { menuId: "credit", label: "Kreditlar", perm: "view_credit" },
-    mod_dep: { menuId: "dep", label: "Omonatlar", perm: "view_dep" },
-    mod_debt: { menuId: "debt", label: "Qarzlar" },
-    mod_income: { label: "Kirim kiritish" },
-    mod_report: { label: "Hisobot" }
+window.TAB_PERMISSIONS = {
+    tab_home: { tab: "home", label: "Asosiy", icon: "🏠" },
+    tab_add: { tab: "add", label: "Kiritish", icon: "➕" },
+    tab_other: { tab: "other", label: "Xizmatlar", icon: "💼" },
+    tab_report: { tab: "report", label: "Hisobot", icon: "📊" }
 };
+
+window.PERMISSION_MODULES = {
+    mod_plan: { menuId: "plan", label: "Bozorlik ro'yxati" },
+    mod_sched: { menuId: "sched", label: "Rejali to'lovlar" },
+    view_credit: { menuId: "credit", label: "Kreditlar" },
+    view_dep: { menuId: "dep", label: "Omonatlar" },
+    mod_debt: { menuId: "debt", label: "Qarzlar" },
+    mod_income: { label: "Kirim kiritish (Kiritish tab)" }
+};
+
+window.DEFAULT_NEW_PROFILE_PERMS = [
+    "tab_home", "tab_add", "tab_other",
+    "shop_food", "shop_clothes", "shop_school",
+    "mod_plan", "mod_sched", "mod_income"
+];
 
 window.DEFAULT_PROFILES = [
     { id: "general", name: "Umumiy", icon: "🏠", role: "home", age: null, gender: "", monthlyLimit: 0, pinEnabled: true, pinHash: "", permissions: ["admin_all"], linked_phone: "", linked_uid: null },
@@ -31,11 +43,73 @@ window.normalizeProfile = function(p) {
         monthlyLimit: parseInt(p.monthlyLimit, 10) || 0,
         pinEnabled: !!p.pinEnabled,
         pinHash: p.pinHash || "",
-        permissions: Array.isArray(p.permissions) ? p.permissions : [],
+        permissions: window.normalizeProfilePermissions(p),
+        permsConfigured: !!p.permsConfigured,
         linked_phone: p.linked_phone || "",
-        linked_uid: p.linked_uid || null,
+        linked_uid: p.linked_uid != null && p.linked_uid !== "" ? String(p.linked_uid) : null,
         archived: !!p.archived
     };
+};
+
+window.normalizeProfilePermissions = function(p) {
+    let perms = Array.isArray(p?.permissions) ? [...p.permissions] : [];
+    if (perms.includes("admin_all")) return perms;
+    if (p?.permsConfigured) return perms;
+    if (perms.length === 0) {
+        const age = p?.age != null && p.age !== "" ? parseInt(p.age, 10) : null;
+        const tabs = age != null && age < 16
+            ? ["tab_home", "tab_add"]
+            : ["tab_home", "tab_add", "tab_other", "tab_report"];
+        tabs.forEach(t => { if (!perms.includes(t)) perms.push(t); });
+    }
+    return perms;
+};
+
+window.canAccessTab = function(tabId, prof) {
+    const p = prof || window.getActiveProfile();
+    if (!p) return tabId === "home";
+    return window.hasPermission("tab_" + tabId, p);
+};
+
+window.getFirstAllowedTab = function(prof) {
+    const order = ["home", "add", "other", "report"];
+    for (const t of order) if (window.canAccessTab(t, prof)) return t;
+    return "add";
+};
+
+window.findProfileByName = function(query) {
+    const q = (query || "").trim().toLowerCase();
+    if (!q) return null;
+    const list = window.state.profiles.filter(p => !p.archived);
+    return list.find(p => (p.name || "").toLowerCase() === q)
+        || list.find(p => (p.name || "").toLowerCase().includes(q));
+};
+
+window.quickSelectProfileByName = function() {
+    const inp = window.el("profile-quick-input") || window.el("add-prof-quick");
+    const q = inp ? window.val(inp.id) : "";
+    const p = window.findProfileByName(q);
+    if (!p) return window.toast("Profil topilmadi", true);
+    if (inp) window.setVal(inp.id, "");
+    window.selectProfileSafe(p.id);
+};
+
+window.tryAutoLinkProfile = function() {
+    if (!window.tgUserId) return;
+    const uid = String(window.tgUserId);
+    const linked = window.state.profiles.find(p => !p.archived && p.linked_uid && String(p.linked_uid) === uid);
+    if (!linked || window.curProf === linked.id) return;
+    window.requestProfileAccess(linked.id, () => {
+        window.curProf = linked.id;
+        const el = document.getElementById("current-profile-name");
+        if (el) el.innerText = linked.name || "Profil";
+        window.applyModulePermissions();
+        if (window.checkAccess) window.checkAccess();
+        if (window.renderSidebar) window.renderSidebar();
+        if (window.renderAddProfileStrip) window.renderAddProfileStrip();
+        if (window.render) window.render();
+        window.toast(`${linked.name} profiliga ulandingiz`);
+    });
 };
 
 window.normalizeAllProfiles = function() {
@@ -80,7 +154,6 @@ window.getActiveProfile = function() {
 window.hasPermission = function(perm, prof) {
     const p = prof || window.getActiveProfile();
     if (!p) return false;
-    if (window.isBudgetAdmin() && p.id === window.curProf) return true;
     const perms = p.permissions || [];
     if (perms.includes("admin_all")) return true;
     return perms.includes(perm);
@@ -223,25 +296,122 @@ window.getCatsForProfile = function() {
 
 window.applyModulePermissions = function() {
     const p = window.getActiveProfile();
-    const show = (perm) => window.hasPermission(perm, p) || window.hasPermission("admin_all", p);
+    const show = (perm) => window.hasPermission(perm, p);
+
+    ["home", "add", "other", "report"].forEach(tab => {
+        const nav = window.el("nav-" + tab);
+        if (nav) nav.style.display = window.canAccessTab(tab, p) ? "" : "none";
+    });
+
     const menu = window.el("bank-main-menu");
     if (menu) {
         menu.querySelectorAll(".main-menu-btn").forEach(btn => {
             const id = btn.getAttribute("data-id");
             let ok = true;
-            if (id === "plan") ok = show("mod_plan") || show("shop_food") || show("shop_clothes") || show("shop_school");
+            if (id === "plan") ok = show("mod_plan");
             else if (id === "sched") ok = show("mod_sched");
-            else if (id === "credit") ok = show("mod_credit") || show("view_credit");
-            else if (id === "dep") ok = show("mod_dep") || show("view_dep");
+            else if (id === "credit") ok = show("view_credit");
+            else if (id === "dep") ok = show("view_dep");
             else if (id === "debt") ok = show("mod_debt");
-            btn.style.display = ok ? "" : "none";
+            btn.style.display = ok || show("admin_all") ? "" : "none";
         });
     }
-    const navOther = document.querySelector('.nav-item[onclick*="other"]');
+
+    const navOther = window.el("nav-other");
+    if (navOther) navOther.style.display = window.canAccessTab("other", p) ? "" : "none";
+
     const child = p && p.age != null && p.age < 16 && !window.PROTECTED_PROFILE_IDS.includes(p.id);
-    if (navOther) navOther.style.display = child && !show("mod_plan") && !show("mod_sched") && !show("view_credit") && !show("view_dep") && !show("mod_debt") ? "none" : "";
-    if (window.el("mode-inc")) window.el("mode-inc").style.display = (child || !show("mod_income")) ? "none" : "";
-    if (window.el("rep-inc-card")) window.el("rep-inc-card").style.display = (child || !show("mod_income")) ? "none" : "";
+    if (window.el("mode-inc")) window.el("mode-inc").style.display = (child || !show("mod_income")) && !show("admin_all") ? "none" : "";
+    if (window.el("rep-inc-card")) window.el("rep-inc-card").style.display = (child || !show("mod_income")) && !show("admin_all") ? "none" : "";
+
+    if (window.curTab && !window.canAccessTab(window.curTab, p) && window.switchTab) {
+        window.switchTab(window.getFirstAllowedTab(p), true);
+    }
+    if (window.closeBankSubViewIfDenied) window.closeBankSubViewIfDenied();
+    if (window.renderAddProfileStrip) window.renderAddProfileStrip();
+    if (window.updateSubViewContext) window.updateSubViewContext();
+};
+
+window.initProfileRowPress = function(rowEl, profId) {
+    if (!rowEl || rowEl._profPressInit) return;
+    rowEl._profPressInit = true;
+    let pressStart = 0;
+    let timer = null;
+    let longDone = false;
+    let moved = false;
+    let startX = 0;
+    let startY = 0;
+
+    const clearTimer = () => {
+        if (timer) { clearTimeout(timer); timer = null; }
+        rowEl.classList.remove("pressing");
+    };
+
+    rowEl.addEventListener("pointerdown", (e) => {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        pressStart = Date.now();
+        longDone = false;
+        moved = false;
+        startX = e.clientX;
+        startY = e.clientY;
+        rowEl.classList.add("pressing");
+        if (window.isBudgetAdmin()) {
+            timer = setTimeout(() => {
+                timer = null;
+                longDone = true;
+                rowEl.classList.remove("pressing");
+                if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+                window.openFullScreenModal(profId);
+                window.toast("Tahrirlash ochildi");
+            }, 3000);
+        }
+    });
+
+    rowEl.addEventListener("pointermove", (e) => {
+        if (!pressStart) return;
+        if (Math.abs(e.clientX - startX) > 12 || Math.abs(e.clientY - startY) > 12) {
+            moved = true;
+            clearTimer();
+        }
+    });
+
+    rowEl.addEventListener("pointerup", (e) => {
+        const wasLong = longDone;
+        clearTimer();
+        if (wasLong) {
+            e.preventDefault();
+            e.stopPropagation();
+            longDone = false;
+            pressStart = 0;
+            return;
+        }
+        if (!pressStart || moved) { pressStart = 0; return; }
+        const duration = Date.now() - pressStart;
+        pressStart = 0;
+        if (duration < 3000) {
+            e.preventDefault();
+            window.selectProfileSafe(profId);
+        }
+    });
+
+    rowEl.addEventListener("pointercancel", () => {
+        clearTimer();
+        pressStart = 0;
+        longDone = false;
+    });
+};
+
+window.renderAddProfileStrip = function() {
+    const strip = window.el("add-profile-strip");
+    const sel = window.el("add-prof-switch");
+    if (!strip || !sel) return;
+    const show = window.canAccessTab("add");
+    strip.style.display = show ? "" : "none";
+    if (!show) return;
+    const list = window.state.profiles.filter(p => !p.archived);
+    sel.innerHTML = list.map(p =>
+        `<option value="${p.id}"${p.id === window.curProf ? " selected" : ""}>${p.icon} ${p.name}</option>`
+    ).join("");
 };
 
 window.toggleAccordion = function(id) {

@@ -23,6 +23,7 @@ window.curProf = "general";
 window.curTab = "home";
 window.addMode = "expense";
 window.amtStr = "";
+window.planPriceStr = "";
 window.actMainCat = null; 
 window.actSubCat = null;
 window.debtType = "take";
