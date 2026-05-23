@@ -207,20 +207,18 @@
             <div class="home-finance-card__hero">
                 <div class="home-finance-card__label" data-i18n="grand_total">Umumiy balans</div>
                 <div id="main-total-balance" class="home-finance-card__total">0 so'm</div>
-                <div class="home-finance-card__sub">
-                    <span data-i18n="available_balance">Mavjud</span> <strong id="home-available-sub">0</strong>
-                    <span class="home-finance-card__sub-dot">·</span>
-                    <span data-i18n="reserve_fund">Zaxira</span> <strong id="home-reserve-sub">0</strong>
-                </div>
             </div>
             <div id="home-reserve-row" class="home-balance-cell home-balance-cell--reserve home-balance-cell--interactive" data-prof-id="general">
                 <div class="home-balance-cell__left">
                     <span class="home-balance-cell__icon">💎</span>
                     <span class="home-balance-cell__lbl" data-i18n="reserve_fund">Zaxira pul</span>
                 </div>
-                <strong id="home-reserve-balance" class="home-balance-cell__amt">0 so'm</strong>
+                <div class="home-balance-cell__right">
+                    <strong id="home-reserve-balance" class="home-balance-cell__amt">0 so'm</strong>
+                    <button type="button" class="home-balance-eye" onclick="event.stopPropagation(); window.openWalletHistory('general')" aria-label="History">👁</button>
+                </div>
             </div>
-            <div id="home-balance-grid" class="home-balance-grid"></div>
+            <div id="home-balance-grid" class="home-balance-list"></div>
         </div>
 
         <div id="home-chat-strip" class="home-chat-strip hidden"></div>
@@ -232,20 +230,6 @@
             <button type="button" onclick="window.closeHomeFinanceFullscreen()" style="background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;">✕</button>
         </div>
         <div class="modal-fs-body home-finance-fs">
-            <div class="home-finance-fs__summary">
-                <div class="home-finance-fs__sum-row">
-                    <span data-i18n="available_balance">Mavjud mablag'</span>
-                    <strong id="fs-available-sum">0</strong>
-                </div>
-                <div class="home-finance-fs__sum-row">
-                    <span data-i18n="reserve_fund">Zaxira pul</span>
-                    <strong id="fs-reserve-sum">0</strong>
-                </div>
-                <div class="home-finance-fs__sum-row home-finance-fs__sum-row--total">
-                    <span data-i18n="grand_total">Umumiy pul</span>
-                    <strong id="fs-grand-sum">0</strong>
-                </div>
-            </div>
             <div id="home-finance-panel" class="home-finance-panel"></div>
         </div>
     </div>

@@ -77,7 +77,6 @@ window.openProfileFinance = function(profId) {
     }
     window._homeFinanceProf = profId;
     window.renderHomeFinancePanel(profId);
-    window.updateHomeFinanceSummary();
     const m = window.el("modal-home-finance");
     const title = window.el("home-finance-fs-title");
     if (title) {
@@ -98,14 +97,7 @@ window.closeHomeFinanceFullscreen = function() {
     if (m) m.style.display = "none";
 };
 
-window.updateHomeFinanceSummary = function() {
-    const avail = window.getProfilesWalletSum();
-    const reserve = window.getReserveBalance();
-    const grand = avail + reserve;
-    window.setTxt("fs-available-sum", window.formatM(avail));
-    window.setTxt("fs-reserve-sum", window.formatM(reserve));
-    window.setTxt("fs-grand-sum", window.formatM(grand));
-};
+window.updateHomeFinanceSummary = function() {};
 
 window.getHomeBalanceRows = function() {
     const rows = [];
@@ -168,9 +160,6 @@ window.transferWallet = function(fromId, toId, amount, note) {
     } else if (fromId !== "general" && !window.canManageWallet(fromId)) {
         return window.toast(window.t("wallet_no_access"), true);
     }
-    if (toId === "general" && !window.canManageWallet("general")) {
-        return window.toast(window.t("admin_only_general"), true);
-    }
     window.ensureHomeState();
     const fromBal = window.getWalletBalance(fromId);
     if (fromBal < amount) return window.toast(window.t("not_enough_balance"), true);
@@ -186,9 +175,15 @@ window.transferWallet = function(fromId, toId, amount, note) {
     window.save(true);
     window.renderHomeTab();
     window.refreshHomeFinanceIfOpen();
-    window.updateHomeFinanceSummary();
     window.updateHeaderBalance();
     window.toast(window.t("transfer_done"));
+};
+
+window.transferAllToGeneral = function(fromId) {
+    if (!window.canManageWallet(fromId)) return window.toast(window.t("wallet_no_access"), true);
+    const amt = window.getWalletBalance(fromId);
+    if (amt <= 0) return window.toast(window.t("not_enough_balance"), true);
+    window.transferWallet(fromId, "general", amt, window.t("return_all_to_reserve"));
 };
 
 window.transferAllFromGeneral = function(toId) {
@@ -235,7 +230,6 @@ window.withdrawFromWallet = function(profId, amount, note) {
     window.save(true);
     window.renderHomeTab();
     window.refreshHomeFinanceIfOpen();
-    window.updateHomeFinanceSummary();
     window.updateHeaderBalance();
     window.toast(window.t("saved_auto"));
 };
@@ -244,8 +238,14 @@ window.getWalletLedgerFor = function(profId) {
     window.ensureHomeState();
     return window.state.walletLedger.filter(e =>
         e.fromProf === profId || e.toProf === profId ||
-        (profId === "general" && (e.fromProf === "general" || e.toProf === "general"))
+        (profId === "general" && (e.fromProf === "general" || e.toProf === "general" || e.toProf === null && e.type === "income"))
     );
+};
+
+window.getLedgerDirection = function(e, profId) {
+    if (e.toProf === profId) return "in";
+    if (e.fromProf === profId) return "out";
+    return "neutral";
 };
 
 window.getProfName = function(id) {
@@ -254,21 +254,41 @@ window.getProfName = function(id) {
     return p ? p.name : id;
 };
 
-window.formatLedgerRow = function(e) {
+window.formatLedgerRow = function(e, profId) {
+    profId = profId || window._walletHistoryProf;
+    const dir = window.getLedgerDirection(e, profId);
     const amt = window.formatM(e.amount);
-    let desc = "";
-    if (e.type === "transfer") {
-        desc = `${window.getProfName(e.fromProf)} → ${window.getProfName(e.toProf)}`;
-    } else if (e.type === "deposit") {
-        desc = `+ ${window.getProfName(e.toProf)}`;
-    } else {
-        desc = `− ${window.getProfName(e.fromProf)}`;
-    }
     const who = (e.user || "Siz").replace(/</g, "&lt;");
-    return `<div class="wallet-ledger-row">
+    let desc = "";
+    let sign = dir === "in" ? "+" : dir === "out" ? "−" : "";
+
+    if (dir === "in") {
+        if (e.type === "transfer") {
+            desc = `${window.getProfName(e.fromProf)} ${window.t("ledger_from")}`;
+        } else if (e.type === "income" || e.type === "deposit") {
+            desc = window.t("ledger_income");
+        } else {
+            desc = window.t("ledger_received");
+        }
+    } else if (dir === "out") {
+        if (e.type === "transfer") {
+            if (e.toProf === "general") {
+                desc = window.t("return_to_reserve");
+            } else {
+                desc = `${window.getProfName(e.toProf)} ${window.t("ledger_to")}`;
+            }
+        } else {
+            desc = window.t("ledger_sent");
+        }
+    } else if (e.type === "transfer") {
+        desc = `${window.getProfName(e.fromProf)} → ${window.getProfName(e.toProf)}`;
+    }
+
+    const note = e.note ? ` · ${e.note.replace(/</g, "&lt;")}` : "";
+    return `<div class="wallet-ledger-row wallet-ledger-row--${dir}">
         <div class="wallet-ledger-row__main">
-            <div class="wallet-ledger-row__desc">${desc}</div>
-            <div class="wallet-ledger-row__meta">${e.date} · ${e.time} · 👤 ${who}${e.note ? " · " + e.note.replace(/</g, "&lt;") : ""}</div>
+            <div class="wallet-ledger-row__desc">${sign ? `<span class="wallet-ledger-row__sign">${sign}</span> ` : ""}${desc}</div>
+            <div class="wallet-ledger-row__meta">${e.date} · ${e.time} · 👤 ${who}${note}</div>
         </div>
         <div class="wallet-ledger-row__amt">${amt}</div>
     </div>`;
@@ -289,7 +309,7 @@ window.openWalletHistory = function(profId) {
             : window.getProfName(profId);
     }
     list.innerHTML = rows.length
-        ? rows.map(window.formatLedgerRow).join("")
+        ? rows.map(e => window.formatLedgerRow(e, profId)).join("")
         : `<div class="wallet-ledger-empty">${window.t("history_empty")}</div>`;
     modal.classList.remove("hidden");
     modal.style.display = "flex";
@@ -349,6 +369,7 @@ window.renderHomeFinancePanel = function(profId) {
             </div>`;
         if (targets.length) {
             html += `
+            <div class="wallet-mgmt-section-label">${window.t("transfer_to_profile")}</div>
             <div class="wallet-mgmt-block__row">
                 <select id="wallet-transfer-target-${p.id}" class="input-text wallet-mgmt-select">
                     ${targets.map(t => `<option value="${t.id}">${t.icon} ${t.name}</option>`).join("")}
@@ -360,10 +381,14 @@ window.renderHomeFinancePanel = function(profId) {
             </button>`;
         }
         html += `
-            <div class="wallet-mgmt-block__row" style="margin-top:8px;">
-                <input type="text" inputmode="numeric" id="wallet-withdraw-amt-${p.id}" class="input-text wallet-mgmt-amt" placeholder="${window.t("withdraw")}" oninput="formatSpace(this)" style="flex:1;" />
-                <button type="button" class="wallet-action-btn wallet-action-btn--out" onclick="window.withdrawFromWallet('${p.id}', window.getNum('wallet-withdraw-amt-${p.id}'))" title="${window.t("withdraw")}">−</button>
+            <div class="wallet-mgmt-section-label">${window.t("return_to_reserve")}</div>
+            <div class="wallet-mgmt-block__row">
+                <input type="text" inputmode="numeric" id="wallet-return-amt-${p.id}" class="input-text wallet-mgmt-amt" placeholder="${window.t("amount")}" oninput="formatSpace(this)" style="flex:1;" />
+                <button type="button" class="wallet-action-btn wallet-action-btn--all" onclick="window.transferAllToGeneral('${p.id}')" title="${window.t("return_all_to_reserve")}">⤴</button>
             </div>
+            <button type="button" class="wallet-mgmt-submit wallet-mgmt-submit--reserve" onclick="window.transferWallet('${p.id}', 'general', window.getNum('wallet-return-amt-${p.id}'), window.t('return_to_reserve'))">
+                ${window.t("return_to_reserve")}
+            </button>
         </div>`;
     }
 
@@ -383,6 +408,7 @@ window.initHomeBalancePress = function(el, profId) {
     };
 
     el.addEventListener("pointerdown", e => {
+        if (e.target.closest(".home-balance-eye")) return;
         const canOpen = profId === "general"
             ? (window.canViewWallet && window.canViewWallet(profId))
             : (window.canManageWallet && window.canManageWallet(profId));
@@ -675,8 +701,6 @@ window.renderHomeTab = function() {
     const grand = avail + reserve;
 
     window.setTxt("main-total-balance", window.formatM(grand));
-    window.setTxt("home-available-sub", window.formatM(avail));
-    window.setTxt("home-reserve-sub", window.formatM(reserve));
     window.setTxt("home-reserve-balance", window.formatM(reserve));
 
     const grid = window.el("home-balance-grid");
@@ -684,13 +708,17 @@ window.renderHomeTab = function() {
         const rows = window.getHomeBalanceRows();
         grid.innerHTML = rows.map(r => {
             const canManage = window.canManageWallet && window.canManageWallet(r.id);
+            const canView = window.canViewWallet && window.canViewWallet(r.id);
             return `
             <div class="home-balance-cell${canManage ? " home-balance-cell--interactive" : ""}" data-prof-id="${r.id}">
                 <div class="home-balance-cell__left">
                     <span class="home-balance-cell__icon">${r.icon}</span>
                     <span class="home-balance-cell__lbl">${r.label.replace(/</g, "&lt;")}</span>
                 </div>
-                <span class="home-balance-cell__amt">${window.formatM(r.amount)}</span>
+                <div class="home-balance-cell__right">
+                    <span class="home-balance-cell__amt">${window.formatM(r.amount)}</span>
+                    ${canView ? `<button type="button" class="home-balance-eye" onclick="event.stopPropagation(); window.openWalletHistory('${r.id}')" aria-label="History">👁</button>` : ""}
+                </div>
             </div>`;
         }).join("");
         grid.querySelectorAll(".home-balance-cell[data-prof-id]").forEach(cell => {
@@ -701,6 +729,5 @@ window.renderHomeTab = function() {
 
     window.bindHomeFinancePress();
 
-    window.updateHomeFinanceSummary();
     window.renderHomeChatStrip();
 };
