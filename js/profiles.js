@@ -350,6 +350,16 @@ window.canManageWallet = function(targetProfId, viewerProf) {
     return (viewer?.walletManage || []).includes(targetProfId);
 };
 
+window.canViewWallet = function(targetProfId, viewerProf) {
+    if (targetProfId === "general") return true;
+    return window.canManageWallet(targetProfId, viewerProf);
+};
+
+window.getTransferTargets = function(fromProfId) {
+    return (window.getSortedProfiles ? window.getSortedProfiles() : window.state.profiles.filter(p => !p.archived))
+        .filter(p => p.id !== "general" && p.id !== fromProfId);
+};
+
 window.getWalletManageProfiles = function(excludeProfId) {
     return (window.getSortedProfiles ? window.getSortedProfiles() : window.state.profiles.filter(p => !p.archived))
         .filter(p => p.id !== "general" && p.id !== excludeProfId);

@@ -72,7 +72,7 @@ window.getTotalWalletBalance = function() {
 };
 
 window.openProfileFinance = function(profId) {
-    if (!window.canManageWallet || !window.canManageWallet(profId)) {
+    if (!window.canViewWallet || !window.canViewWallet(profId)) {
         return window.toast(window.t("wallet_no_access"), true);
     }
     window._homeFinanceProf = profId;
@@ -154,7 +154,13 @@ window.addWalletLedger = function(entry) {
 window.transferWallet = function(fromId, toId, amount, note) {
     amount = parseFloat(amount) || 0;
     if (amount <= 0) return window.toast(window.t("amount_required"), true);
-    if (fromId === "general" && !window.isBudgetAdmin()) {
+    if (!toId || fromId === toId) return window.toast(window.t("amount_required"), true);
+    if (fromId === "general" && !window.canManageWallet("general")) {
+        return window.toast(window.t("admin_only_general"), true);
+    } else if (fromId !== "general" && !window.canManageWallet(fromId)) {
+        return window.toast(window.t("wallet_no_access"), true);
+    }
+    if (toId === "general" && !window.canManageWallet("general")) {
         return window.toast(window.t("admin_only_general"), true);
     }
     window.ensureHomeState();
@@ -178,19 +184,17 @@ window.transferWallet = function(fromId, toId, amount, note) {
 };
 
 window.transferAllFromGeneral = function(toId) {
-    if (!window.isBudgetAdmin()) return window.toast(window.t("admin_only_general"), true);
+    if (!window.canManageWallet("general")) return window.toast(window.t("admin_only_general"), true);
     const amt = window.getWalletBalance("general");
     if (amt <= 0) return window.toast(window.t("not_enough_balance"), true);
     window.transferWallet("general", toId, amt, window.t("transfer_all_note"));
 };
 
-window.depositToWallet = function(profId, amount, note) {
+window.depositToWallet = function(profId, amount, note, internal) {
+    if (!internal) return window.toast(window.t("income_via_add_only"), true);
     amount = parseFloat(amount) || 0;
-    if (amount <= 0) return window.toast(window.t("amount_required"), true);
-    if (!window.canManageWallet(profId)) return window.toast(window.t("wallet_no_access"), true);
-    if (profId === "general" && !window.isBudgetAdmin()) {
-        return window.toast(window.t("admin_only_general"), true);
-    }
+    if (amount <= 0) return;
+    if (profId !== "general") return;
     window.ensureHomeState();
     window.state.wallets[profId] = window.getWalletBalance(profId) + amount;
     window.addWalletLedger({
@@ -200,12 +204,6 @@ window.depositToWallet = function(profId, amount, note) {
         amount,
         note: note || window.t("deposit_note")
     });
-    window.save(true);
-    window.renderHomeTab();
-    window.refreshHomeFinanceIfOpen();
-    window.updateHomeFinanceSummary();
-    window.updateHeaderBalance();
-    window.toast(window.t("saved_auto"));
 };
 
 window.withdrawFromWallet = function(profId, amount, note) {
@@ -298,39 +296,39 @@ window.renderHomeFinancePanel = function(profId) {
     if (!panel) return;
     profId = profId || window._homeFinanceProf;
     if (!profId) return;
-    const isAdmin = window.isBudgetAdmin();
-    const profiles = (window.getSortedProfiles ? window.getSortedProfiles() : window.state.profiles)
-        .filter(p => !p.archived && p.id !== "general");
+    const isAdmin = window.canManageWallet("general");
+    const canManage = window.canManageWallet(profId);
+    const targets = window.getTransferTargets ? window.getTransferTargets(profId) : [];
 
     let html = "";
 
-    if (profId === "general" && isAdmin) {
+    if (profId === "general") {
         html += `
         <div class="wallet-mgmt-block wallet-mgmt-block--general">
             <div class="wallet-mgmt-block__head">
                 <span>${window.t("reserve_fund")}</span>
                 <strong>${window.formatM(window.getReserveBalance())}</strong>
                 <button type="button" class="wallet-eye-btn" onclick="window.openWalletHistory('general')" aria-label="History">👁</button>
-            </div>
+            </div>`;
+        if (isAdmin) {
+            html += `
             <div class="wallet-mgmt-block__row">
                 <select id="wallet-general-target" class="input-text wallet-mgmt-select">
-                    ${profiles.map(p => `<option value="${p.id}">${p.icon} ${p.name}</option>`).join("")}
+                    ${targets.map(p => `<option value="${p.id}">${p.icon} ${p.name}</option>`).join("")}
                 </select>
                 <input type="text" inputmode="numeric" id="wallet-general-amt" class="input-text wallet-mgmt-amt" placeholder="${window.t("amount")}" oninput="formatSpace(this)" />
                 <button type="button" class="wallet-action-btn wallet-action-btn--all" onclick="window.transferAllFromGeneral(window.val('wallet-general-target'))" title="${window.t("transfer_all")}">⤴</button>
             </div>
             <button type="button" class="wallet-mgmt-submit" onclick="window.transferWallet('general', window.val('wallet-general-target'), window.getNum('wallet-general-amt'))">
                 ${window.t("transfer_from_reserve")}
-            </button>
-            <div class="wallet-mgmt-block__row" style="margin-top:8px;">
-                <input type="text" inputmode="numeric" id="wallet-reserve-amt" class="input-text wallet-mgmt-amt" placeholder="${window.t("amount")}" oninput="formatSpace(this)" style="flex:1;" />
-                <button type="button" class="wallet-action-btn wallet-action-btn--in" onclick="window.depositToWallet('general', window.getNum('wallet-reserve-amt'))" title="${window.t("deposit")}">+</button>
-                <button type="button" class="wallet-action-btn wallet-action-btn--out" onclick="window.withdrawFromWallet('general', window.getNum('wallet-reserve-amt'))" title="${window.t("withdraw")}">−</button>
-            </div>
-        </div>`;
+            </button>`;
+        } else {
+            html += `<div class="wallet-view-only">${window.t("wallet_view_only")}</div>`;
+        }
+        html += `</div>`;
     } else {
         const p = window.state.profiles.find(x => x.id === profId);
-        if (!p || !window.canManageWallet(profId)) {
+        if (!p || !canManage) {
             panel.innerHTML = `<div class="wallet-ledger-empty">${window.t("wallet_no_access")}</div>`;
             return;
         }
@@ -340,11 +338,23 @@ window.renderHomeFinancePanel = function(profId) {
                 <span>${p.icon} ${p.name}</span>
                 <strong>${window.formatM(window.getWalletBalance(p.id))}</strong>
                 <button type="button" class="wallet-eye-btn" onclick="window.openWalletHistory('${p.id}')" aria-label="History">👁</button>
-            </div>
+            </div>`;
+        if (targets.length) {
+            html += `
             <div class="wallet-mgmt-block__row">
-                <input type="text" inputmode="numeric" id="wallet-amt-${p.id}" class="input-text wallet-mgmt-amt" placeholder="${window.t("amount")}" oninput="formatSpace(this)" />
-                <button type="button" class="wallet-action-btn wallet-action-btn--in" onclick="window.depositToWallet('${p.id}', window.getNum('wallet-amt-${p.id}'))" title="${window.t("deposit")}">+</button>
-                <button type="button" class="wallet-action-btn wallet-action-btn--out" onclick="window.withdrawFromWallet('${p.id}', window.getNum('wallet-amt-${p.id}'))" title="${window.t("withdraw")}">−</button>
+                <select id="wallet-transfer-target-${p.id}" class="input-text wallet-mgmt-select">
+                    ${targets.map(t => `<option value="${t.id}">${t.icon} ${t.name}</option>`).join("")}
+                </select>
+                <input type="text" inputmode="numeric" id="wallet-transfer-amt-${p.id}" class="input-text wallet-mgmt-amt" placeholder="${window.t("amount")}" oninput="formatSpace(this)" />
+            </div>
+            <button type="button" class="wallet-mgmt-submit" onclick="window.transferWallet('${p.id}', window.val('wallet-transfer-target-${p.id}'), window.getNum('wallet-transfer-amt-${p.id}'))">
+                ${window.t("transfer_to_profile")}
+            </button>`;
+        }
+        html += `
+            <div class="wallet-mgmt-block__row" style="margin-top:8px;">
+                <input type="text" inputmode="numeric" id="wallet-withdraw-amt-${p.id}" class="input-text wallet-mgmt-amt" placeholder="${window.t("withdraw")}" oninput="formatSpace(this)" style="flex:1;" />
+                <button type="button" class="wallet-action-btn wallet-action-btn--out" onclick="window.withdrawFromWallet('${p.id}', window.getNum('wallet-withdraw-amt-${p.id}'))" title="${window.t("withdraw")}">−</button>
             </div>
         </div>`;
     }
@@ -362,21 +372,22 @@ window.initHomeBalancePress = function(el, profId) {
     const clearTimer = () => {
         if (timer) { clearTimeout(timer); timer = null; }
         el.classList.remove("home-balance-cell--hold");
-        el.classList.remove("home-finance-card__reserve--hold");
     };
 
     el.addEventListener("pointerdown", e => {
-        if (!window.canManageWallet(profId)) return;
+        const canOpen = profId === "general"
+            ? (window.canViewWallet && window.canViewWallet(profId))
+            : (window.canManageWallet && window.canManageWallet(profId));
+        if (!canOpen) return;
         longDone = false;
         startX = e.clientX;
         startY = e.clientY;
-        el.classList.add(profId === "general" ? "home-finance-card__reserve--hold" : "home-balance-cell--hold");
+        el.classList.add("home-balance-cell--hold");
         clearTimer();
         timer = setTimeout(() => {
             timer = null;
             longDone = true;
             el.classList.remove("home-balance-cell--hold");
-            el.classList.remove("home-finance-card__reserve--hold");
             if (navigator.vibrate) navigator.vibrate(40);
             window.openProfileFinance(profId);
         }, 500);
@@ -396,7 +407,9 @@ window.initHomeBalancePress = function(el, profId) {
 
 window.bindHomeFinancePress = function() {
     const reserve = window.el("home-reserve-row");
-    if (reserve) window.initHomeBalancePress(reserve, "general");
+    if (reserve && !reserve._homePressInit) {
+        window.initHomeBalancePress(reserve, "general");
+    }
 };
 
 window.refreshHomeFinanceIfOpen = function() {
@@ -417,13 +430,24 @@ window.renderHomeChatStrip = function() {
     }
     strip.classList.remove("hidden");
     strip.innerHTML = `
-        <div class="home-chat-strip__label">${window.t("chat_with")}</div>
-        <div class="home-chat-strip__btns">
-            ${invited.map(p => `
-                <button type="button" class="home-chat-btn" onclick="window.openProfileChat('${p.id}')">
-                    ${p.icon} ${p.name}
-                </button>
-            `).join("")}
+        <div class="home-chat-strip__head">
+            <div class="home-chat-strip__title">
+                <span class="home-chat-strip__icon">💬</span>
+                <span>${window.t("chat_with")}</span>
+            </div>
+        </div>
+        <div class="home-chat-strip__list">
+            ${invited.map(p => {
+                const unread = (window.getUnreadChatNotifs && window.getUnreadChatNotifs() || [])
+                    .filter(m => m.profId === p.id).length;
+                return `
+                <button type="button" class="home-chat-card" onclick="window.openProfileChat('${p.id}')">
+                    <span class="home-chat-card__avatar">${p.icon || "👤"}</span>
+                    <span class="home-chat-card__name">${(p.name || "").replace(/</g, "&lt;")}</span>
+                    ${unread ? `<span class="home-chat-card__badge">${unread > 9 ? "9+" : unread}</span>` : ""}
+                    <span class="home-chat-card__arrow">›</span>
+                </button>`;
+            }).join("")}
         </div>`;
 };
 
@@ -482,8 +506,11 @@ window.renderHomeTab = function() {
     window.ensureHomeState();
     const avail = window.getProfilesWalletSum();
     const reserve = window.getReserveBalance();
+    const grand = avail + reserve;
 
-    window.setTxt("main-total-balance", window.formatM(avail));
+    window.setTxt("main-total-balance", window.formatM(grand));
+    window.setTxt("home-available-sub", window.formatM(avail));
+    window.setTxt("home-reserve-sub", window.formatM(reserve));
     window.setTxt("home-reserve-balance", window.formatM(reserve));
 
     const grid = window.el("home-balance-grid");
@@ -493,8 +520,10 @@ window.renderHomeTab = function() {
             const canManage = window.canManageWallet && window.canManageWallet(r.id);
             return `
             <div class="home-balance-cell${canManage ? " home-balance-cell--interactive" : ""}" data-prof-id="${r.id}">
-                <span class="home-balance-cell__icon">${r.icon}</span>
-                <span class="home-balance-cell__lbl">${r.label.replace(/</g, "&lt;")}</span>
+                <div class="home-balance-cell__left">
+                    <span class="home-balance-cell__icon">${r.icon}</span>
+                    <span class="home-balance-cell__lbl">${r.label.replace(/</g, "&lt;")}</span>
+                </div>
                 <span class="home-balance-cell__amt">${window.formatM(r.amount)}</span>
             </div>`;
         }).join("");

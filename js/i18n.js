@@ -73,7 +73,7 @@ window.I18N = {
         chat_empty: "Xabarlar yo'q",
         available_balance: "Mavjud mablag'",
         reserve_fund: "Zaxira pul",
-        grand_total: "Umumiy pul",
+        grand_total: "Umumiy balans",
         transfer_from_reserve: "Zaxiradan o'tkazish",
         perm_wallets: "Pul boshqaruvi",
         perm_wallets_hint: "Qaysi profil hamyonlarini boshqarishi mumkin",
@@ -82,7 +82,10 @@ window.I18N = {
         income_to_reserve: "Kirim (zaxira)",
         family_notifications: "Oilaviy xabarlar",
         chat_messages: "Chat xabarlari",
-        notif_empty: "Xabar yo'q"
+        notif_empty: "Xabar yo'q",
+        transfer_to_profile: "Profilga o'tkazish",
+        wallet_view_only: "Faqat ko'rish — zaxiradan faqat admin o'tkaza oladi",
+        income_via_add_only: "Kirim faqat Kiritish bo'limidan kiritiladi"
     },
     ru: {
         profiles: "Профили",
@@ -163,7 +166,10 @@ window.I18N = {
         income_to_reserve: "Доход (резерв)",
         family_notifications: "Семейные уведомления",
         chat_messages: "Сообщения чата",
-        notif_empty: "Нет сообщений"
+        notif_empty: "Нет сообщений",
+        transfer_to_profile: "Перевод профилю",
+        wallet_view_only: "Только просмотр — перевод из резерва только для админа",
+        income_via_add_only: "Доход только через раздел «Ввод»"
     },
     en: {
         profiles: "Profiles",
@@ -244,7 +250,10 @@ window.I18N = {
         income_to_reserve: "Income (reserve)",
         family_notifications: "Family notifications",
         chat_messages: "Chat messages",
-        notif_empty: "No messages"
+        notif_empty: "No messages",
+        transfer_to_profile: "Transfer to profile",
+        wallet_view_only: "View only — reserve transfers are admin-only",
+        income_via_add_only: "Income can only be added via the Input tab"
     }
 };
 
