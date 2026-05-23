@@ -728,6 +728,7 @@ window.onCloudStateApplied = function() {
     }
     if (window.renderHomeChatStrip) window.renderHomeChatStrip();
     if (window.updateHeaderNotifications) window.updateHeaderNotifications();
+    if (window.updatePlanBellBadge) window.updatePlanBellBadge();
 };
 
 window.renderHomeTab = function() {

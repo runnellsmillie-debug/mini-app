@@ -154,7 +154,8 @@ window.openBankSubView = (type) => {
             dep: window.t("sub_dep"),
             debt: window.t("sub_debt")
         };
-        titleEl.textContent = labels[type] || "";
+        const icons = { plan: "🛒", sched: "📅", credit: "💳", dep: "🏦", debt: "🤝" };
+        titleEl.textContent = `${icons[type] || ""} ${labels[type] || ""}`.trim();
     }
     document.body.classList.toggle('on-plan-subview', type === 'plan');
 
@@ -163,6 +164,7 @@ window.openBankSubView = (type) => {
     if(type === 'plan') {
         if (window.updatePlanCats) window.updatePlanCats();
         if (window.switchPlanTab) window.switchPlanTab('add');
+        if (window.updatePlanBellBadge) window.updatePlanBellBadge();
     }
 };
 
@@ -170,6 +172,9 @@ window.closeBankSubView = () => {
     window.curBankSub = null;
     document.body.classList.remove('on-plan-add-tab');
     document.body.classList.remove('on-plan-subview');
+    document.body.classList.remove('plan-tabs-open');
+    if (window.closePlanPanels) window.closePlanPanels();
+    if (window.closePlanTabDrawer) window.closePlanTabDrawer(true);
     const titleEl = window.el('sub-view-title');
     if (titleEl) titleEl.classList.add('hidden');
     ['plan', 'sched', 'credit', 'dep', 'debt'].forEach(s => { if(window.el('bank-sub-'+s)) window.el('bank-sub-'+s).classList.add('hidden'); });
@@ -214,7 +219,8 @@ window.refreshBankSubViewTitle = function() {
         dep: window.t("sub_dep"),
         debt: window.t("sub_debt")
     };
-    titleEl.textContent = map[window.curBankSub] || "";
+    const icons = { plan: "🛒", sched: "📅", credit: "💳", dep: "🏦", debt: "🤝" };
+    titleEl.textContent = `${icons[window.curBankSub] || ""} ${map[window.curBankSub] || ""}`.trim();
 };
 
 window.migrateServiceMenuOrder = function() {

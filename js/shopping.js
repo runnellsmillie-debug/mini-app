@@ -45,6 +45,12 @@ window.syncPlanAmountDisplay = function() {
     }
     window.syncPlanFieldDock("plan-amount-dock", displayVal, "plan_est_price");
     if (window.el("plan-price")) window.el("plan-price").value = window.planPriceStr;
+    const urgentWrap = window.el("plan-urgent-wrap");
+    if (urgentWrap) urgentWrap.classList.toggle("hidden", !window.planPriceStr);
+    if (!window.planPriceStr) {
+        const cb = window.el("plan-urgent-cb");
+        if (cb) cb.checked = false;
+    }
 };
 
 window.syncPlanNameDisplay = function() {
@@ -276,6 +282,121 @@ window.updatePlanFilters = function() {
     }
 };
 
+window.planTabDrawerOpen = false;
+window.planNotifOpen = false;
+
+window.ensurePlanUrgentAcks = function() {
+    if (!window.state.planUrgentAcks) window.state.planUrgentAcks = {};
+};
+
+window.getPlanUrgentItems = function() {
+    return (window.state.plan || []).filter(x => x.urgent && !x.archived && !x.skip);
+};
+
+window.isPlanUrgentUnreadForMe = function(item) {
+    const me = window.tgUserId ? String(window.tgUserId) : "";
+    if (!me || !item) return false;
+    if (String(item.urgentBy || "") === me) return false;
+    window.ensurePlanUrgentAcks();
+    const acks = window.state.planUrgentAcks[item.id] || [];
+    return !acks.includes(me);
+};
+
+window.getUnreadPlanUrgentNotifs = function() {
+    return window.getPlanUrgentItems().filter(x => window.isPlanUrgentUnreadForMe(x));
+};
+
+window.updatePlanBellBadge = function() {
+    const unread = window.getUnreadPlanUrgentNotifs();
+    const badge = window.el("plan-bell-badge");
+    const btn = window.el("plan-bell-btn");
+    if (badge) {
+        if (unread.length) {
+            badge.textContent = unread.length > 9 ? "9+" : String(unread.length);
+            badge.classList.remove("hidden");
+        } else badge.classList.add("hidden");
+    }
+    if (btn) btn.classList.toggle("plan-chrome-btn--unread", unread.length > 0 && !window.planNotifOpen);
+};
+
+window.renderPlanNotifPanel = function() {
+    const list = window.el("plan-notif-list");
+    if (!list) return;
+    const items = window.getUnreadPlanUrgentNotifs().sort((a, b) => (b.urgentAt || b.id) - (a.urgentAt || a.id));
+    if (!items.length) {
+        list.innerHTML = `<div class="plan-notif-empty">${window.t("plan_notif_empty")}</div>`;
+        return;
+    }
+    list.innerHTML = items.map(item => {
+        const by = item.urgentByName || window.t("plan_unknown_user");
+        return `<button type="button" class="plan-notif-row" onclick="window.ackPlanUrgent(${item.id})">
+            <span class="plan-notif-row__icon">!</span>
+            <span class="plan-notif-row__body">
+                <span class="plan-notif-row__title">${item.text}</span>
+                <span class="plan-notif-row__meta">${by} · ${window.formatM(item.price || 0)} · ${window.tMarketName(item.market)}</span>
+            </span>
+            <span class="plan-notif-row__ack">${window.t("plan_notif_ack")}</span>
+        </button>`;
+    }).join("");
+};
+
+window.togglePlanNotifPanel = function() {
+    window.planNotifOpen = !window.planNotifOpen;
+    const panel = window.el("plan-notif-panel");
+    if (!panel) return;
+    if (window.planNotifOpen) {
+        window.renderPlanNotifPanel();
+        panel.classList.remove("hidden");
+    } else {
+        panel.classList.add("hidden");
+    }
+    window.updatePlanBellBadge();
+};
+
+window.ackPlanUrgent = function(itemId) {
+    window.ensurePlanUrgentAcks();
+    const me = window.tgUserId ? String(window.tgUserId) : "";
+    if (!me) return;
+    if (!window.state.planUrgentAcks[itemId]) window.state.planUrgentAcks[itemId] = [];
+    if (!window.state.planUrgentAcks[itemId].includes(me)) {
+        window.state.planUrgentAcks[itemId].push(me);
+        window.save();
+    }
+    window.renderPlanNotifPanel();
+    window.updatePlanBellBadge();
+    if (!window.getUnreadPlanUrgentNotifs().length) {
+        window.planNotifOpen = false;
+        window.el("plan-notif-panel")?.classList.add("hidden");
+    }
+};
+
+window.closePlanPanels = function() {
+    window.planNotifOpen = false;
+    window.el("plan-notif-panel")?.classList.add("hidden");
+};
+
+window.togglePlanTabDrawer = function() {
+    window.planTabDrawerOpen = !window.planTabDrawerOpen;
+    const drawer = window.el("plan-tab-drawer");
+    const btn = window.el("plan-tabs-toggle");
+    if (drawer) {
+        drawer.classList.toggle("plan-tab-drawer--open", window.planTabDrawerOpen);
+    }
+    document.body.classList.toggle("plan-tabs-open", window.planTabDrawerOpen);
+    if (btn) btn.classList.toggle("plan-chrome-btn--active", window.planTabDrawerOpen);
+    window.syncPlanLayout();
+};
+
+window.closePlanTabDrawer = function(silent) {
+    window.planTabDrawerOpen = false;
+    const drawer = window.el("plan-tab-drawer");
+    const btn = window.el("plan-tabs-toggle");
+    if (drawer) drawer.classList.remove("plan-tab-drawer--open");
+    document.body.classList.remove("plan-tabs-open");
+    if (btn) btn.classList.remove("plan-chrome-btn--active");
+    if (!silent) window.syncPlanLayout();
+};
+
 window.switchPlanTab = (tab) => {
     ['add', 'active', 'skip', 'history'].forEach(t => {
         let btn = window.el('plan-tab-' + t);
@@ -294,6 +415,7 @@ window.switchPlanTab = (tab) => {
     });
     const onAdd = tab === 'add' && window.curBankSub === 'plan';
     document.body.classList.toggle('on-plan-add-tab', onAdd);
+    window.closePlanTabDrawer(true);
     if (tab === 'add') {
         window.renderPlanMarketChips();
         window.renderPlanAddCats();
@@ -307,6 +429,7 @@ window.switchPlanTab = (tab) => {
         document.body.classList.remove('on-plan-add-tab');
         window.renderPlanned();
     }
+    window.updatePlanBellBadge();
 };
 
 window.selectPlanCat = (cat) => {
@@ -394,7 +517,10 @@ window.addPlannedItemManual = () => {
     if (!p || p === 0) p = window.getHistoricalPrice(n);
     if (!p) return window.toast(window.t("plan_enter_price"), true);
 
-    window.state.plan.push({
+    const urgentCb = window.el("plan-urgent-cb");
+    const isUrgent = !!(urgentCb && urgentCb.checked);
+
+    const item = {
         id: Date.now(),
         text: q ? `${n} (${q})` : n,
         cat: c,
@@ -403,16 +529,25 @@ window.addPlannedItemManual = () => {
         prof: window.curProf,
         skip: false,
         archived: false
-    });
+    };
+    if (isUrgent) {
+        item.urgent = true;
+        item.urgentBy = window.tgUserId ? String(window.tgUserId) : "";
+        item.urgentByName = window.tgUser || window.state.profiles.find(x => x.id === window.curProf)?.name || "";
+        item.urgentAt = Date.now();
+    }
+    window.state.plan.push(item);
     window.planNameStr = "";
     window.planQtyStr = "";
     window.planPriceStr = "";
+    if (urgentCb) urgentCb.checked = false;
     window.syncPlanNameDisplay();
     window.syncPlanQtyDisplay();
     window.syncPlanAmountDisplay();
     window.setHtml("plan-stay-hint", `✅ ${window.t("last_entry_hint").replace("{amount}", `<b style="color:var(--success);">${window.formatM(p)}</b>`)}`);
     window.save();
-    window.toast(window.t("plan_added"));
+    window.toast(isUrgent ? window.t("plan_added_urgent") : window.t("plan_added"));
+    window.updatePlanBellBadge();
     window.focusPlanAmount();
 };
 
@@ -483,8 +618,9 @@ window.renderPlanned = function() {
     const fc = window.val("filter-cat");
     const fm = window.val("filter-market");
 
-    const renderGroupedList = (items, isSkippedMode = false) => {
+    const renderGroupedList = (items, isSkippedMode = false, excludeUrgent = false) => {
         let filtered = items;
+        if (excludeUrgent) filtered = filtered.filter(x => !x.urgent);
         if (fc && fc !== "all") filtered = filtered.filter(x => x.cat === fc);
         if (fm && fm !== "all") filtered = filtered.filter(x => x.market === fm);
 
@@ -501,15 +637,16 @@ window.renderPlanned = function() {
 
         let html = "";
         for (let cat in groups) {
+            groups[cat].list.sort((a, b) => (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0) || b.id - a.id);
             html += `<div class="plan-group-box">
                 <div class="plan-group-head">
                     <span>${window.CAT_ICONS[cat] || '📦'} ${window.tCatName(cat)}</span>
                     <span>${window.formatM(groups[cat].total)}</span>
                 </div>
                 ${groups[cat].list.map(x => `
-                    <div class="plan-item plan-item--flat">
+                    <div class="plan-item plan-item--flat${x.urgent ? " plan-item--urgent" : ""}">
                         <div class="plan-item__body">
-                            <div class="plan-item__title">${x.text}</div>
+                            <div class="plan-item__title">${x.urgent ? "❗ " : ""}${x.text}</div>
                             <div class="plan-item__meta">📍 ${window.tMarketName(x.market)} · ${window.formatM(x.price || 0)}</div>
                         </div>
                         <div class="plan-item-actions">
@@ -527,15 +664,40 @@ window.renderPlanned = function() {
         return { html, grandTotal };
     };
 
-    const activeData = renderGroupedList(allUserPlans.filter(x => !x.archived && !x.skip));
-    let finalActiveHtml = "";
-    if (activeData.grandTotal > 0) {
-        finalActiveHtml += `<div class="plan-summary-banner plan-summary-banner--primary">
-            <div>${window.t("plan_total_expected")}</div>
-            <div>${window.formatM(activeData.grandTotal)}</div>
-        </div>`;
+    const renderUrgentStrip = (items) => {
+        let urgent = items.filter(x => x.urgent);
+        if (fc && fc !== "all") urgent = urgent.filter(x => x.cat === fc);
+        if (fm && fm !== "all") urgent = urgent.filter(x => x.market === fm);
+        urgent.sort((a, b) => (b.urgentAt || b.id) - (a.urgentAt || a.id));
+        if (!urgent.length) return "";
+        return `<div class="plan-urgent-block">${urgent.map(x => `
+            <div class="plan-item plan-item--flat plan-item--urgent">
+                <div class="plan-item__body">
+                    <div class="plan-item__title">❗ ${x.text}</div>
+                    <div class="plan-item__meta">📍 ${window.tMarketName(x.market)} · ${window.formatM(x.price || 0)}</div>
+                </div>
+                <div class="plan-item-actions">
+                    <button onclick="openBuyModal(${x.id})" class="btn-primary btn-success">${window.t("plan_buy")}</button>
+                    <button onclick="skipPlanItem(${x.id})" class="btn-primary btn-primary--ghost">⏳ ${window.t("plan_later")}</button>
+                </div>
+            </div>
+        `).join("")}</div>`;
+    };
+
+    const activePool = allUserPlans.filter(x => !x.archived && !x.skip);
+    const activeData = renderGroupedList(activePool, false, true);
+    const urgentStrip = renderUrgentStrip(activePool);
+    let finalActiveHtml = urgentStrip;
+    if (activeData.grandTotal > 0 || urgentStrip) {
+        const totalAll = activePool.reduce((s, x) => s + (x.price || 0), 0);
+        if (totalAll > 0) {
+            finalActiveHtml += `<div class="plan-summary-banner plan-summary-banner--primary">
+                <div>${window.t("plan_total_expected")}</div>
+                <div>${window.formatM(totalAll)}</div>
+            </div>`;
+        }
     }
-    window.setHtml("planned-list-active", finalActiveHtml + (activeData.html || `<div class='empty-state'>${window.t("plan_empty")}</div>`));
+    window.setHtml("planned-list-active", finalActiveHtml + (activeData.html || (urgentStrip ? "" : `<div class='empty-state'>${window.t("plan_empty")}</div>`)));
 
     const skipData = renderGroupedList(allUserPlans.filter(x => !x.archived && x.skip), true);
     let finalSkipHtml = "";
@@ -581,4 +743,5 @@ window.renderPlanned = function() {
         </div>`;
     }
     window.setHtml("planned-list-history", htmlHistory || `<div class='empty-state'>${window.t("plan_history_empty")}</div>`);
+    window.updatePlanBellBadge();
 };

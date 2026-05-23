@@ -58,7 +58,7 @@ window.getEmptyState = function() {
     return {
         txs: [], plan: [], sched: [], debts: [], incs: [], profiles: [], deps: [], credits: [],
         audit: [], theme: "auto", lang: "uz", catOrders: {}, catHidden: {}, wallets: {},
-        walletLedger: [], chats: {}
+        walletLedger: [], chats: {}, planUrgentAcks: {}
     };
 };
 
