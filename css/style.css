@@ -956,6 +956,10 @@ body.on-add-tab {
     justify-content: center;
     cursor: pointer;
     transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s, filter 0.2s;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
 }
 
 #tab-add .cat-btn--wiggle {
@@ -1642,6 +1646,10 @@ body:not(.dark-mode) .cat-btn span[style*="color: #fff"] {
     font-size: 14px;
     box-shadow: var(--shadow-sm);
     transition: border-color var(--transition), transform 0.1s, box-shadow var(--transition);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
 }
 
 .main-menu-btn:active,

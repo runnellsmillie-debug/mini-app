@@ -244,11 +244,20 @@ window.setupServicesMenuDrag = function() {
     const wrap = window.el("services-menu-wrap");
     const menu = window.el("bank-main-menu");
     if (!wrap || !menu) return;
-    if (wrap.dataset.svcDrag === "2") return;
-    wrap.dataset.svcDrag = "2";
-    let dragEl = null, pressTimer = null;
+    if (wrap.dataset.svcDrag === "3") return;
+    wrap.dataset.svcDrag = "3";
+    let dragEl = null, pressTimer = null, pressTarget = null;
+    let startX = 0, startY = 0;
+    const LONG_MS = 500, MOVE_PX = 14;
 
-    const clearPress = () => { clearTimeout(pressTimer); pressTimer = null; };
+    const clearPress = () => {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+        pressTarget = null;
+    };
+
+    const movedTooFar = (x, y) => Math.hypot(x - startX, y - startY) > MOVE_PX;
+
     const endDrag = () => {
         clearPress();
         if (!dragEl) return;
@@ -258,34 +267,58 @@ window.setupServicesMenuDrag = function() {
         dragEl = null;
     };
 
-    wrap.addEventListener("touchstart", e => {
-        if (e.target.closest(".cat-btn__hide") || e.target.closest(".add-cats-done")) return;
+    const beginLongPress = () => {
+        if (!pressTarget) return;
+        const target = pressTarget;
+        const id = target.getAttribute("data-cat-id");
+        pressTimer = null;
+        window._blockSvcTap = true;
+        if (!window.serviceEditMode) window.enterServiceEditMode();
+        dragEl = menu.querySelector(`.main-menu-btn[data-cat-id="${id}"]`) || target;
+        dragEl?.classList.add("dragging");
+        if (navigator.vibrate) navigator.vibrate(50);
+    };
 
+    const onPressStart = (x, y, target) => {
+        if (!target) return;
         if (!window.serviceEditMode) {
-            const target = e.target.closest(".main-menu-btn[data-cat-id]");
-            if (!target) return;
-            clearPress();
-            pressTimer = setTimeout(() => {
-                window.enterServiceEditMode();
-                dragEl = target;
-                dragEl.classList.add("dragging");
-                if (navigator.vibrate) navigator.vibrate(50);
-            }, 500);
+            pressTarget = target;
+            startX = x;
+            startY = y;
+            clearTimeout(pressTimer);
+            pressTimer = setTimeout(beginLongPress, LONG_MS);
             return;
         }
-
-        const target = e.target.closest(".main-menu-btn[data-cat-id]");
-        if (!target) return;
         clearPress();
         dragEl = target;
         dragEl.classList.add("dragging");
         if (navigator.vibrate) navigator.vibrate(30);
+    };
+
+    wrap.addEventListener("touchstart", e => {
+        if (e.target.closest(".cat-btn__hide") || e.target.closest(".add-cats-done")) return;
+        const target = e.target.closest(".main-menu-btn[data-cat-id]");
+        if (!target) return;
+        const t = e.touches[0];
+        onPressStart(t.clientX, t.clientY, target);
     }, { passive: true });
 
+    wrap.addEventListener("pointerdown", e => {
+        if (e.pointerType !== "mouse" || e.button !== 0) return;
+        if (e.target.closest(".cat-btn__hide") || e.target.closest(".add-cats-done")) return;
+        const target = e.target.closest(".main-menu-btn[data-cat-id]");
+        if (!target) return;
+        onPressStart(e.clientX, e.clientY, target);
+    });
+
     wrap.addEventListener("touchmove", e => {
-        if (!window.serviceEditMode || !dragEl) { clearPress(); return; }
-        e.preventDefault();
         const touch = e.touches[0];
+        if (pressTimer && movedTooFar(touch.clientX, touch.clientY)) {
+            clearPress();
+            return;
+        }
+        if (!window.serviceEditMode || !dragEl) return;
+        e.preventDefault();
         const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
         const dropTarget = elemBelow ? elemBelow.closest(".main-menu-btn[data-cat-id]") : null;
         if (dropTarget && dropTarget !== dragEl) {
@@ -295,8 +328,45 @@ window.setupServicesMenuDrag = function() {
         }
     }, { passive: false });
 
-    wrap.addEventListener("touchend", endDrag);
-    wrap.addEventListener("touchcancel", endDrag);
+    wrap.addEventListener("pointermove", e => {
+        if (e.pointerType !== "mouse") return;
+        if (pressTimer && movedTooFar(e.clientX, e.clientY)) {
+            clearPress();
+            return;
+        }
+        if (!window.serviceEditMode || !dragEl) return;
+        e.preventDefault();
+        const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+        const dropTarget = elemBelow ? elemBelow.closest(".main-menu-btn[data-cat-id]") : null;
+        if (dropTarget && dropTarget !== dragEl) {
+            const rect = dropTarget.getBoundingClientRect();
+            const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+            menu.insertBefore(dragEl, next ? dropTarget.nextSibling : dropTarget);
+        }
+    });
+
+    const onPressEnd = () => {
+        setTimeout(() => { window._blockSvcTap = false; }, 350);
+        endDrag();
+    };
+
+    wrap.addEventListener("touchend", onPressEnd);
+    wrap.addEventListener("touchcancel", onPressEnd);
+    wrap.addEventListener("pointerup", e => {
+        if (e.pointerType !== "mouse") return;
+        onPressEnd();
+    });
+    wrap.addEventListener("pointercancel", e => {
+        if (e.pointerType !== "mouse") return;
+        onPressEnd();
+    });
+
+    wrap.addEventListener("click", e => {
+        if (window._blockSvcTap || window.serviceEditMode) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true);
 
     document.addEventListener("touchstart", e => {
         if (!window.serviceEditMode) return;

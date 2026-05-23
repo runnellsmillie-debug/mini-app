@@ -791,11 +791,19 @@ window.setupAddCatDrag = function() {
     const zone = window.el("add-cats-zone");
     const cont = window.el("cats-container");
     if (!zone || !cont) return;
-    if (zone.dataset.dragSetup === "4") return;
-    zone.dataset.dragSetup = "4";
-    let dragEl = null, pressTimer = null;
+    if (zone.dataset.dragSetup === "5") return;
+    zone.dataset.dragSetup = "5";
+    let dragEl = null, pressTimer = null, pressTarget = null;
+    let startX = 0, startY = 0;
+    const LONG_MS = 500, MOVE_PX = 14;
 
-    const clearPress = () => { clearTimeout(pressTimer); pressTimer = null; };
+    const clearPress = () => {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+        pressTarget = null;
+    };
+
+    const movedTooFar = (x, y) => Math.hypot(x - startX, y - startY) > MOVE_PX;
 
     const saveOrderFromGrid = (grid) => {
         if (!grid) return;
@@ -814,29 +822,62 @@ window.setupAddCatDrag = function() {
         }
     };
 
-    zone.addEventListener("touchstart", e => {
-        if (e.target.closest(".cat-btn__hide") || e.target.closest(".add-cats-done")) return;
-        if (e.target.closest(".back-link") && !e.target.closest(".add-cats-done")) return;
-
-        const target = e.target.closest(".cat-btn--add[data-cat-id]");
-        if (!target || target.classList.contains("cat-btn--ghost")) return;
+    const beginLongPress = () => {
+        if (!pressTarget) return;
+        const target = pressTarget;
+        const id = target.getAttribute("data-cat-id");
         const grid = target.closest(".cat-scroll--add");
         const level = grid?.getAttribute("data-level") || "main";
         const parent = grid?.getAttribute("data-parent") || "root";
+        pressTimer = null;
+        window._blockCatTap = true;
+        if (!window.catEditMode) window.enterCatEditMode(level, parent);
+        dragEl = cont.querySelector(`.cat-btn--add[data-cat-id="${id}"]`) || target;
+        dragEl?.classList.add("dragging");
+        if (navigator.vibrate) navigator.vibrate(50);
+    };
 
-        clearPress();
-        pressTimer = setTimeout(() => {
-            if (!window.catEditMode) window.enterCatEditMode(level, parent);
+    const onPressStart = (x, y, target) => {
+        if (!target || target.classList.contains("cat-btn--ghost")) return;
+        if (window.catEditMode) {
+            clearPress();
             dragEl = target;
             dragEl.classList.add("dragging");
-            if (navigator.vibrate) navigator.vibrate(50);
-        }, 500);
+            if (navigator.vibrate) navigator.vibrate(30);
+            return;
+        }
+        pressTarget = target;
+        startX = x;
+        startY = y;
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(beginLongPress, LONG_MS);
+    };
+
+    zone.addEventListener("touchstart", e => {
+        if (e.target.closest(".cat-btn__hide") || e.target.closest(".add-cats-done")) return;
+        if (e.target.closest(".back-link") && !e.target.closest(".add-cats-done")) return;
+        const target = e.target.closest(".cat-btn--add[data-cat-id]");
+        if (!target) return;
+        const t = e.touches[0];
+        onPressStart(t.clientX, t.clientY, target);
     }, { passive: true });
 
+    zone.addEventListener("pointerdown", e => {
+        if (e.pointerType !== "mouse" || e.button !== 0) return;
+        if (e.target.closest(".cat-btn__hide") || e.target.closest(".add-cats-done")) return;
+        const target = e.target.closest(".cat-btn--add[data-cat-id]");
+        if (!target) return;
+        onPressStart(e.clientX, e.clientY, target);
+    });
+
     zone.addEventListener("touchmove", e => {
-        if (!window.catEditMode || !dragEl) { clearPress(); return; }
-        e.preventDefault();
         const touch = e.touches[0];
+        if (pressTimer && movedTooFar(touch.clientX, touch.clientY)) {
+            clearPress();
+            return;
+        }
+        if (!window.catEditMode || !dragEl) return;
+        e.preventDefault();
         const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
         const dropTarget = elemBelow ? elemBelow.closest(".cat-btn--add[data-cat-id]") : null;
         const grid = dragEl.parentElement;
@@ -847,8 +888,46 @@ window.setupAddCatDrag = function() {
         }
     }, { passive: false });
 
-    zone.addEventListener("touchend", endDrag);
-    zone.addEventListener("touchcancel", endDrag);
+    zone.addEventListener("pointermove", e => {
+        if (e.pointerType !== "mouse") return;
+        if (pressTimer && movedTooFar(e.clientX, e.clientY)) {
+            clearPress();
+            return;
+        }
+        if (!window.catEditMode || !dragEl) return;
+        e.preventDefault();
+        const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+        const dropTarget = elemBelow ? elemBelow.closest(".cat-btn--add[data-cat-id]") : null;
+        const grid = dragEl.parentElement;
+        if (dropTarget && dropTarget !== dragEl && grid) {
+            const rect = dropTarget.getBoundingClientRect();
+            const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+            grid.insertBefore(dragEl, next ? dropTarget.nextSibling : dropTarget);
+        }
+    });
+
+    const onPressEnd = () => {
+        setTimeout(() => { window._blockCatTap = false; }, 350);
+        endDrag();
+    };
+
+    zone.addEventListener("touchend", onPressEnd);
+    zone.addEventListener("touchcancel", onPressEnd);
+    zone.addEventListener("pointerup", e => {
+        if (e.pointerType !== "mouse") return;
+        onPressEnd();
+    });
+    zone.addEventListener("pointercancel", e => {
+        if (e.pointerType !== "mouse") return;
+        onPressEnd();
+    });
+
+    zone.addEventListener("click", e => {
+        if (window._blockCatTap || window.catEditMode) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true);
 
     document.addEventListener("touchstart", e => {
         if (!window.catEditMode) return;
