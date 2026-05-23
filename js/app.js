@@ -788,11 +788,11 @@ window.onRestoreCatClick = function(e, id, level, parentId) {
 };
 
 window.setupAddCatDrag = function() {
-    const zone = window.el("add-cats-zone");
+    const zone = window.el("add-cats-zone") || document.querySelector(".add-cats-zone");
     const cont = window.el("cats-container");
     if (!zone || !cont) return;
-    if (zone.dataset.dragSetup === "5") return;
-    zone.dataset.dragSetup = "5";
+    if (zone.dataset.dragSetup === "6") return;
+    zone.dataset.dragSetup = "6";
     let dragEl = null, pressTimer = null, pressTarget = null;
     let startX = 0, startY = 0;
     const LONG_MS = 500, MOVE_PX = 14;

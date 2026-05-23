@@ -963,12 +963,12 @@ body.on-add-tab {
 }
 
 #tab-add .cat-btn--wiggle {
-    animation: catWiggle 0.32s ease-in-out infinite;
+    animation: catWiggle 0.55s ease-in-out infinite;
 }
 
 @keyframes catWiggle {
-    0%, 100% { transform: rotate(-1.2deg) scale(1); }
-    50% { transform: rotate(1.2deg) scale(1.02); }
+    0%, 100% { transform: rotate(-0.35deg); }
+    50% { transform: rotate(0.35deg); }
 }
 
 #tab-add .cat-btn--masked {
@@ -1679,7 +1679,7 @@ body:not(.dark-mode) .cat-btn span[style*="color: #fff"] {
 }
 
 .main-menu-btn--wiggle {
-    animation: catWiggle 0.32s ease-in-out infinite;
+    animation: catWiggle 0.55s ease-in-out infinite;
 }
 
 .main-menu-btn--masked {
