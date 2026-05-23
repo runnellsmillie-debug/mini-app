@@ -71,7 +71,11 @@ window.switchTab = (id, silent) => {
     if (id !== "other" && window.el("back-btn") && !window.el("back-btn").classList.contains("hidden")) {
         window.closeBankSubView();
     }
-    if (id === "add") window.checkAccess();
+    if (id === "add") {
+        window.checkAccess();
+        if (window.initAddKeyboard) window.initAddKeyboard();
+        if (window.focusAddAmount) window.focusAddAmount();
+    }
     if (id === "home" && window.updatePlanCats) window.updatePlanCats();
     if (id === "report" && window.renderReport) window.renderReport();
     document.body.classList.toggle("on-add-tab", id === "add");

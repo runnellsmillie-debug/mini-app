@@ -90,6 +90,8 @@ async function postLoadInit() {
     if(window.tryAutoLinkProfile) window.tryAutoLinkProfile();
     if(window.renderAddProfileStrip) window.renderAddProfileStrip();
     if(window.syncPlanPriceDisplay) window.syncPlanPriceDisplay();
+    if(window.initAddKeyboard) window.initAddKeyboard();
+    if(window.syncDescDisplay) window.syncDescDisplay();
     
     window.render(); 
 }
@@ -384,13 +386,83 @@ window.setAddMode = m => {
     const exp = window.el("mode-exp"), inc = window.el("mode-inc");
     if (exp) { exp.classList.toggle("mode-btn--active-exp", m === "expense"); exp.classList.toggle("mode-btn--active", m === "expense"); }
     if (inc) { inc.classList.toggle("mode-btn--active-inc", m === "income"); inc.classList.toggle("mode-btn--active", m === "income"); }
-    window.setHtml("stay-hint",""); window.renderAddCats(); 
+    window.setHtml("stay-hint",""); window.renderAddCats();
+    if (window.focusAddAmount) window.focusAddAmount();
+};
+
+window.syncDescDisplay = () => {
+    const el = window.el("add-desc");
+    if (!el) return;
+    if (window.descStr) {
+        el.innerHTML = `<span class="add-desc-val">${window.descStr.replace(/</g, "&lt;")}</span>`;
+        el.classList.add("has-text");
+    } else {
+        el.innerHTML = `<span class="add-desc-ph">Izoh (ixtiyoriy)...</span>`;
+        el.classList.remove("has-text");
+    }
+};
+
+window.focusAddAmount = () => {
+    window.keypadMode = "amount";
+    const n = window.el("add-kb-amount"), t = window.el("add-kb-text");
+    if (n) n.classList.remove("hidden");
+    if (t) t.classList.add("hidden");
+    const d = window.el("add-desc"), nd = window.el("num-display");
+    if (d) d.classList.remove("add-desc--active");
+    if (nd) nd.classList.add("num-display--active");
+};
+
+window.focusAddDesc = () => {
+    window.keypadMode = "text";
+    const n = window.el("add-kb-amount"), t = window.el("add-kb-text");
+    if (n) n.classList.add("hidden");
+    if (t) t.classList.remove("hidden");
+    const d = window.el("add-desc"), nd = window.el("num-display");
+    if (d) d.classList.add("add-desc--active");
+    if (nd) nd.classList.remove("num-display--active");
+};
+
+window.pressTextKey = k => {
+    if (k === "⌫") window.descStr = window.descStr.slice(0, -1);
+    else if (k === "123") { window.focusAddAmount(); return; }
+    else if (k === "CLR") window.descStr = "";
+    else if (window.descStr.length < 120) window.descStr += k;
+    window.syncDescDisplay();
+};
+
+window.initAddKeyboard = () => {
+    const panel = window.el("add-kb-text");
+    if (!panel || panel.dataset.init) return;
+    panel.dataset.init = "1";
+    const rows = [
+        ["Q","W","E","R","T","Y","U","I","O","P"],
+        ["A","S","D","F","G","H","J","K","L"],
+        ["Z","X","C","V","B","N","M","O'","G'"],
+        [".",",","-","!","?"]
+    ];
+    let html = '<div class="text-kb-grid">';
+    rows.forEach(row => {
+        html += '<div class="text-kb-row">';
+        row.forEach(k => {
+            const esc = k.replace(/'/g, "\\'");
+            html += `<button type="button" class="text-kb-key" onclick="window.pressTextKey('${esc}')">${k}</button>`;
+        });
+        html += "</div>";
+    });
+    html += `<div class="text-kb-row text-kb-row--bottom">
+        <button type="button" class="text-kb-key text-kb-key--wide" onclick="window.pressTextKey(' ')">␣</button>
+        <button type="button" class="text-kb-key" onclick="window.pressTextKey('⌫')">⌫</button>
+        <button type="button" class="text-kb-key text-kb-key--mode" onclick="window.focusAddAmount()">123</button>
+    </div></div>`;
+    panel.innerHTML = html;
 };
 
 window.pressNum = v => {
+    if (window.keypadMode === "text") { window.focusAddAmount(); }
     if (v==="C") window.amtStr=""; else if(v==="⌫") window.amtStr=window.amtStr.slice(0,-1); else if(window.amtStr.length<12) window.amtStr+=v;
     let displayVal = "0"; if (window.amtStr) displayVal = parseInt(window.amtStr).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     window.setTxt("num-display", displayVal);
+    window.focusAddAmount();
 };
 
 window.getCats = function() { return window.getCatsForProfile ? window.getCatsForProfile() : (window.CATS_DATA.general || []); };
@@ -399,32 +471,27 @@ window.renderAddCats = function() {
     const cont = window.el("cats-container"), head = window.el("cats-header-container"); if(!cont || !head) return;
     const mkBtn = (icon, label, onclick, extraCls = "") =>
         `<button type="button" class="cat-btn cat-btn--add${extraCls ? " " + extraCls : ""}" onclick="${onclick}"><span class="cat-btn__icon">${icon}</span><span class="cat-btn__label">${label}</span></button>`;
+    const wrap = items => `<div class="cat-scroll--add">${items}</div>`;
 
     if (window.addMode === "income") {
         head.innerHTML = "";
-        cont.innerHTML = `<div class="cat-grid cat-grid--add">` + window.INC_SOURCES.map(s =>
-            mkBtn(s.icon, s.label, `saveTx('${s.label}')`)
-        ).join("") + `</div>`;
+        cont.innerHTML = wrap(window.INC_SOURCES.map(s => mkBtn(s.icon, s.label, `saveTx('${s.label}')`)).join(""));
         return;
     }
 
     const cats = window.getCats();
     if (window.actSubCat) {
         head.innerHTML = `<div class="add-crumb"><span>${window.actMainCat.label} <b>›</b> ${window.actSubCat.label}</span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
-        cont.innerHTML = `<div class="cat-grid cat-grid--add">` + window.actSubCat.items.map(i =>
-            mkBtn(i.icon, i.label, `saveTx('${i.label}', true)`, "cat-btn--pick")
-        ).join("") + `</div>`;
+        cont.innerHTML = wrap(window.actSubCat.items.map(i => mkBtn(i.icon, i.label, `saveTx('${i.label}', true)`, "cat-btn--pick")).join(""));
     } else if (window.actMainCat && window.actMainCat.subs && window.actMainCat.subs.length > 0) {
         head.innerHTML = `<div class="add-crumb"><span>Rukun: <b>${window.actMainCat.label}</b></span><button type="button" class="back-link" onclick="backCat()">Orqaga</button></div>`;
-        cont.innerHTML = `<div class="cat-grid cat-grid--add">` + window.actMainCat.subs.map(s => {
+        cont.innerHTML = wrap(window.actMainCat.subs.map(s => {
             const f = s.items?.length > 0;
             return mkBtn(s.icon, s.label + (f ? "" : " ✓"), f ? `clickSubCat('${s.id}')` : `saveTx('${s.label}')`);
-        }).join("") + mkBtn("⚙️", "Umumiy", `saveTx('${window.actMainCat.label}')`, "cat-btn--ghost") + `</div>`;
+        }).join("") + mkBtn("⚙️", "Umumiy", `saveTx('${window.actMainCat.label}')`, "cat-btn--ghost"));
     } else {
-        head.innerHTML = `<div class="add-cats-title">Kategoriyani tanlang</div>`;
-        cont.innerHTML = `<div class="cat-grid cat-grid--add">` + cats.map(c =>
-            mkBtn(c.icon, c.label, `clickMainCat('${c.id}')`, "cat-btn--main")
-        ).join("") + `</div>`;
+        head.innerHTML = "";
+        cont.innerHTML = wrap(cats.map(c => mkBtn(c.icon, c.label, `clickMainCat('${c.id}')`, "cat-btn--main")).join(""));
     }
 };
 
@@ -433,11 +500,12 @@ window.clickSubCat = id => { const s = window.actMainCat.subs.find(x=>x.id==id);
 window.backCat = () => { if(window.actSubCat) window.actSubCat = null; else window.actMainCat = null; window.setHtml("stay-hint",""); window.renderAddCats(); };
 
 window.saveTx = (l, isDeepItem=false) => {
-    const a = parseFloat(window.amtStr); if(!a || a<=0) return window.toast("Summa yo'q!", true); const d = new Date(), de = window.el("add-desc");
+    const a = parseFloat(window.amtStr); if(!a || a<=0) return window.toast("Summa yo'q!", true); const d = new Date();
     let realCat = window.actMainCat ? window.actMainCat.label : l, realSubCat = l;
     if(isDeepItem && window.actSubCat) realSubCat = `${window.actSubCat.label} › ${l}`; else if(window.actMainCat) realSubCat = l;
 
-    const i = { id: Date.now(), amount: a, desc: de?.value.trim() || l, cat: realCat, subCat: realSubCat, date: d.toISOString().slice(0,10), time: d.toLocaleTimeString("uz-UZ",{hour:'2-digit',minute:'2-digit'}), user: window.tgUser, prof: window.curProf };
+    const note = (window.descStr || "").trim();
+    const i = { id: Date.now(), amount: a, desc: note || l, cat: realCat, subCat: realSubCat, date: d.toISOString().slice(0,10), time: d.toLocaleTimeString("uz-UZ",{hour:'2-digit',minute:'2-digit'}), user: window.tgUser, prof: window.curProf };
     if(window.addMode==="expense") {
         const lim = window.getLimitStatus(window.curProf);
         if (lim.level === "danger") return window.toast("Oylik limit tugagan!", true);
@@ -447,7 +515,9 @@ window.saveTx = (l, isDeepItem=false) => {
     window.sessionData.push({ amount: a, category: `${i.desc} [${window.tgUser}]`, type: window.addMode==='expense'?'minus':'plus' });
     const sc = document.getElementById('session-count');
     if (sc) sc.innerText = String(window.sessionData.length);
-    window.amtStr = ""; if(de) de.value = ""; window.setTxt("num-display", "0"); 
+    window.amtStr = ""; window.descStr = ""; window.setTxt("num-display", "0");
+    if (window.syncDescDisplay) window.syncDescDisplay();
+    if (window.focusAddAmount) window.focusAddAmount();
     window.save(); 
     if(window.actSubCat||window.actMainCat) { window.setHtml("stay-hint", `✅ Oxirgi: <b style="color:var(--success);">${window.formatM(a)}</b>. Yana kiriting!`); window.renderAddCats(); } else window.setHtml("stay-hint", ""); window.toast("Saqlandi!");
 };
