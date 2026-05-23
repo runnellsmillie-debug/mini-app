@@ -1988,19 +1988,59 @@ body.dark-mode .home-balance-cell {
     color: #fff;
 }
 
+.chat-bubble__foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 4px;
+}
+
 .chat-bubble__time {
     font-size: 9px;
     opacity: 0.75;
-    margin-top: 4px;
-    text-align: right;
+}
+
+.chat-bubble__ticks {
+    font-size: 10px;
+    line-height: 1;
+    opacity: 0.85;
+    letter-spacing: -1px;
+}
+
+.chat-bubble__ticks--read {
+    opacity: 1;
+    color: #b8e0ff;
+}
+
+.chat-row--other .chat-bubble__time {
+    color: var(--text-muted);
 }
 
 .chat-bubble--mine .chat-bubble__time {
     color: rgba(255,255,255,0.85);
 }
 
-.chat-row--other .chat-bubble__time {
-    color: var(--text-muted);
+.home-balance-action {
+    border: none;
+    background: rgba(255,255,255,0.18);
+    border-radius: 8px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #fff;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.home-balance-action:active {
+    background: rgba(255,255,255,0.28);
+    transform: scale(0.95);
 }
 
 .profile-chat-compose {

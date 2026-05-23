@@ -548,9 +548,8 @@ window.saveChatSeenIds = function(profId, ids) {
 };
 
 window.getMyLinkedProfiles = function() {
-    const me = window.tgUserId ? String(window.tgUserId) : "";
-    if (!me) return [];
-    return window.state.profiles.filter(p => !p.archived && p.linked_uid && String(p.linked_uid) === me);
+    if (!window.state?.profiles) return [];
+    return window.state.profiles.filter(p => !p.archived && window.isMyProfile && window.isMyProfile(p));
 };
 
 window.getUnreadChatNotifs = function() {

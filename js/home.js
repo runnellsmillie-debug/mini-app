@@ -408,7 +408,7 @@ window.initHomeBalancePress = function(el, profId) {
     };
 
     el.addEventListener("pointerdown", e => {
-        if (e.target.closest(".home-balance-eye")) return;
+        if (e.target.closest(".home-balance-eye") || e.target.closest(".home-balance-action")) return;
         const canOpen = profId === "general"
             ? (window.canViewWallet && window.canViewWallet(profId))
             : (window.canManageWallet && window.canManageWallet(profId));
@@ -511,7 +511,16 @@ window.getChatRoomKey = function(otherProfId) {
 window.mergeChatMessages = function(a, b) {
     const map = new Map();
     [...(a || []), ...(b || [])].forEach(m => {
-        if (m && m.id != null) map.set(m.id, m);
+        if (!m || m.id == null) return;
+        const prev = map.get(m.id);
+        if (prev) {
+            m = {
+                ...prev,
+                ...m,
+                readBy: { ...(prev.readBy || {}), ...(m.readBy || {}) }
+            };
+        }
+        map.set(m.id, m);
     });
     return [...map.values()].sort((x, y) => x.id - y.id);
 };
@@ -554,10 +563,28 @@ window.getUnreadCountForProf = function(otherProfId) {
 };
 
 window.markChatRead = function(otherProfId) {
+    const me = window.tgUserId ? String(window.tgUserId) : "";
+    if (!me) return;
     const roomKey = window.getChatRoomKey(otherProfId);
     const seen = window.getChatSeenIds(roomKey);
-    window.getChatMessagesFor(otherProfId).forEach(m => seen.add(m.id));
+    let changed = false;
+    window.getChatMessagesFor(otherProfId).forEach(m => {
+        if (window.isChatMessageMine(m)) return;
+        seen.add(m.id);
+        if (!m.readBy) m.readBy = {};
+        if (!m.readBy[me]) {
+            m.readBy[me] = Date.now();
+            changed = true;
+        }
+    });
     window.saveChatSeenIds(roomKey, seen);
+    if (changed) window.save(true);
+};
+
+window.isChatMessageRead = function(m) {
+    if (!m?.readBy) return false;
+    const me = window.tgUserId ? String(window.tgUserId) : "";
+    return Object.keys(m.readBy).some(uid => uid && uid !== me);
 };
 
 window.formatChatPreview = function(text) {
@@ -615,11 +642,16 @@ window.renderProfileChatMessages = function() {
         }
         const mine = window.isChatMessageMine(m);
         const text = (m.text || "").replace(/</g, "&lt;").replace(/\n/g, "<br>");
+        const read = mine && window.isChatMessageRead(m);
+        const ticks = mine ? `<span class="chat-bubble__ticks${read ? " chat-bubble__ticks--read" : ""}">${read ? "✓✓" : "✓"}</span>` : "";
         parts.push(`
             <div class="chat-row${mine ? " chat-row--mine" : " chat-row--other"}">
                 <div class="chat-bubble${mine ? " chat-bubble--mine" : ""}">
                     <div class="chat-bubble__text">${text}</div>
-                    <div class="chat-bubble__time">${m.time || ""}</div>
+                    <div class="chat-bubble__foot">
+                        <span class="chat-bubble__time">${m.time || ""}</span>
+                        ${ticks}
+                    </div>
                 </div>
             </div>`);
     });
@@ -640,7 +672,8 @@ window.sendProfileChat = function() {
         text,
         user: window.tgUser || "Siz",
         uid: window.tgUserId ? String(window.tgUserId) : null,
-        time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })
+        time: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" }),
+        readBy: {}
     });
     inp.value = "";
     window.save(true);
@@ -665,9 +698,11 @@ window.syncOpenChatFromCloud = async function() {
     });
     const local = window.state.chats[roomKey] || [];
     const merged = window.mergeChatMessages(local, cloudMerged);
-    if (JSON.stringify(merged) !== JSON.stringify(local)) {
-        window.state.chats[roomKey] = merged;
-        window.renderProfileChatMessages();
+    const dataChanged = JSON.stringify(merged) !== JSON.stringify(local);
+    window.state.chats[roomKey] = merged;
+    window.markChatRead(profId);
+    window.renderProfileChatMessages();
+    if (dataChanged) {
         window.renderHomeChatStrip();
         if (window.updateHeaderNotifications) window.updateHeaderNotifications();
     }
@@ -708,7 +743,7 @@ window.renderHomeTab = function() {
         const rows = window.getHomeBalanceRows();
         grid.innerHTML = rows.map(r => {
             const canManage = window.canManageWallet && window.canManageWallet(r.id);
-            const canView = window.canViewWallet && window.canViewWallet(r.id);
+            const canReturn = window.canReturnToReserve && window.canReturnToReserve(r.id);
             return `
             <div class="home-balance-cell${canManage ? " home-balance-cell--interactive" : ""}" data-prof-id="${r.id}">
                 <div class="home-balance-cell__left">
@@ -717,7 +752,8 @@ window.renderHomeTab = function() {
                 </div>
                 <div class="home-balance-cell__right">
                     <span class="home-balance-cell__amt">${window.formatM(r.amount)}</span>
-                    ${canView ? `<button type="button" class="home-balance-eye" onclick="event.stopPropagation(); window.openWalletHistory('${r.id}')" aria-label="History">👁</button>` : ""}
+                    ${canReturn ? `<button type="button" class="home-balance-action" onclick="event.stopPropagation(); window.openProfileFinance('${r.id}')" title="${window.t("return_to_reserve")}">↩</button>` : ""}
+                    <button type="button" class="home-balance-eye" onclick="event.stopPropagation(); window.openWalletHistory('${r.id}')" aria-label="History">👁</button>
                 </div>
             </div>`;
         }).join("");

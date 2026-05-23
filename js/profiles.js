@@ -371,13 +371,18 @@ window.canManageWallet = function(targetProfId, viewerProf) {
         return window.isBudgetAdmin() || window.hasPermission("admin_all", viewer);
     }
     if (window.isBudgetAdmin() || window.hasPermission("admin_all", viewer)) return true;
+    const myIds = window.getMyLinkedProfileIds ? window.getMyLinkedProfileIds() : [];
+    if (myIds.includes(targetProfId)) return true;
     if (viewer && viewer.id === targetProfId) return true;
     return (viewer?.walletManage || []).includes(targetProfId);
 };
 
-window.canViewWallet = function(targetProfId, viewerProf) {
-    if (targetProfId === "general") return true;
-    return window.canManageWallet(targetProfId, viewerProf);
+window.canViewWallet = function(targetProfId) {
+    return !!window.tgUserId;
+};
+
+window.canReturnToReserve = function(profId) {
+    return profId && profId !== "general" && window.canManageWallet(profId);
 };
 
 window.getTransferTargets = function(fromProfId) {
