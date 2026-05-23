@@ -78,6 +78,26 @@ window.initCloudData = async function() {
     postLoadInit();
 };
 
+window.updateBudgetInfo = function() {
+    const box = window.el("sidebar-budget-info");
+    if (!box) return;
+    const bid = window.currentBudgetId;
+    if (!bid) {
+        box.innerHTML = `<div class="sidebar-budget-info__warn">⚠️ ${window.t ? window.t("budget_id") : "Hisob ID"}: —<br><small>Bot orqali kiring</small></div>`;
+        return;
+    }
+    const typeLabel = window.isAdmin === true || window.isAdmin === "true"
+        ? window.t("budget_type_admin")
+        : window.t("budget_type_invited");
+    box.innerHTML = `
+        <div class="sidebar-budget-info__row">
+            <span class="sidebar-budget-info__lbl">${window.t("budget_id")}</span>
+            <strong class="sidebar-budget-info__val" id="sidebar-bid-val">${bid}</strong>
+        </div>
+        <div class="sidebar-budget-info__type">${typeLabel}</div>
+        <div class="sidebar-budget-info__hint">${window.t("budget_id_hint")}</div>`;
+};
+
 async function postLoadInit() {
     window.normalizeAllProfiles();
     if (window.isBudgetAdmin()) {
@@ -102,6 +122,7 @@ async function postLoadInit() {
     const hm = window.el("header-main");
     if (hm && !window.curBankSub) hm.classList.remove("hidden");
     if (window.updateHeaderBalance) window.updateHeaderBalance();
+    if (window.updateBudgetInfo) window.updateBudgetInfo();
     
     if(window.loadExternalData) await window.loadExternalData();
     

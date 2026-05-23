@@ -85,7 +85,11 @@ window.I18N = {
         notif_empty: "Xabar yo'q",
         transfer_to_profile: "Profilga o'tkazish",
         wallet_view_only: "Faqat ko'rish — zaxiradan faqat admin o'tkaza oladi",
-        income_via_add_only: "Kirim faqat Kiritish bo'limidan kiritiladi"
+        income_via_add_only: "Kirim faqat Kiritish bo'limidan kiritiladi",
+        budget_id: "Hisob ID",
+        budget_type_admin: "Asosiy hisob (admin)",
+        budget_type_invited: "Taklif hisobi",
+        budget_id_hint: "Oilaviy hisob — ikkalangizda bir xil raqam bo'lishi kerak"
     },
     ru: {
         profiles: "Профили",
@@ -169,7 +173,11 @@ window.I18N = {
         notif_empty: "Нет сообщений",
         transfer_to_profile: "Перевод профилю",
         wallet_view_only: "Только просмотр — перевод из резерва только для админа",
-        income_via_add_only: "Доход только через раздел «Ввод»"
+        income_via_add_only: "Доход только через раздел «Ввод»",
+        budget_id: "ID счёта",
+        budget_type_admin: "Основной счёт (админ)",
+        budget_type_invited: "Приглашённый счёт",
+        budget_id_hint: "Семейный счёт — номер должен совпадать у обоих"
     },
     en: {
         profiles: "Profiles",
@@ -253,7 +261,11 @@ window.I18N = {
         notif_empty: "No messages",
         transfer_to_profile: "Transfer to profile",
         wallet_view_only: "View only — reserve transfers are admin-only",
-        income_via_add_only: "Income can only be added via the Input tab"
+        income_via_add_only: "Income can only be added via the Input tab",
+        budget_id: "Account ID",
+        budget_type_admin: "Main account (admin)",
+        budget_type_invited: "Invited account",
+        budget_id_hint: "Family account — both must show the same number"
     }
 };
 
@@ -291,6 +303,7 @@ window.applyLang = function() {
 
     if (window.renderHomeTab) window.renderHomeTab();
     if (window.syncSettingsUI) window.syncSettingsUI();
+    if (window.updateBudgetInfo) window.updateBudgetInfo();
     if (window.renderSidebar) window.renderSidebar();
     if (window.renderAddCats) window.renderAddCats();
     if (window.renderServicesMenu) window.renderServicesMenu();

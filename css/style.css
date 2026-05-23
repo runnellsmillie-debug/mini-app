@@ -2224,6 +2224,57 @@ body:not(.dark-mode) .cat-btn span[style*="color: #fff"] {
     display: none;
 }
 
+.sidebar-budget-info {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.sidebar-budget-info__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.sidebar-budget-info__lbl {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.sidebar-budget-info__val {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: 0.04em;
+}
+
+.sidebar-budget-info__type {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.sidebar-budget-info__hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    opacity: 0.85;
+}
+
+.sidebar-budget-info__warn {
+    color: var(--warning);
+    font-size: 11px;
+}
+
+.sidebar-budget-info__warn small {
+    opacity: 0.85;
+}
+
 .settings-icon-row {
     display: flex;
     gap: 8px;
