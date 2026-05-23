@@ -3,7 +3,7 @@ services:
     name: mini-app-1
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: python Bat.py
     envVars:
       - key: BOT_TOKEN
