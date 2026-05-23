@@ -70,6 +70,7 @@ window.I18N = {
         history_empty: "Tarix bo'sh",
         chat_with: "Yozishish",
         chat: "Chat",
+        chat_online: "Onlayn",
         chat_empty: "Xabarlar yo'q",
         available_balance: "Mavjud mablag'",
         reserve_fund: "Zaxira pul",
@@ -161,6 +162,7 @@ window.I18N = {
         history_empty: "История пуста",
         chat_with: "Переписка",
         chat: "Чат",
+        chat_online: "В сети",
         chat_empty: "Нет сообщений",
         available_balance: "Доступные средства",
         reserve_fund: "Резерв",
@@ -252,6 +254,7 @@ window.I18N = {
         history_empty: "No history",
         chat_with: "Chat with",
         chat: "Chat",
+        chat_online: "Online",
         chat_empty: "No messages",
         available_balance: "Available funds",
         reserve_fund: "Reserve",
@@ -312,7 +315,6 @@ window.applyLang = function() {
 
     if (window.renderHomeTab) window.renderHomeTab();
     if (window.syncSettingsUI) window.syncSettingsUI();
-    if (window.updateBudgetInfo) window.updateBudgetInfo();
     if (window.renderSidebar) window.renderSidebar();
     if (window.renderAddCats) window.renderAddCats();
     if (window.renderServicesMenu) window.renderServicesMenu();

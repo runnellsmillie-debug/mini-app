@@ -446,17 +446,97 @@ window.renderHomeChatStrip = function() {
         </div>
         <div class="home-chat-strip__list">
             ${invited.map(p => {
-                const unread = (window.getUnreadChatNotifs && window.getUnreadChatNotifs() || [])
-                    .filter(m => m.profId === p.id).length;
+                const unread = window.getUnreadCountForProf(p.id);
+                const msgs = window.getChatMessagesFor(p.id);
+                const last = msgs[msgs.length - 1];
+                const preview = last
+                    ? (window.isChatMessageMine(last) ? "Siz: " : "") + window.formatChatPreview(last.text)
+                    : window.t("chat_empty");
+                const time = last?.time || "";
                 return `
-                <button type="button" class="home-chat-card" onclick="window.openProfileChat('${p.id}')">
+                <button type="button" class="home-chat-card${unread ? " home-chat-card--unread" : ""}" onclick="window.openProfileChat('${p.id}')">
                     <span class="home-chat-card__avatar">${p.icon || "👤"}</span>
-                    <span class="home-chat-card__name">${(p.name || "").replace(/</g, "&lt;")}</span>
+                    <span class="home-chat-card__body">
+                        <span class="home-chat-card__top">
+                            <span class="home-chat-card__name">${(p.name || "").replace(/</g, "&lt;")}</span>
+                            ${time ? `<span class="home-chat-card__time">${time}</span>` : ""}
+                        </span>
+                        <span class="home-chat-card__preview">${preview.replace(/</g, "&lt;")}</span>
+                    </span>
                     ${unread ? `<span class="home-chat-card__badge">${unread > 9 ? "9+" : unread}</span>` : ""}
-                    <span class="home-chat-card__arrow">›</span>
                 </button>`;
             }).join("")}
         </div>`;
+};
+
+window.getMyPrimaryProfileId = function() {
+    const ids = window.getMyLinkedProfileIds ? window.getMyLinkedProfileIds() : [];
+    if (ids.length) return ids[0];
+    const lp = window.getMyLinkedProfiles ? window.getMyLinkedProfiles() : [];
+    return lp[0]?.id || null;
+};
+
+window.getChatRoomKey = function(otherProfId) {
+    const myId = window.getMyPrimaryProfileId();
+    if (!myId || !otherProfId || myId === otherProfId) return otherProfId;
+    return [myId, otherProfId].sort().join("__");
+};
+
+window.mergeChatMessages = function(a, b) {
+    const map = new Map();
+    [...(a || []), ...(b || [])].forEach(m => {
+        if (m && m.id != null) map.set(m.id, m);
+    });
+    return [...map.values()].sort((x, y) => x.id - y.id);
+};
+
+window.ensureChatRoom = function(otherProfId) {
+    window.ensureHomeState();
+    const roomKey = window.getChatRoomKey(otherProfId);
+    const myId = window.getMyPrimaryProfileId();
+    let msgs = window.state.chats[roomKey] || [];
+    let migrated = false;
+    [otherProfId, myId].filter(Boolean).forEach(id => {
+        if (id === roomKey) return;
+        const leg = window.state.chats[id];
+        if (leg?.length) {
+            msgs = window.mergeChatMessages(msgs, leg);
+            delete window.state.chats[id];
+            migrated = true;
+        }
+    });
+    window.state.chats[roomKey] = msgs;
+    if (migrated) window.save(true);
+    return roomKey;
+};
+
+window.getChatMessagesFor = function(otherProfId) {
+    const roomKey = window.ensureChatRoom(otherProfId);
+    return window.state.chats[roomKey] || [];
+};
+
+window.isChatMessageMine = function(m) {
+    const me = window.tgUserId ? String(window.tgUserId) : "";
+    if (me && m.uid) return String(m.uid) === me;
+    return (m.user || "") === (window.tgUser || "Siz");
+};
+
+window.getUnreadCountForProf = function(otherProfId) {
+    const roomKey = window.getChatRoomKey(otherProfId);
+    const seen = window.getChatSeenIds(roomKey);
+    return window.getChatMessagesFor(otherProfId).filter(m => !window.isChatMessageMine(m) && !seen.has(m.id)).length;
+};
+
+window.markChatRead = function(otherProfId) {
+    const roomKey = window.getChatRoomKey(otherProfId);
+    const seen = window.getChatSeenIds(roomKey);
+    window.getChatMessagesFor(otherProfId).forEach(m => seen.add(m.id));
+    window.saveChatSeenIds(roomKey, seen);
+};
+
+window.formatChatPreview = function(text) {
+    const t = (text || "").replace(/\s+/g, " ").trim();
+    return t.length > 40 ? t.slice(0, 40) + "…" : t;
 };
 
 window.openProfileChat = function(profId) {
@@ -464,29 +544,61 @@ window.openProfileChat = function(profId) {
     const p = window.state.profiles.find(x => x.id === profId);
     const modal = window.el("modal-profile-chat");
     const title = window.el("profile-chat-title");
-    if (title) title.textContent = p ? `${p.icon} ${p.name}` : window.t("chat");
+    const status = window.el("profile-chat-status");
+    if (title) title.textContent = p ? p.name : window.t("chat");
+    if (status) status.textContent = window.t("chat_online");
+    window.ensureChatRoom(profId);
+    window.markChatRead(profId);
     window.renderProfileChatMessages();
     if (modal) { modal.classList.remove("hidden"); modal.style.display = "flex"; }
+    const inp = window.el("profile-chat-input");
+    if (inp) setTimeout(() => inp.focus(), 120);
+    window.startChatLiveSync();
+    window.syncOpenChatFromCloud();
+    if (window.updateHeaderNotifications) window.updateHeaderNotifications();
 };
 
 window.closeProfileChat = function() {
     const modal = window.el("modal-profile-chat");
     if (modal) { modal.classList.add("hidden"); modal.style.display = "none"; }
     window._chatProfId = null;
+    window.stopChatLiveSync();
+    if (window.renderHomeChatStrip) window.renderHomeChatStrip();
 };
 
 window.renderProfileChatMessages = function() {
     const box = window.el("profile-chat-messages");
     const profId = window._chatProfId;
     if (!box || !profId) return;
-    window.ensureHomeState();
-    const msgs = window.state.chats[profId] || [];
-    const me = window.tgUser || "Siz";
-    box.innerHTML = msgs.length ? msgs.map(m => {
-        const mine = m.user === me;
-        return `<div class="chat-bubble${mine ? " chat-bubble--mine" : ""}"><div class="chat-bubble__text">${(m.text || "").replace(/</g, "&lt;")}</div><div class="chat-bubble__meta">${m.time || ""} · ${(m.user || "").replace(/</g, "&lt;")}</div></div>`;
-    }).join("") : `<div class="chat-empty">${window.t("chat_empty")}</div>`;
-    box.scrollTop = box.scrollHeight;
+    const msgs = window.getChatMessagesFor(profId);
+    const wasAtBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+
+    if (!msgs.length) {
+        box.innerHTML = `<div class="chat-empty">${window.t("chat_empty")}</div>`;
+        return;
+    }
+
+    let lastDate = "";
+    const parts = [];
+    msgs.forEach(m => {
+        const d = new Date(m.id);
+        const dateKey = isNaN(d.getTime()) ? "" : d.toLocaleDateString("uz-UZ", { day: "numeric", month: "short" });
+        if (dateKey && dateKey !== lastDate) {
+            lastDate = dateKey;
+            parts.push(`<div class="chat-date-sep"><span>${dateKey}</span></div>`);
+        }
+        const mine = window.isChatMessageMine(m);
+        const text = (m.text || "").replace(/</g, "&lt;").replace(/\n/g, "<br>");
+        parts.push(`
+            <div class="chat-row${mine ? " chat-row--mine" : " chat-row--other"}">
+                <div class="chat-bubble${mine ? " chat-bubble--mine" : ""}">
+                    <div class="chat-bubble__text">${text}</div>
+                    <div class="chat-bubble__time">${m.time || ""}</div>
+                </div>
+            </div>`);
+    });
+    box.innerHTML = parts.join("");
+    if (wasAtBottom) box.scrollTop = box.scrollHeight;
 };
 
 window.sendProfileChat = function() {
@@ -496,8 +608,8 @@ window.sendProfileChat = function() {
     const text = (inp.value || "").trim();
     if (!text) return;
     window.ensureHomeState();
-    if (!window.state.chats[profId]) window.state.chats[profId] = [];
-    window.state.chats[profId].push({
+    const roomKey = window.ensureChatRoom(profId);
+    window.state.chats[roomKey].push({
         id: Date.now(),
         text,
         user: window.tgUser || "Siz",
@@ -507,6 +619,52 @@ window.sendProfileChat = function() {
     inp.value = "";
     window.save(true);
     window.renderProfileChatMessages();
+    window.renderHomeChatStrip();
+    if (window.updateHeaderNotifications) window.updateHeaderNotifications();
+    setTimeout(() => window.syncOpenChatFromCloud && window.syncOpenChatFromCloud(), 350);
+};
+
+window.syncOpenChatFromCloud = async function() {
+    if (!window._chatProfId || !window.currentBudgetId) return;
+    const cloud = await window.fetchCloudState();
+    if (!cloud?.chats) return;
+    const profId = window._chatProfId;
+    const roomKey = window.ensureChatRoom(profId);
+    const myId = window.getMyPrimaryProfileId();
+    let cloudMerged = [];
+    [roomKey, profId, myId].filter(Boolean).forEach(key => {
+        if (cloud.chats[key]?.length) {
+            cloudMerged = window.mergeChatMessages(cloudMerged, cloud.chats[key]);
+        }
+    });
+    const local = window.state.chats[roomKey] || [];
+    const merged = window.mergeChatMessages(local, cloudMerged);
+    if (JSON.stringify(merged) !== JSON.stringify(local)) {
+        window.state.chats[roomKey] = merged;
+        window.renderProfileChatMessages();
+        window.renderHomeChatStrip();
+        if (window.updateHeaderNotifications) window.updateHeaderNotifications();
+    }
+};
+
+window.startChatLiveSync = function() {
+    window.stopChatLiveSync();
+    window._chatSyncTimer = setInterval(() => window.syncOpenChatFromCloud(), 1200);
+};
+
+window.stopChatLiveSync = function() {
+    if (window._chatSyncTimer) {
+        clearInterval(window._chatSyncTimer);
+        window._chatSyncTimer = null;
+    }
+};
+
+window.onCloudStateApplied = function() {
+    if (window._chatProfId) {
+        window.ensureChatRoom(window._chatProfId);
+        window.renderProfileChatMessages();
+    }
+    if (window.renderHomeChatStrip) window.renderHomeChatStrip();
     if (window.updateHeaderNotifications) window.updateHeaderNotifications();
 };
 
@@ -545,5 +703,4 @@ window.renderHomeTab = function() {
 
     window.updateHomeFinanceSummary();
     window.renderHomeChatStrip();
-    if (window.updateBudgetInfo) window.updateBudgetInfo();
 };

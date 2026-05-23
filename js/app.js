@@ -71,6 +71,7 @@ window.applyCloudState = function(data) {
     }
     localStorage.setItem(window.getStateStorageKey(), JSON.stringify(window.state));
     window._cloudLoadedAtStart = true;
+    if (window.onCloudStateApplied) window.onCloudStateApplied();
 };
 
 window.fetchCloudState = async function(bid) {
@@ -155,46 +156,7 @@ window.initCloudData = async function() {
     }
 };
 
-window.updateBudgetInfo = function() {
-    const html = window.getBudgetInfoHtml();
-    const sidebar = window.el("sidebar-budget-info");
-    const home = window.el("home-budget-banner");
-    if (sidebar) sidebar.innerHTML = html;
-    if (home) home.innerHTML = html;
-};
-
-window.getBudgetInfoHtml = function() {
-    const bid = window.currentBudgetId;
-    if (!bid) {
-        return `<div class="budget-banner budget-banner--warn">
-            <div class="budget-banner__title">⚠️ ${window.t("budget_id")}: —</div>
-            <div class="budget-banner__hint">${window.t("budget_open_via_bot")}</div>
-        </div>`;
-    }
-    const isOwn = window._ownBudgetId && String(window._ownBudgetId) === String(bid);
-    const typeLabel = window.isAdmin === true || window.isAdmin === "true" || isOwn
-        ? window.t("budget_type_admin")
-        : window.t("budget_type_invited");
-    let extra = "";
-    if (window._ownBudgetId && window._invitedBudgetId) {
-        extra = `<div class="budget-banner__ids">Shaxsiy: ${window._ownBudgetId} · Oilaviy: ${window._invitedBudgetId}</div>`;
-    } else if (window._ownBudgetId) {
-        extra = `<div class="budget-banner__ids">Shaxsiy: ${window._ownBudgetId}</div>`;
-    }
-    const warn = window._ownBudgetId && window._invitedBudgetId && String(bid) === String(window._ownBudgetId) && window._invitedBudgetId
-        ? `<div class="budget-banner__alert">⚠️ ${window.t("budget_wrong_account")}</div>` : "";
-    return `
-        <div class="budget-banner">
-            <div class="budget-banner__row">
-                <span>${window.t("budget_id")}</span>
-                <strong>${bid}</strong>
-            </div>
-            <div class="budget-banner__type">${typeLabel}</div>
-            ${extra}
-            ${warn}
-            <div class="budget-banner__hint">${window.t("budget_id_hint")}</div>
-        </div>`;
-};
+window.updateBudgetInfo = function() {};
 
 async function postLoadInit() {
     window.normalizeAllProfiles();
@@ -220,7 +182,6 @@ async function postLoadInit() {
     const hm = window.el("header-main");
     if (hm && !window.curBankSub) hm.classList.remove("hidden");
     if (window.updateHeaderBalance) window.updateHeaderBalance();
-    if (window.updateBudgetInfo) window.updateBudgetInfo();
     
     if(window.loadExternalData) await window.loadExternalData();
     
@@ -596,10 +557,14 @@ window.getUnreadChatNotifs = function() {
     const me = window.tgUserId ? String(window.tgUserId) : "";
     if (!me) return [];
     const unread = [];
-    window.getMyLinkedProfiles().forEach(p => {
-        const seen = window.getChatSeenIds(p.id);
-        (window.state.chats?.[p.id] || []).forEach(m => {
-            if (String(m.uid || "") !== me && !seen.has(m.id)) {
+    const partners = window.getInvitedChatProfiles ? window.getInvitedChatProfiles() : [];
+    partners.forEach(p => {
+        const roomKey = window.getChatRoomKey ? window.getChatRoomKey(p.id) : p.id;
+        const seen = window.getChatSeenIds(roomKey);
+        const msgs = window.getChatMessagesFor ? window.getChatMessagesFor(p.id) : (window.state.chats?.[p.id] || []);
+        msgs.forEach(m => {
+            const mine = window.isChatMessageMine ? window.isChatMessageMine(m) : String(m.uid || "") === me;
+            if (!mine && !seen.has(m.id)) {
                 unread.push({ ...m, profId: p.id, profName: p.name, profIcon: p.icon, kind: "chat" });
             }
         });
@@ -716,11 +681,15 @@ window.toggleHeaderNotifPanel = function() {
     const seen = window.getNotifSeenIds();
     window.getFamilyNotifTxs().forEach(x => seen.add(x.id));
     window.saveNotifSeenIds(seen);
-    window.getMyLinkedProfiles().forEach(p => {
-        const chatSeen = window.getChatSeenIds(p.id);
-        (window.state.chats?.[p.id] || []).forEach(m => chatSeen.add(m.id));
-        window.saveChatSeenIds(p.id, chatSeen);
-    });
+    if (window.getInvitedChatProfiles && window.markChatRead) {
+        window.getInvitedChatProfiles().forEach(p => window.markChatRead(p.id));
+    } else {
+        window.getMyLinkedProfiles().forEach(p => {
+            const chatSeen = window.getChatSeenIds(p.id);
+            (window.state.chats?.[p.id] || []).forEach(m => chatSeen.add(m.id));
+            window.saveChatSeenIds(p.id, chatSeen);
+        });
+    }
     window.updateHeaderNotifications();
 };
 
@@ -1477,7 +1446,8 @@ window.render = function() {
 // ==========================================
 window.startAutoSync = function() {
     if (!window.currentBudgetId) return;
-    setInterval(async () => {
+    if (window._autoSyncTimer) clearInterval(window._autoSyncTimer);
+    const tick = async () => {
         try {
             const cloudState = await window.fetchCloudState();
             if (!cloudState) return;
@@ -1500,7 +1470,11 @@ window.startAutoSync = function() {
                 }
             }
         } catch (e) {}
-    }, 3000);
+    };
+    window._autoSyncTimer = setInterval(tick, 3000);
+    window._autoSyncFastTimer = setInterval(() => {
+        if (window._chatProfId && window.syncOpenChatFromCloud) window.syncOpenChatFromCloud();
+    }, 1200);
 };
 
 if(document.readyState==="loading") {
