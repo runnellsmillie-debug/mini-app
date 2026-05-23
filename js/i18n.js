@@ -70,7 +70,11 @@ window.I18N = {
         history_empty: "Tarix bo'sh",
         chat_with: "Yozishish",
         chat: "Chat",
-        chat_empty: "Xabarlar yo'q"
+        chat_empty: "Xabarlar yo'q",
+        available_balance: "Mavjud mablag'",
+        reserve_fund: "Zaxira pul",
+        grand_total: "Umumiy pul",
+        transfer_from_reserve: "Zaxiradan o'tkazish"
     },
     ru: {
         profiles: "Профили",
@@ -139,7 +143,11 @@ window.I18N = {
         history_empty: "История пуста",
         chat_with: "Переписка",
         chat: "Чат",
-        chat_empty: "Нет сообщений"
+        chat_empty: "Нет сообщений",
+        available_balance: "Доступные средства",
+        reserve_fund: "Резерв",
+        grand_total: "Всего",
+        transfer_from_reserve: "Перевод из резерва"
     },
     en: {
         profiles: "Profiles",
@@ -208,7 +216,11 @@ window.I18N = {
         history_empty: "No history",
         chat_with: "Chat with",
         chat: "Chat",
-        chat_empty: "No messages"
+        chat_empty: "No messages",
+        available_balance: "Available funds",
+        reserve_fund: "Reserve",
+        grand_total: "Grand total",
+        transfer_from_reserve: "Transfer from reserve"
     }
 };
 

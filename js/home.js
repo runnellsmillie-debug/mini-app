@@ -17,12 +17,28 @@ window.ensureHomeState = function() {
     if (!window.state.wallets) window.state.wallets = {};
     if (!window.state.walletLedger) window.state.walletLedger = [];
     if (!window.state.chats) window.state.chats = {};
+    if (window.state.wallets.general == null) {
+        window.state.wallets.general = Math.max(0, window.getProfileBalance("general"));
+    }
     (window.getSortedProfiles ? window.getSortedProfiles() : window.state.profiles).forEach(p => {
-        if (p.archived) return;
+        if (p.archived || p.id === "general") return;
         if (window.state.wallets[p.id] == null) {
             window.state.wallets[p.id] = Math.max(0, window.getProfileBalance(p.id));
         }
     });
+};
+
+window.getProfilesWalletSum = function() {
+    return window.getHomeBalanceRows().reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+};
+
+window.getReserveBalance = function() {
+    window.ensureHomeState();
+    return parseFloat(window.state.wallets.general) || 0;
+};
+
+window.getGrandTotalBalance = function() {
+    return window.getProfilesWalletSum() + window.getReserveBalance();
 };
 
 window.getRelationLabel = function(p) {
@@ -38,8 +54,28 @@ window.getWalletBalance = function(profId) {
 };
 
 window.getTotalWalletBalance = function() {
-    window.ensureHomeState();
-    return Object.values(window.state.wallets).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+    return window.getGrandTotalBalance();
+};
+
+window.openHomeFinanceFullscreen = function() {
+    window.renderHomeFinancePanel();
+    window.updateHomeFinanceSummary();
+    const m = window.el("modal-home-finance");
+    if (m) m.style.display = "flex";
+};
+
+window.closeHomeFinanceFullscreen = function() {
+    const m = window.el("modal-home-finance");
+    if (m) m.style.display = "none";
+};
+
+window.updateHomeFinanceSummary = function() {
+    const avail = window.getProfilesWalletSum();
+    const reserve = window.getReserveBalance();
+    const grand = avail + reserve;
+    window.setTxt("fs-available-sum", window.formatM(avail));
+    window.setTxt("fs-reserve-sum", window.formatM(reserve));
+    window.setTxt("fs-grand-sum", window.formatM(grand));
 };
 
 window.getHomeBalanceRows = function() {
@@ -106,6 +142,7 @@ window.transferWallet = function(fromId, toId, amount, note) {
     });
     window.save(true);
     window.renderHomeTab();
+    window.updateHomeFinanceSummary();
     window.updateHeaderBalance();
     window.toast(window.t("transfer_done"));
 };
@@ -131,6 +168,7 @@ window.depositToWallet = function(profId, amount, note) {
     });
     window.save(true);
     window.renderHomeTab();
+    window.updateHomeFinanceSummary();
     window.updateHeaderBalance();
     window.toast(window.t("saved_auto"));
 };
@@ -151,6 +189,7 @@ window.withdrawFromWallet = function(profId, amount, note) {
     });
     window.save(true);
     window.renderHomeTab();
+    window.updateHomeFinanceSummary();
     window.updateHeaderBalance();
     window.toast(window.t("saved_auto"));
 };
@@ -189,13 +228,7 @@ window.formatLedgerRow = function(e) {
     </div>`;
 };
 
-window.toggleHomeFinancePanel = function() {
-    const panel = window.el("home-finance-panel");
-    const btn = window.el("home-finance-toggle");
-    if (!panel) return;
-    panel.classList.toggle("hidden");
-    btn?.classList.toggle("home-finance-toggle--open", !panel.classList.contains("hidden"));
-};
+window.toggleHomeFinancePanel = window.openHomeFinanceFullscreen;
 
 window.openWalletHistory = function(profId) {
     window._walletHistoryProf = profId;
@@ -233,8 +266,8 @@ window.renderHomeFinancePanel = function() {
         html += `
         <div class="wallet-mgmt-block wallet-mgmt-block--general">
             <div class="wallet-mgmt-block__head">
-                <span>${window.t("general_pool")}</span>
-                <strong>${window.formatM(window.getWalletBalance("general"))}</strong>
+                <span>${window.t("reserve_fund")}</span>
+                <strong>${window.formatM(window.getReserveBalance())}</strong>
                 <button type="button" class="wallet-eye-btn" onclick="window.openWalletHistory('general')" aria-label="History">👁</button>
             </div>
             <div class="wallet-mgmt-block__row">
@@ -245,8 +278,13 @@ window.renderHomeFinancePanel = function() {
                 <button type="button" class="wallet-action-btn wallet-action-btn--all" onclick="window.transferAllFromGeneral(window.val('wallet-general-target'))" title="${window.t("transfer_all")}">⤴</button>
             </div>
             <button type="button" class="wallet-mgmt-submit" onclick="window.transferWallet('general', window.val('wallet-general-target'), window.getNum('wallet-general-amt'))">
-                ${window.t("transfer_from_general")}
+                ${window.t("transfer_from_reserve")}
             </button>
+            <div class="wallet-mgmt-block__row" style="margin-top:8px;">
+                <input type="text" inputmode="numeric" id="wallet-reserve-amt" class="input-text wallet-mgmt-amt" placeholder="${window.t("amount")}" oninput="formatSpace(this)" style="flex:1;" />
+                <button type="button" class="wallet-action-btn wallet-action-btn--in" onclick="window.depositToWallet('general', window.getNum('wallet-reserve-amt'))" title="${window.t("deposit")}">+</button>
+                <button type="button" class="wallet-action-btn wallet-action-btn--out" onclick="window.withdrawFromWallet('general', window.getNum('wallet-reserve-amt'))" title="${window.t("withdraw")}">−</button>
+            </div>
         </div>`;
     }
 
@@ -342,21 +380,24 @@ window.sendProfileChat = function() {
 
 window.renderHomeTab = function() {
     window.ensureHomeState();
-    const total = window.getTotalWalletBalance();
-    window.setTxt("main-total-balance", window.formatM(total));
+    const avail = window.getProfilesWalletSum();
+    const reserve = window.getReserveBalance();
 
-    const list = window.el("home-balance-list");
-    if (list) {
+    window.setTxt("main-total-balance", window.formatM(avail));
+    window.setTxt("home-reserve-balance", window.formatM(reserve));
+
+    const grid = window.el("home-balance-grid");
+    if (grid) {
         const rows = window.getHomeBalanceRows();
-        list.innerHTML = rows.map(r => `
-            <div class="home-balance-row">
-                <span class="home-balance-row__icon">${r.icon}</span>
-                <span class="home-balance-row__label">${r.label.replace(/</g, "&lt;")}</span>
-                <span class="home-balance-row__amt">${window.formatM(r.amount)}</span>
+        grid.innerHTML = rows.map(r => `
+            <div class="home-balance-cell">
+                <span class="home-balance-cell__icon">${r.icon}</span>
+                <span class="home-balance-cell__lbl">${r.label.replace(/</g, "&lt;")}</span>
+                <span class="home-balance-cell__amt">${window.formatM(r.amount)}</span>
             </div>
         `).join("");
     }
 
-    window.renderHomeFinancePanel();
+    window.updateHomeFinanceSummary();
     window.renderHomeChatStrip();
 };
