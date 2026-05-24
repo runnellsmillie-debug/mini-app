@@ -650,6 +650,10 @@ body {
 
 body.on-plan-subview #header-bell-btn { display: none; }
 
+body.on-plan-subview #services-menu-wrap {
+    display: none !important;
+}
+
 body.on-plan-subview.on-plan-add-tab #tab-other {
     padding-bottom: calc(var(--nav-h) + var(--plan-bottom-stack-h) + var(--safe-bottom) + 4px);
 }
@@ -660,13 +664,17 @@ body.on-plan-list-tab {
 
 body.on-plan-list-tab #tab-other {
     padding-top: 0;
-    margin-top: -6px;
+    margin-top: 0;
 }
 
 #bank-sub-plan.bank-sub-panel--list {
     gap: 0;
     margin: 0;
     padding: 0;
+}
+
+#bank-sub-plan.bank-sub-panel--list .plan-list-view {
+    padding-top: 0;
 }
 
 #plan-view-add.plan-add-screen {
@@ -1108,11 +1116,11 @@ body.on-plan-add-tab .plan-list-view { padding-top: 0; }
 
 .plan-list-toolbar {
     position: sticky;
-    top: calc(var(--header-h) + var(--safe-top) - 2px);
+    top: calc(var(--header-h) + var(--safe-top));
     z-index: 820;
     background: var(--bg-main);
-    padding: 0 0 8px;
-    margin: 0 0 6px;
+    padding: 4px 0 6px;
+    margin: 0 0 4px;
 }
 
 .plan-list-body {
@@ -1184,24 +1192,26 @@ body.on-plan-add-tab .plan-list-view { padding-top: 0; }
 
 .plan-item-actions--icons {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
     gap: 4px;
     flex-shrink: 0;
 }
 
 .plan-icon-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
     border: 1px solid var(--border-color);
     background: var(--bg-main);
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background var(--transition), transform 0.1s;
+    padding: 0;
 }
 
 .plan-icon-btn:active { transform: scale(0.94); }
@@ -1214,7 +1224,7 @@ body.on-plan-add-tab .plan-list-view { padding-top: 0; }
 .plan-icon-btn--del {
     border-color: color-mix(in srgb, var(--danger) 35%, var(--border-color));
     color: var(--danger);
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .plan-icon-btn--return {
@@ -1308,7 +1318,7 @@ body.on-plan-add-tab .plan-list-view { padding-top: 0; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 6px;
     border: none !important;
     border-bottom: 1px solid var(--border-color) !important;
     border-radius: 0 !important;
